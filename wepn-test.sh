@@ -286,18 +286,18 @@ install_required_packages(){
       # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
           apt update &> /dev/null
-          echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
+          echo "iptables-persistent iptables-persistent/autosave_v4 boolean false" | debconf-set-selections
+          echo "iptables-persistent iptables-persistent/autosave_v6 boolean false" | debconf-set-selections
+          echo "iptables-persistent iptables-persistent/autosave_v4 seen false" | debconf-set-selections
+          echo "iptables-persistent iptables-persistent/autosave_v6 seen false" | debconf-set-selections
           apt install -y iptables-persistent &> /dev/null
       # Install iptables-persistent using yum on CentOS 8
       elif [ -x "$(command -v yum)" ]; then
           yum update -y >/dev/null 2>&1
-          echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
+          echo "iptables-persistent iptables-persistent/autosave_v4 boolean false" | debconf-set-selections
+          echo "iptables-persistent iptables-persistent/autosave_v6 boolean false" | debconf-set-selections
+          echo "iptables-persistent iptables-persistent/autosave_v4 seen false" | debconf-set-selections
+          echo "iptables-persistent iptables-persistent/autosave_v6 seen false" | debconf-set-selections
           yum install iptables-persistent -y >/dev/null 2>&1
       else
           redbold "Unsupported distribution. Exiting..."
