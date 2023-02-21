@@ -158,7 +158,7 @@ install_wepn(){
 
   # not installed
   if ! test -f "/usr/local/bin/wepn"; then
-      bluebold "Installing WePN..."
+      blue "Installing WePN..."
       curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn #todo change to wpn.sh
       chmod +x /usr/local/bin/wepn
 
@@ -169,7 +169,7 @@ install_wepn(){
 #  elif $running_installed ; then
   elif true ; then
 
-    bluebold "Checking for updates..."
+    blue "Checking for updates..."
     installed_version=$(cat "$HOME/.wepn/settings" | grep version | awk '{split($0,a,"="); print a[2]}')
     latest_version="$(get_latest_version_number)"
 
@@ -185,9 +185,10 @@ install_wepn(){
       latest_version="$(get_latest_version_number)"
       sed -i.bak "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings" && rm "$HOME/.wepn/settings.bak"
 
-      exit 1
+      bluebold "WePN is updated :)"
+
 #    else
-#      bluebold "WePN is UP-TO-DATE."
+#      blue "WePN is UP-TO-DATE."
     fi
 
   fi
@@ -200,7 +201,7 @@ install_wget_and_curl(){
     # Check if curl is installed
     if ! command -v curl &> /dev/null
     then
-        bluebold "Installing curl..."
+        blue "Installing curl..."
 
         # Install curl using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
         if [ -x "$(command -v apt)" ]; then
@@ -220,7 +221,7 @@ install_wget_and_curl(){
     # Check if wget is installed
     if ! command -v wget &> /dev/null
     then
-        bluebold "Installing wget..."
+        blue "Installing wget..."
 
         # Install wget using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
         if [ -x "$(command -v apt)" ]; then
@@ -245,7 +246,7 @@ install_required_packages(){
   # Check if iptables-save is installed
   if ! command -v iptables-save &> /dev/null
   then
-      bluebold "Installing iptables..."
+      blue "Installing iptables..."
 
       # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -265,7 +266,7 @@ install_required_packages(){
   # Check if iptables-persistent is installed
   if ! (dpkg -s iptables-persistent >/dev/null 2>&1 || rpm -q iptables-services >/dev/null 2>&1);
   then
-      bluebold "Installing iptables-persistent..."
+      blue "Installing iptables-persistent..."
 
       # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -289,7 +290,7 @@ install_required_packages(){
 #----------------------------------------------------------------------------------------------------------------------- load required data
 load_iranips(){
   #normal "Loading the most up-to-date IP addresses..."
-  bluebold "Loading Iran IP ranges..."
+  blue "Loading Iran IP ranges..."
 
   # URL of the text file to read
   url="https://raw.githubusercontent.com/elemen3/wepn/master/iran_ip_ranges.txt"
@@ -305,7 +306,7 @@ load_iranips(){
 }
 load_arvancloud_ips(){
 
-  bluebold "Loading Arvancloud IP ranges..."
+  blue "Loading Arvancloud IP ranges..."
 
   # URL of the text file to read
     url="https://www.arvancloud.ir/fa/ips.txt"
@@ -348,6 +349,13 @@ load_arvancloud_ips(){
       )
     fi
 
+}
+#----------------------------------------------------------------------------------------------------------------------- hide/show cursor
+hide_cursor(){
+  tput civis
+}
+show_cursor(){
+  tput cnorm
 }
 #----------------------------------------------------------------------------------------------------------------------- progressbar
 # normal
@@ -394,8 +402,7 @@ prepare_screen(){
   echo -ne '\e]11;#0a121e\e\\'
   #echo -ne '\e]10;\e\\'
 
-  # hide cursor
-  tput sc ; tput civis
+  hide_cursor
 
   # Set up the trap to call the exit function when the script is interrupted
   trap fn_menu_4 INT
@@ -547,7 +554,7 @@ save_rules(){
 hit_enter(){
   selected_menu_index=0
   echo
-  bluebold "Press Enter to continue..."
+  blue "Press Enter to continue..."
   echo
   read -p ""
   clear
@@ -779,9 +786,8 @@ fn_menu_4(){
   sleep 1
 
 
-
-# show cursor
-  tput rc ; tput cnorm
+  tput sc
+  show_cursor
 
   clear && printf '\e[3J'
 
@@ -827,36 +833,43 @@ fn_menu_block_ir_websites_1(){
 
 # block_ir_websites > block all
 fn_menu_block_ir_websites_2(){
-  bluebold "Are you absolutely sure you want to block outgoing traffic from your server to Iranian websites? [y/N]"
-  read -e -p $'\033[38;5;250m(default:n): \033[0m' unyn
-  [[ -z ${unyn} ]] && unyn="n"
+#  bluebold "Are you absolutely sure you want to block outgoing traffic from your server to Iranian websites? [y/N]"
+#  read -e -p $(blue "(default:n):") unyn
+#  [[ -z ${unyn} ]] && unyn="n"
 
-  if [[ ${unyn} == [Yy] ]]; then
+  show_cursor
+  read -p "$(bluebold "Are you absolutely sure you want to block outgoing traffic from your server to Iranian websites? [y/N]: ")" response
+  response=${response:-N}
+
+  if [[ $response =~ ^[Yy]$ ]]; then
 
     while true; do
-        bluebold "Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling)"
-        read -e -p $'\033[38;5;250mIP Address: \033[0m' irsrv_ip_address
-        [[ -z ${irsrv_ip_address} ]] && irsrv_ip_address=""
 
-        if [ -z "$irsrv_ip_address" ]; then
+        show_cursor
+        read -p "$(bluebold "Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): ")" response
+
+        hide_cursor
+
+        if [ -z "$response" ]; then
           # no tunneling
             normal "Blocking all..."
             block_all
             break
-        elif [[ $irsrv_ip_address =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+        elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
             normal "Blocking all excluding your Iranian server..."
             block_all
             # exclude irsrv ip addr
-            iptables -A OUTPUT -d $irsrv_ip_address -p tcp --dport 443 -j ACCEPT
+            iptables -A OUTPUT -d $response -p tcp --dport 443 -j ACCEPT
             break
         else
-            redbold "IP address '$irsrv_ip_address' is not valid. Please try again."
+            redbold "IP address '$response' is not valid. Please try again."
         fi
     done
 
     greenbold "All Iranian websites are blocked."
   fi
 
+  hide_cursor
   hit_enter
 }
 
@@ -887,6 +900,5 @@ install_wepn
 load_iranips
 load_arvancloud_ips
 #----------------------------------------------------------------------------------------------------------------------- RUN
-#show_headers
-#menu_handler "menu"
-#sleep 3
+show_headers
+menu_handler "menu"
