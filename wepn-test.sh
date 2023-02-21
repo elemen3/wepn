@@ -34,17 +34,43 @@ declare -a arvancloud_ips
 global_menu_size=0
 selected_menu=""
 selected_menu_item=""
+#----------------------------------------------------------------------------------------------------------------------- version
+get_datetime_of_file_on_github(){
+  # Set the username and repository name
+  USERNAME="elemen3"
+  REPO_NAME="wepn"
+
+  # Set the branch name and file path
+  BRANCH_NAME="master"
+  FILE_PATH="wepn.sh"
+
+  # Get the timestamp of the last commit for the file
+  TIMESTAMP=$(curl -s "https://api.github.com/repos/${USERNAME}/${REPO_NAME}/commits?path=${FILE_PATH}&sha=${BRANCH_NAME}&per_page=1" | grep -oE "\"date\": \"[^\"]+\"" | cut -d'"' -f4 | head -n1)
 
 
+  if [[ "$(uname)" == "Darwin" ]]; then
+    FORMATTED_DATETIME=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "2023-02-21T05:30:14Z" "+%y.%m.%d.%H%M%S")
+  else
+    date -u -d "2023-02-21T05:30:14Z" "+%y.%m.%d.%H%M%S"
+  fi
+
+  echo "${FORMATTED_DATETIME}"
+}
+
+version=$(get_datetime_of_file_on_github)
+
+echo $version
+
+echo $0
+exit 1
 #----------------------------------------------------------------------------------------------------------------------- settings
 mkdir -p "$HOME/.wepn"
 
-# Check if the ~/.wepn/settings file exists
 if [ ! -f "$HOME/.wepn/settings" ]; then
-  # Create the file if it doesn't exist and add default values
   echo "version=$version" >> "$HOME/.wepn/settings"
+else
+  sed -i 's/version=.*/version=$version/' ~/.wepn/settings
 fi
-#sed -i 's/version=.*/version=123/' ~/.wepn/settings
 #----------------------------------------------------------------------------------------------------------------------- break_string
 function break_string() {
   local str="$1"
