@@ -21,10 +21,28 @@
 # THE SOFTWARE.
 #
 
-# DESCRIPTION: Master Script for VPN
+# DESCRIPTION: Master Script for VPN Admins
 # AUTHOR: macromicro
 # TELEGRAM: @wepn_group
 # VERSION: 0.0.1
+
+#todo git repo for WePN with docs and WiKi
+#todo save wepn command /usr/local/bin
+#todo add version
+#todo script updater
+#todo add left and right arrow keys -> go to first and last item in menu
+#todo make menu navigation faster -> eccho separator to a var?
+#todo menu back auto add function
+#todo add path header for the menu (root > ssh -> ...)
+#todo Q key to exit
+#todo on android termius un-selected menu items are not rendering properly (cut in half)
+#todo check root
+#todo installing iptables-save stucks in ubuntu
+#todo /etc/iptables/rules.v4 no such file or directory -> looks like iptables-persist cannot be installed
+#todo menu fast navigation sometimes prints [[A like chars
+#todo check OS (debian 10, centos, ...) and warn for not-tested OSes
+#todo check ufw
+#todo generic package installer using array of package names
 #----------------------------------------------------------------------------------------------------------------------- vars
 width=64
 
@@ -176,7 +194,7 @@ prereqs(){
   # Check if wget is installed
   if ! command -v wget &> /dev/null
   then
-      normal "Installing wget package..."
+      normal "Installing wget..."
 
       # Install wget using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -190,14 +208,13 @@ prereqs(){
           redbold "Unsupported distribution. Exiting..."
       fi
 
-      normal "wget package has been installed."
   fi
 
 
   # Check if iptables-save is installed
   if ! command -v iptables-save &> /dev/null
   then
-      normal "Installing iptables package..."
+      normal "Installing iptables..."
 
       # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -211,14 +228,12 @@ prereqs(){
           redbold "Unsupported distribution. Exiting..."
       fi
 
-      normal "iptables package has been installed."
   fi
 
   # Check if iptables-persistent is installed
   if ! (dpkg -s iptables-persistent >/dev/null 2>&1 || rpm -q iptables-services >/dev/null 2>&1);
   then
-      normal "Installing iptables-persistent package..."
-
+      normal "Installing iptables-persistent..."
 
       # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -236,7 +251,6 @@ prereqs(){
           redbold "Unsupported distribution. Exiting..."
       fi
 
-      normal "iptables-persistent package has been installed."
   fi
 
 }
@@ -275,7 +289,7 @@ seperator(){
 #----------------------------------------------------------------------------------------------------------------------- show headers
 show_headers(){
   clear && printf '\e[3J'
-  cat /tmp/wepn-logo-small.txt
+  cat /tmp/wepn-logo-ascii.txt
   seperator
   echo -e "\e[1;37;48;5;21m                                                                \e[0m"
   echo -e "\e[1;37;48;5;20m                    [ WePN MASTER SCRIPT ]                      \e[0m"
@@ -444,10 +458,10 @@ print_menu(){
       fi
 
       if [ "${menu_items[i]}" != "-" ]; then
-          printf -v item "%-$((width+2))b" " $icon  ${menu_items[i]}"
+          printf -v item "%-$((width+2))b" " $icon ${menu_items[i]}"
           echo -e "\e[48;5;27m\e[1m\e[97m${item}\e[0m"
       else
-          printf -v item "%-${width}b" " $icon  ${menu_items[i]}"
+          printf -v item "%-${width}b" " $icon ${menu_items[i]}"
           seperator
       fi
 
@@ -466,13 +480,13 @@ print_menu(){
 
     else
 
-      icon="◯"
+      icon="○"
       if [ "${menu_items[i]}" == "Back" ]; then
         icon="←"
       fi
 
       if [ "${menu_items[i]}" != "-" ]; then
-          echo " $(bold "$icon")  "$(bold "${menu_items[i]}")
+          echo " $(bold "$icon") "$(bold "${menu_items[i]}")
       else
           seperator
       fi
@@ -589,7 +603,7 @@ menu_block_ir_websites=(
 'Clear all rules applied by this script'
 'Save settings'
 )
-
+#------------------------------------------------------------------------------------------------------- root
 # ssh
 fn_menu_0(){
   menu_handler "menu_ssh"
@@ -607,6 +621,7 @@ fn_menu_2(){
 
 # exit
 fn_menu_4(){
+
   echo
 
   width=$((width-2))
@@ -619,26 +634,37 @@ fn_menu_4(){
 
   padding=$(( ($width - ${#exit_msg1}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg1" $padding ''
+  sleep 0.2
   padding=$(( ($width - ${#exit_msg2}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg2" $padding ''
+  sleep 0.2
   padding=$(( ($width - ${#exit_msg3}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg3" $padding ''
+  sleep 0.2
+  echo
   padding=$(( ($width - ${#exit_msg4}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg4" $padding ''
+  sleep 0.2
   padding=$(( ($width - ${#exit_msg5}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg5" $padding ''
+  sleep 0.2
   padding=$(( ($width - ${#exit_msg6}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg6" $padding ''
-
-
-
   echo
+
   sleep 1
+
+
+
+# show cursor
+  tput rc ; tput cnorm
+
+  clear && printf '\e[3J'
+
+
+
   exit 1
 }
-
-
-
 #------------------------------------------------------------------------------------------------------- ssh
 # back
 fn_menu_ssh_0(){
@@ -651,7 +677,7 @@ fn_menu_ssh_1(){
 #  view_existing_settings
   hit_enter
 }
-#------------------------------------------------------------------------------------------------------- ssh
+#------------------------------------------------------------------------------------------------------- cloudflare
 # back
 fn_menu_cloudflare_0(){
   menu_handler "menu"
@@ -684,7 +710,7 @@ fn_menu_block_ir_websites_2(){
   if [[ ${unyn} == [Yy] ]]; then
 
     while true; do
-        bluebold "Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): "
+        bluebold "Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling)"
         read -e -p $'\033[38;5;250mIP Address: \033[0m' irsrv_ip_address
         [[ -z ${irsrv_ip_address} ]] && irsrv_ip_address=""
 
@@ -739,25 +765,20 @@ echo -ne '\e]10;#a9a9a9\e\\'
 # set terminal default background color
 echo -ne '\e]11;#0a121e\e\\'
 
-echo -ne '\e]10;\e\\'
+#echo -ne '\e]10;\e\\'
+
 prereqs
 load_iranips
 load_arvancloud_ips
 
 # get wepn_group logo
-wget -q https://raw.githubusercontent.com/elemen3/scripts/master/asset/wepn-logo-small.txt -O /tmp/wepn-logo-small.txt
-#----------------------------------------------------------------------------------------------------------------------- RUN
+wget -q https://raw.githubusercontent.com/elemen3/scripts/master/asset/wepn-logo-ascii.txt -O /tmp/wepn-logo-ascii.txt
 # hide cursor
 tput sc ; tput civis
 
-
-
+# Set up the trap to call the exit function when the script is interrupted
+trap fn_menu_4 INT
+#----------------------------------------------------------------------------------------------------------------------- RUN
 show_headers
 menu_handler "menu"
 
-
-# show cursor
-tput rc ; tput cnorm
-
-clear
-exit 1
