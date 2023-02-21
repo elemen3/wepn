@@ -163,7 +163,7 @@ install_script(){
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- settings
-cat "$HOME/.wepn/settings" | grep version=
+cat "$HOME/.wepn/settings" | grep version
 echo $latest_version
 
 exit 1
