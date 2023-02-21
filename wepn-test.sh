@@ -87,7 +87,7 @@ install(){
   bluebold "Installing script..."
   #todo check for updates
   if ! test -f "/usr/local/bin/wepn"; then
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn #todo change to wpn.sh
       chmod +x /usr/local/bin/wepn
   else
     installed=true
