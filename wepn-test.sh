@@ -163,6 +163,7 @@ install_wepn(){
   # not installed
   if ! test -f "/usr/local/bin/wepn"; then
       blue "Installing WePN..."
+      sleep 0.5
       curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
       chmod +x /usr/local/bin/wepn
 
@@ -188,6 +189,7 @@ install_wepn(){
 
       echo $(blue "You are running the outdated version (")$(redbold "$installed_version")$(blue ")!")
       echo $(blue "Installing the new version (")$(greenbold "$latest_version")$(blue ")...")
+      sleep 0.5
 
       curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
       chmod +x /usr/local/bin/wepn
@@ -212,6 +214,7 @@ install_wget_and_curl(){
     if ! command -v curl &> /dev/null
     then
         blue "Installing curl..."
+        sleep 0.5
 
         # Install curl using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
         if [ -x "$(command -v apt)" ]; then
@@ -232,6 +235,7 @@ install_wget_and_curl(){
     if ! command -v wget &> /dev/null
     then
         blue "Installing wget..."
+        sleep 0.5
 
         # Install wget using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
         if [ -x "$(command -v apt)" ]; then
@@ -257,6 +261,7 @@ install_required_packages(){
   if ! command -v iptables-save &> /dev/null
   then
       blue "Installing iptables..."
+      sleep 0.5
 
       # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -305,6 +310,7 @@ install_required_packages(){
 load_iranips(){
   #normal "Loading the most up-to-date IP addresses..."
   blue "Loading Iran IP ranges..."
+  sleep 0.5
 
   # URL of the text file to read
   url="https://raw.githubusercontent.com/elemen3/wepn/master/iran_ip_ranges.txt"
@@ -321,6 +327,7 @@ load_iranips(){
 load_arvancloud_ips(){
 
   blue "Loading Arvancloud IP ranges..."
+  sleep 0.5
 
   # URL of the text file to read
     url="https://www.arvancloud.ir/fa/ips.txt"
