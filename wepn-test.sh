@@ -23,27 +23,9 @@
 
 # DESCRIPTION: Master Script for VPN Admins
 # AUTHOR: macromicro
-# TELEGRAM: @wepn_group
-# VERSION: 0.0.1
-
-#todo git repo for WePN with docs and WiKi
-#todo save wepn command /usr/local/bin
-#todo add version
-#todo script updater
-#todo add left and right arrow keys -> go to first and last item in menu
-#todo make menu navigation faster -> eccho separator to a var?
-#todo menu back auto add function
-#todo add path header for the menu (root > ssh -> ...)
-#todo Q key to exit
-#todo on android termius un-selected menu items are not rendering properly (cut in half)
-#todo check root
-#todo installing iptables-save stucks in ubuntu
-#todo /etc/iptables/rules.v4 no such file or directory -> looks like iptables-persist cannot be installed
-#todo menu fast navigation sometimes prints [[A like chars
-#todo check OS (debian 10, centos, ...) and warn for not-tested OSes
-#todo check ufw
-#todo generic package installer using array of package names
+# TELEGRAM GROUP: @wepn_group
 #----------------------------------------------------------------------------------------------------------------------- vars
+version="23.02.21.053014"
 width=64
 
 declare -a iranips
@@ -52,6 +34,17 @@ declare -a arvancloud_ips
 global_menu_size=0
 selected_menu=""
 selected_menu_item=""
+
+
+#----------------------------------------------------------------------------------------------------------------------- settings
+mkdir -p "$HOME/.wepn"
+
+# Check if the ~/.wepn/settings file exists
+if [ ! -f "$HOME/.wepn/settings" ]; then
+  # Create the file if it doesn't exist and add default values
+  echo "version=$version" >> "$HOME/.wepn/settings"
+fi
+#sed -i 's/version=.*/version=123/' ~/.wepn/settings
 #----------------------------------------------------------------------------------------------------------------------- break_string
 function break_string() {
   local str="$1"
