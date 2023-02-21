@@ -32,16 +32,16 @@ get_datetime_of_file_on_github(){
 
   # Set the branch name and file path
   BRANCH_NAME="master"
-  FILE_PATH="wepn.sh"
+  FILE_PATH="wepn-test.sh" #todo change to wepn.sh
 
   # Get the timestamp of the last commit for the file
   TIMESTAMP=$(curl -s "https://api.github.com/repos/${USERNAME}/${REPO_NAME}/commits?path=${FILE_PATH}&sha=${BRANCH_NAME}&per_page=1" | grep -oE "\"date\": \"[^\"]+\"" | cut -d'"' -f4 | head -n1)
 
 
   if [[ "$(uname)" == "Darwin" ]]; then
-    FORMATTED_DATETIME=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "2023-02-21T05:30:14Z" "+%y.%m.%d.%H%M%S")
+    FORMATTED_DATETIME=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$TIMESTAMP" "+%Y.%m.%d.%H%M%S")
   else
-    date -u -d "2023-02-21T05:30:14Z" "+%y.%m.%d.%H%M%S"
+    date -u -d "$TIMESTAMP" "+%Y.%m.%d.%H%M%S"
   fi
 
   echo "${FORMATTED_DATETIME}"
