@@ -24,40 +24,19 @@
 # DESCRIPTION: Master Script for VPN Admins
 # AUTHOR: macromicro
 # TELEGRAM GROUP: @wepn_group
-#----------------------------------------------------------------------------------------------------------------------- get latest version number
-get_datetime_of_file_on_github(){
-  # Set the username and repository name
-  USERNAME="elemen3"
-  REPO_NAME="wepn"
 
-  # Set the branch name and file path
-  BRANCH_NAME="master"
-  FILE_PATH="wepn-test.sh" #todo change to wepn.sh
-
-  # Get the timestamp of the last commit for the file
-  TIMESTAMP=$(curl -s "https://api.github.com/repos/${USERNAME}/${REPO_NAME}/commits?path=${FILE_PATH}&sha=${BRANCH_NAME}&per_page=1" | grep -oE "\"date\": \"[^\"]+\"" | cut -d'"' -f4 | head -n1)
-
-
-  if [[ "$(uname)" == "Darwin" ]]; then
-    FORMATTED_DATETIME=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$TIMESTAMP" "+%Y.%m.%d.%H%M%S")
-  else
-    date -u -d "$TIMESTAMP" "+%Y.%m.%d.%H%M%S"
-  fi
-
-  echo "${FORMATTED_DATETIME}"
-}
 #----------------------------------------------------------------------------------------------------------------------- vars
-latest_version=$(get_datetime_of_file_on_github)
+installed_version=""
+latest_version=""
 
 running_url=false
 running_installed=false
 running_locally=false
-installed=false
 
 width=64
 
-declare -a iranips
-declare -a arvancloud_ips
+iranips=()
+arvancloud_ips=()
 
 global_menu_size=0
 selected_menu=""
@@ -137,12 +116,12 @@ redbg(){
   broken_text=$(break_string "$1")
   echo -e "\033[41m\033[30m$broken_text\033[0m"
 }
-#----------------------------------------------------------------------------------------------------------------------- run mode
+#----------------------------------------------------------------------------------------------------------------------- set run mode
 set_run_mode(){
   if [[ "$0" == /dev* ]]; then
     running_url=true
   #  echo "The script is being executed from a URL"
-  elif [[ "$0" == "$HOME/.wepn/wepn.sh" ]]; then
+  elif [[ "$0" == "/usr/local/bin/wepn" ]]; then
     running_installed=true
   #  echo "The script is being executed locally"
   else
@@ -150,36 +129,161 @@ set_run_mode(){
   #  echo "The script is being executed locally but not .wpn dir"
   fi
 }
-set_run_mode
-#----------------------------------------------------------------------------------------------------------------------- install script
-install_script(){
-  bluebold "Installing script..."
-  #todo check for updates
+#----------------------------------------------------------------------------------------------------------------------- get latest version number
+get_latest_version_number(){
+  # Set the username and repository name
+  USERNAME="elemen3"
+  REPO_NAME="wepn"
+
+  # Set the branch name and file path
+  BRANCH_NAME="master"
+  FILE_PATH="wepn-test.sh" #todo change to wepn.sh
+
+  # Get the timestamp of the last commit for the file
+  TIMESTAMP=$(curl -s "https://api.github.com/repos/${USERNAME}/${REPO_NAME}/commits?path=${FILE_PATH}&sha=${BRANCH_NAME}&per_page=1" | grep -oE "\"date\": \"[^\"]+\"" | cut -d'"' -f4 | head -n1)
+
+
+  if [[ "$(uname)" == "Darwin" ]]; then
+    FORMATTED_DATETIME=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$TIMESTAMP" "+%Y.%m.%d.%H%M%S")
+  else
+    date -u -d "$TIMESTAMP" "+%Y.%m.%d.%H%M%S"
+  fi
+
+  echo "$FORMATTED_DATETIME"
+}
+#----------------------------------------------------------------------------------------------------------------------- install wepn
+install_wepn(){
+
+  mkdir -p "$HOME/.wepn"
+  touch "$HOME/.wepn/settings"
+  echo $running_installed
+
+  # not installed
   if ! test -f "/usr/local/bin/wepn"; then
+      bluebold "Installing WePN..."
       curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn #todo change to wpn.sh
       chmod +x /usr/local/bin/wepn
-  else
-    installed=true
+
+      latest_version="$(get_latest_version_number)"
+      echo "version=$latest_version" > "$HOME/.wepn/settings"
+
+  # already installed and running via wepn cmd
+  elif $running_installed ; then
+
+    bluebold "Checking for updates..."
+    exit 1
+    installed_version=$(cat "$HOME/.wepn/settings" | grep version | awk '{split($0,a,"="); print a[2]}')
+    latest_version="$(get_latest_version_number)"
+
+    echo $installed_version
+    echo $latest_version
+
+    # if different -> re-install
+
+    exit 1
+
+    sed -i "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings"
+  fi
+
+  exit 1
+}
+#----------------------------------------------------------------------------------------------------------------------- install wget and curl first
+install_wget_and_curl(){
+
+  echo "nameserver 1.1.1.1" > /etc/resolv.conf
+
+    # Check if curl is installed
+    if ! command -v curl &> /dev/null
+    then
+        bluebold "Installing curl..."
+
+        # Install curl using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
+        if [ -x "$(command -v apt)" ]; then
+            apt update &> /dev/null
+            apt install curl -y &> /dev/null
+        # Install curl using yum on CentOS 8
+        elif [ -x "$(command -v yum)" ]; then
+            yum update -y >/dev/null 2>&1
+            yum install curl -y >/dev/null 2>&1
+        else
+            redbold "Unsupported distribution. Exiting..."
+            fn_menu_4
+        fi
+
+    fi
+
+    # Check if wget is installed
+    if ! command -v wget &> /dev/null
+    then
+        bluebold "Installing wget..."
+
+        # Install wget using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
+        if [ -x "$(command -v apt)" ]; then
+            apt update &> /dev/null
+            apt install wget -y &> /dev/null
+        # Install wget using yum on CentOS 8
+        elif [ -x "$(command -v yum)" ]; then
+            yum update -y >/dev/null 2>&1
+            yum install wget -y >/dev/null 2>&1
+        else
+            redbold "Unsupported distribution. Exiting..."
+            fn_menu_4
+        fi
+
+    fi
+}
+#----------------------------------------------------------------------------------------------------------------------- install required packages
+install_required_packages(){
+
+  echo "nameserver 1.1.1.1" > /etc/resolv.conf
+
+  # Check if iptables-save is installed
+  if ! command -v iptables-save &> /dev/null
+  then
+      bluebold "Installing iptables..."
+
+      # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
+      if [ -x "$(command -v apt)" ]; then
+          apt update &> /dev/null
+          apt install iptables -y &> /dev/null
+      # Install iptables using yum on CentOS 8
+      elif [ -x "$(command -v yum)" ]; then
+          yum update -y >/dev/null 2>&1
+          yum install iptables -y >/dev/null 2>&1
+      else
+          redbold "Unsupported distribution. Exiting..."
+          fn_menu_4
+      fi
+
+  fi
+
+  # Check if iptables-persistent is installed
+  if ! (dpkg -s iptables-persistent >/dev/null 2>&1 || rpm -q iptables-services >/dev/null 2>&1);
+  then
+      bluebold "Installing iptables-persistent..."
+
+      # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
+      if [ -x "$(command -v apt)" ]; then
+          apt update &> /dev/null
+          echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
+          echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
+          apt install iptables-persistent -y &> /dev/null
+      # Install iptables-persistent using yum on CentOS 8
+      elif [ -x "$(command -v yum)" ]; then
+          yum update -y >/dev/null 2>&1
+          echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | sudo debconf-set-selections
+          echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | sudo debconf-set-selections
+          yum install iptables-persistent -y >/dev/null 2>&1
+      else
+          redbold "Unsupported distribution. Exiting..."
+          fn_menu_4
+      fi
+
   fi
 }
-#----------------------------------------------------------------------------------------------------------------------- settings
-cat "$HOME/.wepn/settings" | grep version
-echo $latest_version
-
-exit 1
-
-
-
-mkdir -p "$HOME/.wepn"
-
-if [ ! -f "$HOME/.wepn/settings" ]; then
-  echo "version=$latest_version" >> "$HOME/.wepn/settings"
-else
-  sed -i "s/version=.*/version=$latest_version/" ~/.wepn/settings
-fi
 #----------------------------------------------------------------------------------------------------------------------- load required data
 load_iranips(){
-
+  #normal "Loading the most up-to-date IP addresses..."
   bluebold "Loading Iran IP ranges..."
 
   # URL of the text file to read
@@ -194,7 +298,6 @@ load_iranips(){
     fi
   done < <(curl -s "$url")
 }
-#normal "Loading the most up-to-date IP addresses..."
 load_arvancloud_ips(){
 
   bluebold "Loading Arvancloud IP ranges..."
@@ -241,77 +344,6 @@ load_arvancloud_ips(){
     fi
 
 }
-#----------------------------------------------------------------------------------------------------------------------- install required packages
-install_required_packages(){
-
-  echo "nameserver 1.1.1.1" > /etc/resolv.conf
-
-  # Check if wget is installed
-  if ! command -v wget &> /dev/null
-  then
-      bluebold "Installing wget..."
-
-      # Install wget using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
-      if [ -x "$(command -v apt)" ]; then
-          apt update &> /dev/null
-          apt install_script wget -y &> /dev/null
-      # Install wget using yum on CentOS 8
-      elif [ -x "$(command -v yum)" ]; then
-          yum update -y >/dev/null 2>&1
-          yum install_script wget -y >/dev/null 2>&1
-      else
-          redbold "Unsupported distribution. Exiting..."
-          fn_menu_4
-      fi
-
-  fi
-
-
-  # Check if iptables-save is installed
-  if ! command -v iptables-save &> /dev/null
-  then
-      bluebold "Installing iptables..."
-
-      # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
-      if [ -x "$(command -v apt)" ]; then
-          apt update &> /dev/null
-          apt install_script iptables -y &> /dev/null
-      # Install iptables using yum on CentOS 8
-      elif [ -x "$(command -v yum)" ]; then
-          yum update -y >/dev/null 2>&1
-          yum install_script iptables -y >/dev/null 2>&1
-      else
-          redbold "Unsupported distribution. Exiting..."
-          fn_menu_4
-      fi
-
-  fi
-
-  # Check if iptables-persistent is installed
-  if ! (dpkg -s iptables-persistent >/dev/null 2>&1 || rpm -q iptables-services >/dev/null 2>&1);
-  then
-      bluebold "Installing iptables-persistent..."
-
-      # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
-      if [ -x "$(command -v apt)" ]; then
-          apt update &> /dev/null
-          echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
-          echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
-          apt install_script iptables-persistent -y &> /dev/null
-      # Install iptables-persistent using yum on CentOS 8
-      elif [ -x "$(command -v yum)" ]; then
-          yum update -y >/dev/null 2>&1
-          echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | sudo debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | sudo debconf-set-selections
-          yum install_script iptables-persistent -y >/dev/null 2>&1
-      else
-          redbold "Unsupported distribution. Exiting..."
-          fn_menu_4
-      fi
-
-  fi
-
-}
 #----------------------------------------------------------------------------------------------------------------------- progressbar
 # normal
 _show_progress() {
@@ -325,7 +357,6 @@ _show_progress() {
     printf "[%s%s] %d%%" "$bar" "$restbar" $((current * 100 / total))
     printf "\r"
 }
-
 # blue bold
 show_progress() {
     local current=$1
@@ -370,16 +401,19 @@ show_headers(){
 
   #logo
   if [ ! -f "$HOME/.wepn/logo" ]; then
+    mkdir -p "$HOME/.wepn"
     wget -q https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt -O "$HOME/.wepn/logo"
   fi
+
   cat "$HOME/.wepn/logo"
 
   #header
   seperator
   echo -e "\e[1;37;48;5;21m                                                                \e[0m"
   echo -e "\e[1;37;48;5;20m                    [ WePN MASTER SCRIPT ]                      \e[0m"
+#  echo -e "\e[1;37;48;5;20m                 Version: $installed_version                      \e[0m" todo
   echo -e "\e[1;37;48;5;19m                      Author: macromicro                        \e[0m"
-  echo -e "\e[1;37;48;5;18m                 Telegram Group: @wepn_group                    \e[0m"
+  echo -e "\e[1;37;48;5;18m                    Telegram: @wepn_group                       \e[0m"
   echo -e "\e[1;37;48;5;17m                                                                \e[0m"
   seperator
 }
@@ -838,16 +872,15 @@ fn_menu_block_ir_websites_5(){
   save_rules
   hit_enter
 }
-
 #----------------------------------------------------------------------------------------------------------------------- prepare
 prepare_screen
+install_wget_and_curl
 show_headers
-install_script
+set_run_mode
 install_required_packages
+install_wepn
 load_iranips
 load_arvancloud_ips
-
-
 #----------------------------------------------------------------------------------------------------------------------- RUN
 #show_headers
 #menu_handler "menu"
