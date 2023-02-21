@@ -26,6 +26,7 @@
 # TELEGRAM GROUP: @wepn_group
 
 #----------------------------------------------------------------------------------------------------------------------- vars
+main_script_file="wepn-test.sh"
 installed_version=""
 latest_version=""
 
@@ -137,7 +138,7 @@ get_latest_version_number(){
 
   # Set the branch name and file path
   BRANCH_NAME="master"
-  FILE_PATH="wepn-test.sh" #todo change to wepn.sh
+  FILE_PATH="$main_script_file"
 
   # Get the timestamp of the last commit for the file
   TIMESTAMP=$(curl -s "https://api.github.com/repos/${USERNAME}/${REPO_NAME}/commits?path=${FILE_PATH}&sha=${BRANCH_NAME}&per_page=1" | grep -oE "\"date\": \"[^\"]+\"" | cut -d'"' -f4 | head -n1)
@@ -162,15 +163,22 @@ install_wepn(){
   # not installed
   if ! test -f "/usr/local/bin/wepn"; then
       blue "Installing WePN..."
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn #todo change to wpn.sh
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
       chmod +x /usr/local/bin/wepn
 
       latest_version="$(get_latest_version_number)"
       echo "version=$latest_version" > "$HOME/.wepn/settings"
 
+      echo
+      blue "WePN is installed on your system."
+      echo $(blue "From now on, simply issue") $(greenbold "wepn") $(blue " command to run the script.")
+      echo
+
+      bluebold "Press Enter to continue..."
+      read -p ""
+
   # already installed and running via wepn cmd
-#  elif $running_installed ; then
-  elif true ; then
+  elif $running_installed ; then
 
     blue "Checking for updates..."
     installed_version=$(cat "$HOME/.wepn/settings" | grep version | awk '{split($0,a,"="); print a[2]}')
@@ -181,7 +189,7 @@ install_wepn(){
       echo $(blue "You are running the outdated version (")$(redbold "$installed_version")$(blue ")!")
       echo $(blue "Installing the new version (")$(greenbold "$latest_version")$(blue ")...")
 
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn #todo change to wpn.sh
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
       chmod +x /usr/local/bin/wepn
 
       latest_version="$(get_latest_version_number)"
@@ -425,9 +433,8 @@ show_headers(){
   seperator
   echo -e "\e[1;37;48;5;21m                                                                \e[0m"
   echo -e "\e[1;37;48;5;20m                    [ WePN MASTER SCRIPT ]                      \e[0m"
-#  echo -e "\e[1;37;48;5;20m                 Version: $installed_version                      \e[0m" todo
   echo -e "\e[1;37;48;5;19m                      Author: macromicro                        \e[0m"
-  echo -e "\e[1;37;48;5;18m                    Telegram: @wepn_group                       \e[0m"
+  echo -e "\e[1;37;48;5;18m                 Telegram Group: @wepn_group                    \e[0m"
   echo -e "\e[1;37;48;5;17m                                                                \e[0m"
   seperator
 }
