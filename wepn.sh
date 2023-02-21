@@ -131,7 +131,7 @@ redbg(){
 #----------------------------------------------------------------------------------------------------------------------- load required data
 load_iranips(){
   # URL of the text file to read
-  url="https://raw.githubusercontent.com/elemen3/scripts/master/iran_ip_ranges.txt"
+  url="https://raw.githubusercontent.com/elemen3/wepn/master/iran_ip_ranges.txt"
 
   # Read the file from the URL line by line
   while read -r line; do
@@ -772,7 +772,7 @@ load_iranips
 load_arvancloud_ips
 
 # get wepn_group logo
-wget -q https://raw.githubusercontent.com/elemen3/scripts/master/asset/wepn-logo-ascii.txt -O /tmp/wepn-logo-ascii.txt
+wget -q https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt -O /tmp/wepn-logo-ascii.txt
 # hide cursor
 tput sc ; tput civis
 
