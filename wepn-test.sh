@@ -174,14 +174,19 @@ install_wepn(){
     installed_version=$(cat "$HOME/.wepn/settings" | grep version | awk '{split($0,a,"="); print a[2]}')
     latest_version="$(get_latest_version_number)"
 
-    echo $installed_version
-    echo $latest_version
 
     if [ "$installed_version" != "$latest_version" ]; then
+
       echo $(blue "You are running the outdated version (")$(redbold "$installed_version")$(blue ")!")
       echo $(blue "Installing the new version (")$(greenbold "$latest_version")$(blue ")...")
+
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn #todo change to wpn.sh
+      chmod +x /usr/local/bin/wepn
+
+      latest_version="$(get_latest_version_number)"
+      sed -i.bak "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings" && rm "$HOME/.wepn/settings.bak"
+
       exit 1
-#      sed -i "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings"
     else
       bluebold "WePN is UP-TO-DATE."
     fi
