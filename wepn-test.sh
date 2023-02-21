@@ -142,7 +142,6 @@ get_latest_version_number(){
   # Get the timestamp of the last commit for the file
   TIMESTAMP=$(curl -s "https://api.github.com/repos/${USERNAME}/${REPO_NAME}/commits?path=${FILE_PATH}&sha=${BRANCH_NAME}&per_page=1" | grep -oE "\"date\": \"[^\"]+\"" | cut -d'"' -f4 | head -n1)
 
-
   if [[ "$(uname)" == "Darwin" ]]; then
     FORMATTED_DATETIME=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$TIMESTAMP" "+%Y.%m.%d.%H%M%S")
   else
@@ -151,6 +150,7 @@ get_latest_version_number(){
 
   echo "$FORMATTED_DATETIME"
 }
+get_latest_version_number
 #----------------------------------------------------------------------------------------------------------------------- install wepn
 install_wepn(){
 
