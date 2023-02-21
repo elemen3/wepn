@@ -142,10 +142,13 @@ get_latest_version_number(){
   # Get the timestamp of the last commit for the file
   TIMESTAMP=$(curl -s "https://api.github.com/repos/${USERNAME}/${REPO_NAME}/commits?path=${FILE_PATH}&sha=${BRANCH_NAME}&per_page=1" | grep -oE "\"date\": \"[^\"]+\"" | cut -d'"' -f4 | head -n1)
 
-  if [[ "$(uname)" == "Darwin" ]]; then
-    FORMATTED_DATETIME=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$TIMESTAMP" "+%Y.%m.%d.%H%M%S")
-  else
-    date -u -d "$TIMESTAMP" "+%Y.%m.%d.%H%M%S"
+  if [ -n "$TIMESTAMP" ]; then
+
+    if [[ "$(uname)" == "Darwin" ]]; then
+      FORMATTED_DATETIME=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$TIMESTAMP" "+%Y.%m.%d.%H%M%S")
+    else
+      date -u -d "$TIMESTAMP" "+%Y.%m.%d.%H%M%S"
+    fi
   fi
 
   echo "$FORMATTED_DATETIME"
@@ -173,8 +176,7 @@ install_wepn(){
     installed_version=$(cat "$HOME/.wepn/settings" | grep version | awk '{split($0,a,"="); print a[2]}')
     latest_version="$(get_latest_version_number)"
 
-
-    if [ "$installed_version" != "$latest_version" ]; then
+    if [ -n "$latest_version" && -n "$installed_version" && "$installed_version" != "$latest_version" ]; then
 
       echo $(blue "You are running the outdated version (")$(redbold "$installed_version")$(blue ")!")
       echo $(blue "Installing the new version (")$(greenbold "$latest_version")$(blue ")...")
@@ -508,7 +510,7 @@ block_all(){
 }
 
 clear_rules(){
-  normal "Cleaning up..."
+  blue "Cleaning up..."
 
   index=0
   # for (( i=0; i<${#iranips[@]}; i++ ))
@@ -554,7 +556,7 @@ save_rules(){
 hit_enter(){
   selected_menu_index=0
   echo
-  blue "Press Enter to continue..."
+  bluebold "Press Enter to continue..."
   echo
   read -p ""
   clear
@@ -833,9 +835,6 @@ fn_menu_block_ir_websites_1(){
 
 # block_ir_websites > block all
 fn_menu_block_ir_websites_2(){
-#  bluebold "Are you absolutely sure you want to block outgoing traffic from your server to Iranian websites? [y/N]"
-#  read -e -p $(blue "(default:n):") unyn
-#  [[ -z ${unyn} ]] && unyn="n"
 
   show_cursor
   read -p "$(bluebold "Are you absolutely sure you want to block outgoing traffic from your server to Iranian websites? [y/N]: ")" response
@@ -852,11 +851,11 @@ fn_menu_block_ir_websites_2(){
 
         if [ -z "$response" ]; then
           # no tunneling
-            normal "Blocking all..."
+            blue "Blocking all..."
             block_all
             break
         elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            normal "Blocking all excluding your Iranian server..."
+            blue "Blocking all excluding your Iranian server..."
             block_all
             # exclude irsrv ip addr
             iptables -A OUTPUT -d $response -p tcp --dport 443 -j ACCEPT
