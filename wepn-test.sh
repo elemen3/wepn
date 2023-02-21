@@ -25,7 +25,6 @@
 # AUTHOR: macromicro
 # TELEGRAM GROUP: @wepn_group
 #----------------------------------------------------------------------------------------------------------------------- version
-#----------------------------------------------------------------------------------------------------------------------- get file last modified datetime
 get_datetime_of_file_on_github(){
   # Set the username and repository name
   USERNAME="elemen3"
@@ -82,6 +81,18 @@ set_run_mode
 echo $running_url
 echo $running_installed
 echo $running_locally
+
+#----------------------------------------------------------------------------------------------------------------------- install
+install(){
+  bluebold "Installing script..."
+  #todo check for updates
+  if ! test -f "/usr/local/bin/wepn"; then
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn
+      chmod +x /usr/local/bin/wepn
+  else
+    installed=true
+  fi
+}
 #----------------------------------------------------------------------------------------------------------------------- settings
 mkdir -p "$HOME/.wepn"
 
@@ -93,8 +104,7 @@ fi
 
 echo $version
 
-
-exit 1
+#exit 1
 #----------------------------------------------------------------------------------------------------------------------- break_string
 function break_string() {
   local str="$1"
@@ -173,6 +183,9 @@ redbg(){
 }
 #----------------------------------------------------------------------------------------------------------------------- load required data
 load_iranips(){
+
+  bluebold "Loading Iran IP ranges..."
+
   # URL of the text file to read
   url="https://raw.githubusercontent.com/elemen3/wepn/master/iran_ip_ranges.txt"
 
@@ -187,6 +200,9 @@ load_iranips(){
 }
 #normal "Loading the most up-to-date IP addresses..."
 load_arvancloud_ips(){
+
+  bluebold "Loading Arvancloud IP ranges..."
+
   # URL of the text file to read
     url="https://www.arvancloud.ir/fa/ips.txt"
 
@@ -237,7 +253,7 @@ prereqs(){
   # Check if wget is installed
   if ! command -v wget &> /dev/null
   then
-      normal "Installing wget..."
+      bluebold "Installing wget..."
 
       # Install wget using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -249,6 +265,7 @@ prereqs(){
           yum install wget -y >/dev/null 2>&1
       else
           redbold "Unsupported distribution. Exiting..."
+          fn_menu_4
       fi
 
   fi
@@ -257,7 +274,7 @@ prereqs(){
   # Check if iptables-save is installed
   if ! command -v iptables-save &> /dev/null
   then
-      normal "Installing iptables..."
+      bluebold "Installing iptables..."
 
       # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -269,6 +286,7 @@ prereqs(){
           yum install iptables -y >/dev/null 2>&1
       else
           redbold "Unsupported distribution. Exiting..."
+          fn_menu_4
       fi
 
   fi
@@ -276,7 +294,7 @@ prereqs(){
   # Check if iptables-persistent is installed
   if ! (dpkg -s iptables-persistent >/dev/null 2>&1 || rpm -q iptables-services >/dev/null 2>&1);
   then
-      normal "Installing iptables-persistent..."
+      bluebold "Installing iptables-persistent..."
 
       # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -292,6 +310,7 @@ prereqs(){
           yum install iptables-persistent -y >/dev/null 2>&1
       else
           redbold "Unsupported distribution. Exiting..."
+          fn_menu_4
       fi
 
   fi
@@ -810,6 +829,8 @@ echo -ne '\e]11;#0a121e\e\\'
 
 #echo -ne '\e]10;\e\\'
 
+show_headers
+install
 prereqs
 load_iranips
 load_arvancloud_ips
@@ -822,6 +843,6 @@ tput sc ; tput civis
 # Set up the trap to call the exit function when the script is interrupted
 trap fn_menu_4 INT
 #----------------------------------------------------------------------------------------------------------------------- RUN
-show_headers
-menu_handler "menu"
-
+#show_headers
+#menu_handler "menu"
+#sleep 3
