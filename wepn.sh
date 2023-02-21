@@ -25,24 +25,6 @@
 # AUTHOR: macromicro
 # TELEGRAM: @wepn_group
 # VERSION: 0.0.1
-
-#todo git repo for WePN with docs and WiKi
-#todo save wepn command /usr/local/bin
-#todo add version
-#todo script updater
-#todo add left and right arrow keys -> go to first and last item in menu
-#todo make menu navigation faster -> eccho separator to a var?
-#todo menu back auto add function
-#todo add path header for the menu (root > ssh -> ...)
-#todo Q key to exit
-#todo on android termius un-selected menu items are not rendering properly (cut in half)
-#todo check root
-#todo installing iptables-save stucks in ubuntu
-#todo /etc/iptables/rules.v4 no such file or directory -> looks like iptables-persist cannot be installed
-#todo menu fast navigation sometimes prints [[A like chars
-#todo check OS (debian 10, centos, ...) and warn for not-tested OSes
-#todo check ufw
-#todo generic package installer using array of package names
 #----------------------------------------------------------------------------------------------------------------------- vars
 width=64
 
@@ -60,20 +42,20 @@ function break_string() {
 
   for ((i=0; i<${#words[@]}; i++)); do
     if (( ${#line} + ${#words[i]} + 1 <= $width )); then
-      # Add the next word to the current line.
+      # add the next word to the current line.
       if [[ -z "$line" ]]; then
         line="${words[i]}"
       else
         line="$line ${words[i]}"
       fi
     else
-      # Output the current line and start a new one.
+      # output the current line and start a new one.
       echo "${line}"
       line="${words[i]}"
     fi
   done
 
-  # Output the final line, if there is one.
+  # output the final line, if there is one.
   if [[ -n "$line" ]]; then
     echo "${line}"
   fi

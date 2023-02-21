@@ -60,20 +60,20 @@ function break_string() {
 
   for ((i=0; i<${#words[@]}; i++)); do
     if (( ${#line} + ${#words[i]} + 1 <= $width )); then
-      # Add the next word to the current line.
+      # add the next word to the current line.
       if [[ -z "$line" ]]; then
         line="${words[i]}"
       else
         line="$line ${words[i]}"
       fi
     else
-      # Output the current line and start a new one.
+      # output the current line and start a new one.
       echo "${line}"
       line="${words[i]}"
     fi
   done
 
-  # Output the final line, if there is one.
+  # output the final line, if there is one.
   if [[ -n "$line" ]]; then
     echo "${line}"
   fi
