@@ -24,17 +24,8 @@
 # DESCRIPTION: Master Script for VPN Admins
 # AUTHOR: macromicro
 # TELEGRAM GROUP: @wepn_group
-#----------------------------------------------------------------------------------------------------------------------- vars
-version="23.02.21.053014"
-width=64
-
-declare -a iranips
-declare -a arvancloud_ips
-
-global_menu_size=0
-selected_menu=""
-selected_menu_item=""
 #----------------------------------------------------------------------------------------------------------------------- version
+#----------------------------------------------------------------------------------------------------------------------- get file last modified datetime
 get_datetime_of_file_on_github(){
   # Set the username and repository name
   USERNAME="elemen3"
@@ -56,19 +47,41 @@ get_datetime_of_file_on_github(){
 
   echo "${FORMATTED_DATETIME}"
 }
-
+#----------------------------------------------------------------------------------------------------------------------- vars
 version=$(get_datetime_of_file_on_github)
 
-echo $version
+running_url=false
+running_installed=false
+running_locally=false
+installed=false
 
-# Check if the script is being executed from a URL
-if [[ "$0" == /dev* ]]; then
-  echo "The script is being executed from a URL"
-else
-  echo "The script is being executed locally"
-fi
+width=64
 
-exit 1
+declare -a iranips
+declare -a arvancloud_ips
+
+global_menu_size=0
+selected_menu=""
+selected_menu_item=""
+#----------------------------------------------------------------------------------------------------------------------- run mode
+set_run_mode(){
+  if [[ "$0" == /dev* ]]; then
+    running_url=true
+  #  echo "The script is being executed from a URL"
+  elif [[ "$0" == "$HOME/.wepn/wepn.sh" ]]; then
+    running_installed=true
+  #  echo "The script is being executed locally"
+  else
+    running_locally=true
+  #  echo "The script is being executed locally but not .wpn dir"
+  fi
+}
+
+set_run_mode
+
+echo $running_url
+echo $running_installed
+echo $running_locally
 #----------------------------------------------------------------------------------------------------------------------- settings
 mkdir -p "$HOME/.wepn"
 
@@ -77,6 +90,10 @@ if [ ! -f "$HOME/.wepn/settings" ]; then
 else
   sed -i 's/version=.*/version=$version/' ~/.wepn/settings
 fi
+
+echo $version
+
+exit 1
 #----------------------------------------------------------------------------------------------------------------------- break_string
 function break_string() {
   local str="$1"
