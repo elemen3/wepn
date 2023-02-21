@@ -156,7 +156,6 @@ install_wepn(){
 
   mkdir -p "$HOME/.wepn"
   touch "$HOME/.wepn/settings"
-  echo $running_installed
 
   # not installed
   if ! test -f "/usr/local/bin/wepn"; then
@@ -168,24 +167,26 @@ install_wepn(){
       echo "version=$latest_version" > "$HOME/.wepn/settings"
 
   # already installed and running via wepn cmd
-  elif $running_installed ; then
+#  elif $running_installed ; then
+  elif true ; then
 
     bluebold "Checking for updates..."
-    exit 1
     installed_version=$(cat "$HOME/.wepn/settings" | grep version | awk '{split($0,a,"="); print a[2]}')
     latest_version="$(get_latest_version_number)"
 
     echo $installed_version
     echo $latest_version
 
-    # if different -> re-install
+    if [ "$installed_version" != "$latest_version" ]; then
+      echo $(blue "You are running the outdated version (")$(redbold "$installed_version")$(blue ")!")
+      echo $(blue "Installing the new version (")$(greenbold "$latest_version")$(blue ")...")
+      exit 1
+#      sed -i "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings"
+    else
+      bluebold "WePN is UP-TO-DATE."
+    fi
 
-    exit 1
-
-    sed -i "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings"
   fi
-
-  exit 1
 }
 #----------------------------------------------------------------------------------------------------------------------- install wget and curl first
 install_wget_and_curl(){
