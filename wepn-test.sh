@@ -62,7 +62,7 @@ version=$(get_datetime_of_file_on_github)
 echo $version
 
 # Check if the script is being executed from a URL
-if [[ "$0" == /dev/fd* ]]; then
+if [[ "$0" == /dev* ]]; then
   echo "The script is being executed from a URL"
 else
   echo "The script is being executed locally"
