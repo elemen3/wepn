@@ -1,7 +1,7 @@
 # WePN Master Script
 
 
-- [فارسی](README.fa.md)
+[فارسی](README.fa.md)
 
 
 ## Installation

@@ -3,7 +3,7 @@
 # WePN Master Script
 
 
-- [English](README.md)
+[English](README.md)
 
 
 ## نصب 
