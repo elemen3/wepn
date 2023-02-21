@@ -24,7 +24,7 @@
 # DESCRIPTION: Master Script for VPN Admins
 # AUTHOR: macromicro
 # TELEGRAM GROUP: @wepn_group
-#----------------------------------------------------------------------------------------------------------------------- version
+#----------------------------------------------------------------------------------------------------------------------- get latest version number
 get_datetime_of_file_on_github(){
   # Set the username and repository name
   USERNAME="elemen3"
@@ -47,7 +47,7 @@ get_datetime_of_file_on_github(){
   echo "${FORMATTED_DATETIME}"
 }
 #----------------------------------------------------------------------------------------------------------------------- vars
-version=$(get_datetime_of_file_on_github)
+latest_version=$(get_datetime_of_file_on_github)
 
 running_url=false
 running_installed=false
@@ -62,51 +62,8 @@ declare -a arvancloud_ips
 global_menu_size=0
 selected_menu=""
 selected_menu_item=""
-#----------------------------------------------------------------------------------------------------------------------- run mode
-set_run_mode(){
-  if [[ "$0" == /dev* ]]; then
-    running_url=true
-  #  echo "The script is being executed from a URL"
-  elif [[ "$0" == "$HOME/.wepn/wepn.sh" ]]; then
-    running_installed=true
-  #  echo "The script is being executed locally"
-  else
-    running_locally=true
-  #  echo "The script is being executed locally but not .wpn dir"
-  fi
-}
-
-set_run_mode
-
-echo $running_url
-echo $running_installed
-echo $running_locally
-
-#----------------------------------------------------------------------------------------------------------------------- install
-install(){
-  bluebold "Installing script..."
-  #todo check for updates
-  if ! test -f "/usr/local/bin/wepn"; then
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn #todo change to wpn.sh
-      chmod +x /usr/local/bin/wepn
-  else
-    installed=true
-  fi
-}
-#----------------------------------------------------------------------------------------------------------------------- settings
-mkdir -p "$HOME/.wepn"
-
-if [ ! -f "$HOME/.wepn/settings" ]; then
-  echo "version=$version" >> "$HOME/.wepn/settings"
-else
-  sed -i 's/version=.*/version=$version/' ~/.wepn/settings
-fi
-
-echo $version
-
-#exit 1
-#----------------------------------------------------------------------------------------------------------------------- break_string
-function break_string() {
+#----------------------------------------------------------------------------------------------------------------------- colors
+break_string() {
   local str="$1"
   local words=($str)
   local line=""
@@ -131,7 +88,7 @@ function break_string() {
     echo "${line}"
   fi
 }
-#----------------------------------------------------------------------------------------------------------------------- colors
+
 normal() {
   broken_text=$(break_string "$1")
   echo -e "\033[38;5;250m$broken_text\033[0m"
@@ -154,7 +111,6 @@ greenbg(){
   broken_text=$(break_string "$1")
   echo -e "\033[42m\033[30m$broken_text\033[0m";
 }
-
 
 blue(){
   broken_text=$(break_string "$1")
@@ -181,6 +137,46 @@ redbg(){
   broken_text=$(break_string "$1")
   echo -e "\033[41m\033[30m$broken_text\033[0m"
 }
+#----------------------------------------------------------------------------------------------------------------------- run mode
+set_run_mode(){
+  if [[ "$0" == /dev* ]]; then
+    running_url=true
+  #  echo "The script is being executed from a URL"
+  elif [[ "$0" == "$HOME/.wepn/wepn.sh" ]]; then
+    running_installed=true
+  #  echo "The script is being executed locally"
+  else
+    running_locally=true
+  #  echo "The script is being executed locally but not .wpn dir"
+  fi
+}
+set_run_mode
+#----------------------------------------------------------------------------------------------------------------------- install script
+install_script(){
+  bluebold "Installing script..."
+  #todo check for updates
+  if ! test -f "/usr/local/bin/wepn"; then
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh" -o /usr/local/bin/wepn #todo change to wpn.sh
+      chmod +x /usr/local/bin/wepn
+  else
+    installed=true
+  fi
+}
+#----------------------------------------------------------------------------------------------------------------------- settings
+cat "$HOME/.wepn/settings" | grep version=
+echo $latest_version
+
+exit 1
+
+
+
+mkdir -p "$HOME/.wepn"
+
+if [ ! -f "$HOME/.wepn/settings" ]; then
+  echo "version=$latest_version" >> "$HOME/.wepn/settings"
+else
+  sed -i "s/version=.*/version=$latest_version/" ~/.wepn/settings
+fi
 #----------------------------------------------------------------------------------------------------------------------- load required data
 load_iranips(){
 
@@ -246,7 +242,7 @@ load_arvancloud_ips(){
 
 }
 #----------------------------------------------------------------------------------------------------------------------- install required packages
-prereqs(){
+install_required_packages(){
 
   echo "nameserver 1.1.1.1" > /etc/resolv.conf
 
@@ -258,11 +254,11 @@ prereqs(){
       # Install wget using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
           apt update &> /dev/null
-          apt install wget -y &> /dev/null
+          apt install_script wget -y &> /dev/null
       # Install wget using yum on CentOS 8
       elif [ -x "$(command -v yum)" ]; then
           yum update -y >/dev/null 2>&1
-          yum install wget -y >/dev/null 2>&1
+          yum install_script wget -y >/dev/null 2>&1
       else
           redbold "Unsupported distribution. Exiting..."
           fn_menu_4
@@ -279,11 +275,11 @@ prereqs(){
       # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
           apt update &> /dev/null
-          apt install iptables -y &> /dev/null
+          apt install_script iptables -y &> /dev/null
       # Install iptables using yum on CentOS 8
       elif [ -x "$(command -v yum)" ]; then
           yum update -y >/dev/null 2>&1
-          yum install iptables -y >/dev/null 2>&1
+          yum install_script iptables -y >/dev/null 2>&1
       else
           redbold "Unsupported distribution. Exiting..."
           fn_menu_4
@@ -301,13 +297,13 @@ prereqs(){
           apt update &> /dev/null
           echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
           echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
-          apt install iptables-persistent -y &> /dev/null
+          apt install_script iptables-persistent -y &> /dev/null
       # Install iptables-persistent using yum on CentOS 8
       elif [ -x "$(command -v yum)" ]; then
           yum update -y >/dev/null 2>&1
           echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | sudo debconf-set-selections
           echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | sudo debconf-set-selections
-          yum install iptables-persistent -y >/dev/null 2>&1
+          yum install_script iptables-persistent -y >/dev/null 2>&1
       else
           redbold "Unsupported distribution. Exiting..."
           fn_menu_4
@@ -348,10 +344,37 @@ seperator(){
 #  normal "${separator// /-}"
   echo -e "\033[38;5;250m${separator// /-}\033[0m"
 }
+#----------------------------------------------------------------------------------------------------------------------- prepare screen
+prepare_screen(){
+
+  # get terminal default bg color
+  #default_bg_color=$(echo "rgb:0a0a/1212/1e1e" | sed 's/rgb:\(..\)\(..\)\(..\)\/\(..\)\(..\)\(..\)/\1\2\3/g' | xxd -r -p | xxd -p -u -l 3 | tr '[:upper:]' '[:lower:]')
+  #echo $default_bg_color
+
+  # set terminal default foreground color
+  echo -ne '\e]10;#a9a9a9\e\\'
+
+  # set terminal default background color
+  echo -ne '\e]11;#0a121e\e\\'
+  #echo -ne '\e]10;\e\\'
+
+  # hide cursor
+  tput sc ; tput civis
+
+  # Set up the trap to call the exit function when the script is interrupted
+  trap fn_menu_4 INT
+}
 #----------------------------------------------------------------------------------------------------------------------- show headers
 show_headers(){
   clear && printf '\e[3J'
-  cat /tmp/wepn-logo-ascii.txt
+
+  #logo
+  if [ ! -f "$HOME/.wepn/logo" ]; then
+    wget -q https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt -O "$HOME/.wepn/logo"
+  fi
+  cat "$HOME/.wepn/logo"
+
+  #header
   seperator
   echo -e "\e[1;37;48;5;21m                                                                \e[0m"
   echo -e "\e[1;37;48;5;20m                    [ WePN MASTER SCRIPT ]                      \e[0m"
@@ -817,31 +840,14 @@ fn_menu_block_ir_websites_5(){
 }
 
 #----------------------------------------------------------------------------------------------------------------------- prepare
-# get terminal default bg color
-#default_bg_color=$(echo "rgb:0a0a/1212/1e1e" | sed 's/rgb:\(..\)\(..\)\(..\)\/\(..\)\(..\)\(..\)/\1\2\3/g' | xxd -r -p | xxd -p -u -l 3 | tr '[:upper:]' '[:lower:]')
-#echo $default_bg_color
-
-# set terminal default foreground color
-echo -ne '\e]10;#a9a9a9\e\\'
-
-# set terminal default background color
-echo -ne '\e]11;#0a121e\e\\'
-
-#echo -ne '\e]10;\e\\'
-
+prepare_screen
 show_headers
-install
-prereqs
+install_script
+install_required_packages
 load_iranips
 load_arvancloud_ips
 
-# get wepn_group logo
-wget -q https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt -O /tmp/wepn-logo-ascii.txt
-# hide cursor
-tput sc ; tput civis
 
-# Set up the trap to call the exit function when the script is interrupted
-trap fn_menu_4 INT
 #----------------------------------------------------------------------------------------------------------------------- RUN
 #show_headers
 #menu_handler "menu"
