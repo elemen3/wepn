@@ -283,12 +283,16 @@ install_required_packages(){
           apt update &> /dev/null
           echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
           echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
-          apt install iptables-persistent -y &> /dev/null
+          echo iptables-persistent iptables-persistent/autosave_v4 seen true | debconf-set-selections
+          echo iptables-persistent iptables-persistent/autosave_v6 seen true | debconf-set-selections
+          apt install -y iptables-persistent &> /dev/null
       # Install iptables-persistent using yum on CentOS 8
       elif [ -x "$(command -v yum)" ]; then
           yum update -y >/dev/null 2>&1
-          echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | sudo debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | sudo debconf-set-selections
+          echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
+          echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
+          echo iptables-persistent iptables-persistent/autosave_v4 seen true | debconf-set-selections
+          echo iptables-persistent iptables-persistent/autosave_v6 seen true | debconf-set-selections
           yum install iptables-persistent -y >/dev/null 2>&1
       else
           redbold "Unsupported distribution. Exiting..."
