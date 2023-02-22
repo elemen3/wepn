@@ -185,7 +185,8 @@ install_wepn(){
     installed_version=$(cat "$HOME/.wepn/settings" | grep version | awk '{split($0,a,"="); print a[2]}')
     latest_version="$(get_latest_version_number)"
 
-    if [ -n "$latest_version" && -n "$installed_version" && "$installed_version" != "$latest_version" ]; then
+
+    if [[ -n "$latest_version" && -n "$installed_version" && "$installed_version" != "$latest_version" ]]; then
 
       echo $(blue "You are running the outdated version (")$(redbold "$installed_version")$(blue ")!")
       echo $(blue "Installing the new version (")$(greenbold "$latest_version")$(blue ")...")
@@ -200,7 +201,7 @@ install_wepn(){
       bluebold "WePN is updated :)"
 
 #    else
-#      blue "WePN is UP-TO-DATE."
+#      bluebold "WePN is UP-TO-DATE."
     fi
 
   fi
@@ -437,7 +438,8 @@ show_headers(){
   #logo
   if [ ! -f "$HOME/.wepn/logo" ]; then
     mkdir -p "$HOME/.wepn"
-    wget -q https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt -O "$HOME/.wepn/logo"
+#    wget -q https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt -O "$HOME/.wepn/logo"
+    curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt > "$HOME/.wepn/logo"
   fi
 
   cat "$HOME/.wepn/logo"
@@ -673,10 +675,10 @@ run_menu(){
 		case "$input"
 		in
 			$'\x1B')  # ESC ASCII code (https://dirask.com/posts/ASCII-Table-pJ3Y0j)
-				read -rsn1 -t 0.1 input
+				read -rsn1 -t 0.01 input
 				if [ "$input" = "[" ]  # occurs before arrow code
 				then
-					read -rsn1 -t 0.1 input
+					read -rsn1 -t 0.01 input
 					case "$input"
 					in
 						A)  # Up Arrow
@@ -710,11 +712,14 @@ run_menu(){
 							;;
 					esac
 				fi
-				read -rsn5 -t 0.1  # flushing stdin
+#				read -rsn5 -t 0.1  # flushing stdin
 				;;
 			"")  # Enter key
 				return "$selected_menu_index"
 				;;
+		  [qQ])  # Q key
+    			fn_menu_4
+    		;;
 		esac
 	done
 }
@@ -787,31 +792,31 @@ fn_menu_4(){
 
   padding=$(( ($width - ${#exit_msg1}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg1" $padding ''
-  sleep 0.2
+  sleep 0.05
   padding=$(( ($width - ${#exit_msg2}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg2" $padding ''
-  sleep 0.2
+  sleep 0.05
   padding=$(( ($width - ${#exit_msg3}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg3" $padding ''
-  sleep 0.2
+  sleep 0.05
   echo
   padding=$(( ($width - ${#exit_msg4}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg4" $padding ''
-  sleep 0.2
+  sleep 0.05
   padding=$(( ($width - ${#exit_msg5}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg5" $padding ''
-  sleep 0.2
+  sleep 0.05
   padding=$(( ($width - ${#exit_msg6}) / 2 ))
   printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg6" $padding ''
   echo
 
-  sleep 1
+#  sleep 1
 
 
-  tput sc
+#  tput sc
   show_cursor
 
-  clear && printf '\e[3J'
+#  clear && printf '\e[3J'
 
 
 
