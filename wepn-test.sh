@@ -155,7 +155,7 @@ get_latest_version_number(){
   echo "$FORMATTED_DATETIME"
 }
 #----------------------------------------------------------------------------------------------------------------------- install wepn
-install_wepn(){
+install_or_update_wepn(){
 
   mkdir -p "$HOME/.wepn"
   touch "$HOME/.wepn/settings"
@@ -205,53 +205,6 @@ install_wepn(){
     fi
 
   fi
-}
-#----------------------------------------------------------------------------------------------------------------------- install wget and curl first
-install_wget_and_curl(){
-
-  echo "nameserver 1.1.1.1" > /etc/resolv.conf
-
-    # Check if curl is installed
-    if ! command -v curl &> /dev/null
-    then
-        blue "Installing curl..."
-        sleep 0.5
-
-        # Install curl using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
-        if [ -x "$(command -v apt)" ]; then
-            apt update &> /dev/null
-            apt install curl -y &> /dev/null
-        # Install curl using yum on CentOS 8
-        elif [ -x "$(command -v yum)" ]; then
-            yum update -y >/dev/null 2>&1
-            yum install curl -y >/dev/null 2>&1
-        else
-            redbold "Unsupported distribution. Exiting..."
-            fn_menu_4
-        fi
-
-    fi
-
-    # Check if wget is installed
-    if ! command -v wget &> /dev/null
-    then
-        blue "Installing wget..."
-        sleep 0.5
-
-        # Install wget using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
-        if [ -x "$(command -v apt)" ]; then
-            apt update &> /dev/null
-            apt install wget -y &> /dev/null
-        # Install wget using yum on CentOS 8
-        elif [ -x "$(command -v yum)" ]; then
-            yum update -y >/dev/null 2>&1
-            yum install wget -y >/dev/null 2>&1
-        else
-            redbold "Unsupported distribution. Exiting..."
-            fn_menu_4
-        fi
-
-    fi
 }
 #----------------------------------------------------------------------------------------------------------------------- install required packages
 install_required_packages(){
@@ -438,7 +391,6 @@ show_headers(){
   #logo
   if [ ! -f "$HOME/.wepn/logo" ]; then
     mkdir -p "$HOME/.wepn"
-#    wget -q https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt -O "$HOME/.wepn/logo"
     curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt > "$HOME/.wepn/logo"
   fi
 
@@ -916,11 +868,10 @@ fn_menu_block_ir_websites_5(){
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare
 prepare_screen
-install_wget_and_curl
 show_headers
 set_run_mode
 install_required_packages
-install_wepn
+install_or_update_wepn
 load_iranips
 load_arvancloud_ips
 #----------------------------------------------------------------------------------------------------------------------- RUN
