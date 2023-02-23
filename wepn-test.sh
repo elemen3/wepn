@@ -861,7 +861,7 @@ fn_menu_block_ir_websites_2(){
   load_iranips
   show_cursor
   echo
-  read -p "$(print "[bold][blue]Are you absolutely sure you want to block outgoing traffic from your server to Iranian websites? [y/N]: ")" response
+  read -p "$(print "[bold][white]Are you sure you want to block outgoing traffic from your server to Iranian websites? [y/N]: ")" response
   response=${response:-N}
 
   if [[ $response =~ ^[Yy]$ ]]; then
@@ -870,12 +870,13 @@ fn_menu_block_ir_websites_2(){
 
         show_cursor
         echo
-        read -p "$(print "[bold][blue]Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): ")" response
+        read -p "$(print "[bold][white]Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): ")" response
 
         hide_cursor
 
         if [ -z "$response" ]; then
           # no tunneling
+            echo
             print "[blue]Blocking all..."
             block_all
             break
@@ -891,6 +892,7 @@ fn_menu_block_ir_websites_2(){
         fi
     done
 
+    echo
     print "[bold][green]All Iranian websites are blocked."
   fi
 
