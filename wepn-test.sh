@@ -151,25 +151,22 @@ check_root(){
 }
 #----------------------------------------------------------------------------------------------------------------------- check OS
 check_os(){
+
+  os="Unknown"
+  os_version="0"
+
   # Detect the OS and version
-  if [[ $(uname) == "Darwin" ]]; then
-    os="macOS"
-    os_version=$(sw_vers -productVersion)
+  if [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+    os="${NAME%% *}"
+    os_version=$VERSION_ID
   elif [[ -f /etc/centos-release ]]; then
     os="CentOS"
     os_version=$(cat /etc/centos-release | cut -d" " -f4)
-  elif [[ -f /etc/os-release ]]; then
-    . /etc/os-release
-    os=$NAME
-    os_version=$VERSION_ID
-  elif [[ -f /etc/debian_version ]]; then
-    os="Debian"
-    os_version=$(cat /etc/debian_version)
+  elif [[ $(uname) == "Darwin" ]]; then
+    os="macOS"
+    os_version=$(sw_vers -productVersion)
   fi
-
-#  os="Ubuntu"
-#  os_version="18.04"
-
 
   if [[ "$os" == "Ubuntu" ]]; then
       if ! [[ "$os_version" == "18.04" || "$os_version" == "20.04" || "$os_version" == "22.04" || "$os_version" == "22.10" ]]; then
