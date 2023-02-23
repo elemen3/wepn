@@ -860,6 +860,7 @@ fn_menu_block_ir_websites_2(){
   install_iptables_persistent
   load_iranips
   show_cursor
+  echo
   read -p "$(print "[bold][blue]Are you absolutely sure you want to block outgoing traffic from your server to Iranian websites? [y/N]: ")" response
   response=${response:-N}
 
@@ -868,6 +869,7 @@ fn_menu_block_ir_websites_2(){
     while true; do
 
         show_cursor
+        echo
         read -p "$(print "[bold][blue]Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): ")" response
 
         hide_cursor
@@ -884,6 +886,7 @@ fn_menu_block_ir_websites_2(){
             iptables -A OUTPUT -d $response -p tcp --dport 443 -j ACCEPT
             break
         else
+            echo
             print "[bold][red]IP address [bold][yellow]$response' [bold][red]is not valid. Please try again."
         fi
     done
