@@ -279,7 +279,6 @@ install_or_update_wepn(){
 #----------------------------------------------------------------------------------------------------------------------- install iptables and iptables-persistent
 install_iptables_persistent(){
 
-  eco 8888
   echo "nameserver 1.1.1.1" > /etc/resolv.conf
 
   # Check if iptables-save is installed
