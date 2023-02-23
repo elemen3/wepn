@@ -42,92 +42,164 @@ arvancloud_ips=()
 global_menu_size=0
 selected_menu=""
 selected_menu_item=""
-#----------------------------------------------------------------------------------------------------------------------- colors
-break_string() {
-  local str="$1"
-  local words=($str)
-  local line=""
+#----------------------------------------------------------------------------------------------------------------------- print with text style
+print() {
 
-  for ((i=0; i<${#words[@]}; i++)); do
-    if (( ${#line} + ${#words[i]} + 1 <= $width )); then
-      # add the next word to the current line.
-      if [[ -z "$line" ]]; then
-        line="${words[i]}"
-      else
-        line="$line ${words[i]}"
-      fi
-    else
-      # output the current line and start a new one.
-      echo "${line}"
-      line="${words[i]}"
-    fi
-  done
+  fold_text() {
+    awk -v n="${1:-10}" '
+      BEGIN {
+        regex="[[:cntrl:]][[][^m]*m"
+      }
+      {
+        input=$0
+        while (input != "") {
+          count=n
+          output=""
+          while ( count > 0 ) {
+            match(input,regex)
+            if (RSTART && RSTART <= count) {
+              output=output substr(input,1,RSTART+RLENGTH-1)
+              input=substr(input,RSTART+RLENGTH)
+              count=count - (RSTART > 1 ? RSTART-1 : 0)
+            }
+            else {
+              output=output substr(input,1,count)
+              input=substr(input,count+1)
+              count=0
+            }
+          }
+          if (length(input) > 0 && substr(input,1,1) != " ") {
+            # move last word to next line
+            last_word=""
+            for (i=length(output); i>0; i--) {
+              if (substr(output,i,1) == " ") {
+                last_word=substr(output,i+1)
+                output=substr(output,1,i)
+                break
+              }
+            }
+            if (last_word != "") {
+              if (substr(input,1,1) == " ") {
+                input=last_word substr(input,2)
+              } else {
+                input=last_word input
+              }
+            }
+          }
+          print output
+        }
+      }
+    '
+  }
 
-  # output the final line, if there is one.
-  if [[ -n "$line" ]]; then
-    echo "${line}"
+
+  # Read the alignment parameter and set the default to left
+  if [ "$1" == "left" ] || [ "$1" == "center" ] || [ "$1" == "right" ]; then
+    align=$1
+    text=$2
+  else
+    align="left"
+    text=$1
   fi
-}
 
-normal() {
-  broken_text=$(break_string "$1")
-  echo -e "\033[38;5;250m$broken_text\033[0m"
-}
+  # Define color codes
+  end="\\\033[0m"
+  normal="$end\\\033[38;5;244m"
+  bold="\\\033[1m\\\033[97m"
+  colors=(white red green blue yellow cyan)
+  color_codes=("\\\033[97m" "\\\033[38;5;203m" "\\\033[38;5;42m" "\\\033[38;5;39m" "\\\033[38;5;227m" "\\\033[36m")
 
-bold() {
-  broken_text=$(break_string "$1")
-  echo -e "\033[1m\033[97m$broken_text\033[0m"
-}
+  # Apply styles and colors to the formatted text
+  formatted_text=$text
+  formatted_text=$(echo "$formatted_text" | sed -E "s/\[(normal)\]/$normal/g")
+  formatted_text=$(echo "$formatted_text" | sed -E "s/\[(bold)\]/$bold/g")
+  for ((i=0;i<${#colors[@]};i++)); do
+    formatted_text=$(echo "$formatted_text" | sed -E "s/\[(${colors[i]})\]/${color_codes[i]}/g")
+  done
+  formatted_text=$(echo "$formatted_text" | sed -E "s/\[(end)\]/$end/g")
+  formatted_text="$formatted_text\033[0m"
 
-green(){
-  broken_text=$(break_string "$1")
-  echo -e "\033[32m$broken_text\033[0m"
-}
-greenbold(){
-  broken_text=$(break_string "$1")
-  echo -e "\033[1m\033[32m$broken_text\033[0m"
-}
-greenbg(){
-  broken_text=$(break_string "$1")
-  echo -e "\033[42m\033[30m$broken_text\033[0m";
-}
 
-blue(){
-  broken_text=$(break_string "$1")
-  echo -e "\033[34m$broken_text\033[0m"
-}
-bluebold(){
-  broken_text=$(break_string "$1")
-  echo -e "\033[1m\033[34m$broken_text\033[0m"
-}
-bluebg(){
-  broken_text=$(break_string "$1")
-  echo -e "\033[44m\033[30m$broken_text\033[0m"
-}
+  # cleanup and fold
+  if [ $(echo -e "$formatted_text" | tr -s ' ' | tr -d '\n' | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | wc -c) -le $width ]; then
+    formatted_text=$(echo -en "$formatted_text" | tr -s ' ' | sed 's/^ *//;s/ *$//' | sed 's/^ //')
+  else
+    formatted_text=$(echo -en "$formatted_text" | tr -s ' ' | sed 's/^ *//;s/ *$//' | fold_text $width | sed 's/^ //')
+  fi
 
-red(){
-  broken_text=$(break_string "$1")
-  echo -e "\033[31m$broken_text\033[0m"
+
+  # center alignment
+  if [ "$align" = "center" ]; then
+    formatted_text=$(echo -e "$formatted_text" | while read line; do
+      line_length=$(echo -n "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | tr -s ' ' | sed 's/^ *//;s/ *$//' | wc -m)
+      printf "%*s%s%*s\n" $(((width-line_length)/2)) '' "$(echo $line | tr -s ' ' | sed 's/^ *//;s/ *$//')" $(((width-line_length+1)/2)) ''
+    done)
+  # right alignment
+  elif [ "$align" = "right" ]; then
+    formatted_text=$(echo -e "$formatted_text" | while read line; do
+      line_length=$(echo -n "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | tr -s ' ' | sed 's/^ *//;s/ *$//' | wc -m)
+      printf "%*s%s\n" $((width-line_length)) '' "$(echo $line | tr -s ' ' | sed 's/^ *//;s/ *$//')"
+    done)
+  fi
+
+  # Print the formatted text
+  echo -e "$formatted_text"
 }
-redbold(){
-  broken_text=$(break_string "$1")
-  echo -e "\033[1m\033[31m$broken_text\033[0m"
+#----------------------------------------------------------------------------------------------------------------------- check root
+check_root(){
+  redbold "Unsupported distribution. Exiting..." #todo
 }
-redbg(){
-  broken_text=$(break_string "$1")
-  echo -e "\033[41m\033[30m$broken_text\033[0m"
+#----------------------------------------------------------------------------------------------------------------------- check OS
+check_os(){
+  # Detect the OS and version
+  if [[ $(uname) == "Darwin" ]]; then
+    os="macOS"
+    os_version=$(sw_vers -productVersion)
+  elif [[ -f /etc/centos-release ]]; then
+    os="CentOS"
+    os_version=$(cat /etc/centos-release | cut -d" " -f4)
+  elif [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+    os=$NAME
+    os_version=$VERSION_ID
+  elif [[ -f /etc/debian_version ]]; then
+    os="Debian"
+    os_version=$(cat /etc/debian_version)
+  fi
+
+#  os="Ubuntu"
+#  os_version="18.04"
+
+
+  if [[ "$os" == "Ubuntu" ]]; then
+      if ! [[ "$os_version" == "18.04" || "$os_version" == "20.04" || "$os_version" == "22.04" || "$os_version" == "22.10" ]]; then
+          echo
+          print center "[bold][red]This script has not been tested on\n [bold][yellow]$os $os_version [bold][red]yet!"
+          fn_menu_4
+      fi
+  elif [[ "$os" == "Debian" ]]; then
+      if ! [[ "$os_version" == "10" || "$os_version" == "11" ]]; then
+          echo
+          print center "[bold][red]This script has not been tested on [bold][yellow]$os $os_version [bold][red]yet."
+          fn_menu_4
+      fi
+  elif [[ "$os" == "macOS" ]]; then #todo macOS_ for production
+    # FOR TESTING PURPOSES ONLY!
+    echo > /dev/null
+  else
+      echo
+      print center "[bold][red]This script is designed to work only on\n [bold][yellow]Ubuntu [bold][red]and [bold][yellow]Debian [bold][red]systems."
+      fn_menu_4
+  fi
 }
 #----------------------------------------------------------------------------------------------------------------------- set run mode
 set_run_mode(){
   if [[ "$0" == /dev* ]]; then
     running_url=true
-  #  echo "The script is being executed from a URL"
   elif [[ "$0" == "/usr/local/bin/wepn" ]]; then
     running_installed=true
-  #  echo "The script is being executed locally"
   else
     running_locally=true
-  #  echo "The script is being executed locally but not .wpn dir"
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- get latest version number
@@ -162,7 +234,7 @@ install_or_update_wepn(){
 
   # not installed
   if ! test -f "/usr/local/bin/wepn"; then
-      blue "Installing WePN..."
+      print "[blue]Installing WePN..."
       sleep 0.5
       curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
       chmod +x /usr/local/bin/wepn
@@ -171,25 +243,25 @@ install_or_update_wepn(){
       echo "version=$latest_version" > "$HOME/.wepn/settings"
 
       echo
-      blue "WePN is installed on your system."
-      echo $(blue "From now on, simply issue") $(greenbold "wepn") $(blue " command to run the script.")
+      print center "[bold][blue]WePN is now installed on your system."
+      print center "[bold][blue]From now on, simply issue [bold][white]wepn [bold][blue]command to run the script."
       echo
 
-      bluebold "Press Enter to continue..."
+      print "[bold][cyan]Press Enter to continue..."
       read -p ""
 
   # already installed and running via wepn cmd
   elif $running_installed ; then
 
-    blue "Checking for updates..."
+    print "[blue]Checking for updates..."
     installed_version=$(cat "$HOME/.wepn/settings" | grep version | awk '{split($0,a,"="); print a[2]}')
     latest_version="$(get_latest_version_number)"
 
 
     if [[ -n "$latest_version" && -n "$installed_version" && "$installed_version" != "$latest_version" ]]; then
 
-      echo $(blue "You are running the outdated version (")$(redbold "$installed_version")$(blue ")!")
-      echo $(blue "Installing the new version (")$(greenbold "$latest_version")$(blue ")...")
+      print "[blue]You are running the outdated version ([bold][red]$installed_version[blue])!"
+      print "[blue]Installing the new version ([bold][green]$latest_version)[blue]..."
       sleep 0.5
 
       curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
@@ -198,7 +270,8 @@ install_or_update_wepn(){
       latest_version="$(get_latest_version_number)"
       sed -i.bak "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings" && rm "$HOME/.wepn/settings.bak"
 
-      bluebold "WePN is updated :)"
+      print "[bold][blue]WePN is updated :)"
+      sleep 1
 
 #    else
 #      bluebold "WePN is UP-TO-DATE."
@@ -206,36 +279,30 @@ install_or_update_wepn(){
 
   fi
 }
-#----------------------------------------------------------------------------------------------------------------------- install required packages
-install_required_packages(){
+#----------------------------------------------------------------------------------------------------------------------- install iptables and iptables-persistent
+install_iptables_persistent(){
 
+  eco 8888
   echo "nameserver 1.1.1.1" > /etc/resolv.conf
 
   # Check if iptables-save is installed
   if ! command -v iptables-save &> /dev/null
   then
-      blue "Installing iptables..."
+      print "[blue]Installing iptables..."
       sleep 0.5
 
       # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
           apt update &> /dev/null
           apt install iptables -y &> /dev/null
-      # Install iptables using yum on CentOS 8
-      elif [ -x "$(command -v yum)" ]; then
-          yum update -y >/dev/null 2>&1
-          yum install iptables -y >/dev/null 2>&1
-      else
-          redbold "Unsupported distribution. Exiting..."
-          fn_menu_4
       fi
 
   fi
 
   # Check if iptables-persistent is installed
-  if ! (dpkg -s iptables-persistent >/dev/null 2>&1 || rpm -q iptables-services >/dev/null 2>&1);
+  if ! (dpkg -s iptables-persistent >/dev/null 2>&1);
   then
-      blue "Installing iptables-persistent..."
+      print "[blue]Installing iptables-persistent..."
 
       # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
       if [ -x "$(command -v apt)" ]; then
@@ -245,17 +312,6 @@ install_required_packages(){
           echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
           echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
           apt install -y iptables-persistent &> /dev/null
-      # Install iptables-persistent using yum on CentOS 8
-      elif [ -x "$(command -v yum)" ]; then
-          yum update -y >/dev/null 2>&1
-          echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
-          yum install iptables-persistent -y >/dev/null 2>&1
-      else
-          redbold "Unsupported distribution. Exiting..."
-          fn_menu_4
       fi
 
   fi
@@ -263,7 +319,7 @@ install_required_packages(){
 #----------------------------------------------------------------------------------------------------------------------- load required data
 load_iranips(){
   #normal "Loading the most up-to-date IP addresses..."
-  blue "Loading Iran IP ranges..."
+  print "[blue]Loading Iran IP ranges..."
   sleep 0.5
 
   # URL of the text file to read
@@ -280,7 +336,7 @@ load_iranips(){
 }
 load_arvancloud_ips(){
 
-  blue "Loading Arvancloud IP ranges..."
+  print "[blue]Loading Arvancloud IP ranges..."
   sleep 0.5
 
   # URL of the text file to read
@@ -354,16 +410,16 @@ show_progress() {
     local rest=$((bar_size - progress))
     local bar=$(printf "%${progress}s" | tr ' ' '#')
     local restbar=$(printf "%${rest}s")
-    printf "\033[1;34m[%s%s]\033[0m \033[1;34m%d%%\033[0m" "$bar" "$restbar" $((current * 100 / total))
+    color_code="\033[38;5;39m"
+    printf "\033[1;34m[%s%s]\033[0m \033[1;34m%d%%\033[0m" "$bar" "$restbar" $((current * 100 / total)) #todo change color
     printf "\r"
 }
 #----------------------------------------------------------------------------------------------------------------------- seperator
 seperator(){
-#  printf -v separator "%-${width}b" ""
+#  printf -v s "%-${width}b" ""
   s="----------------------------------------------------------------"
-  echo -e "\033[38;5;250m$s\033[0m"
-#  echo -e "\033[38;5;250m${s// /-}\033[0m"
-#  normal "${separator// /-}"
+  echo -e "\033[38;5;250m${s// /-}\033[0m"
+#  print "[normal]${s// /-}"
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare screen
 prepare_screen(){
@@ -455,7 +511,7 @@ view_existing_settings(){
           done
       fi
   else
-      greenbold "No rules are applied yet."
+      print "[bold][yellow]No rules are applied yet."
   fi
 
 
@@ -484,7 +540,7 @@ block_all(){
 }
 
 clear_rules(){
-  blue "Cleaning up..."
+  print "[blue]Cleaning up..."
 
   index=0
   # for (( i=0; i<${#iranips[@]}; i++ ))
@@ -507,7 +563,7 @@ clear_rules(){
     fi
   done
 
-  greenbold "Cleaned up."
+  print "[bold][green]Cleaned up."
 }
 
 allow_arvancloud(){
@@ -518,19 +574,19 @@ allow_arvancloud(){
       fi
     done
 
-    greenbold "Arvancloud is whitelisted."
+    print "[bold][green]Arvancloud is whitelisted."
 }
 
 save_rules(){
   iptables-save > /etc/iptables/rules.v4
 #  ip6tables-save > /etc/iptables/rules.v6
-  greenbold "Saved."
+  print "[bold][green]Saved."
 }
 #----------------------------------------------------------------------------------------------------------------------- menu core functions
 hit_enter(){
   selected_menu_index=0
   echo
-  bluebold "Press Enter to continue..."
+  print "[bold][cyan]Press Enter to continue..."
   echo
   read -p ""
   clear
@@ -593,7 +649,7 @@ print_menu(){
       fi
 
       if [ "${menu_items[i]}" != "-" ]; then
-          echo " $(bold "$icon") "$(bold "${menu_items[i]}")
+          echo -e "\e[1m\e[97m $icon ${menu_items[i]}\e[0m"
       else
           seperator
       fi
@@ -733,7 +789,6 @@ fn_menu_2(){
 fn_menu_4(){
 
   echo
-
   width=$((width-2))
   exit_msg1="Appreciate your taking the time to play with my script."
   exit_msg2="I hope you found it helpful."
@@ -743,34 +798,27 @@ fn_menu_4(){
   exit_msg6="❤"
 
   padding=$(( ($width - ${#exit_msg1}) / 2 ))
-  printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg1" $padding ''
+  printf "\\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg1" $padding ''
   sleep 0.05
   padding=$(( ($width - ${#exit_msg2}) / 2 ))
-  printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg2" $padding ''
+  printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg2" $padding ''
   sleep 0.05
   padding=$(( ($width - ${#exit_msg3}) / 2 ))
-  printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg3" $padding ''
+  printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg3" $padding ''
   sleep 0.05
   echo
   padding=$(( ($width - ${#exit_msg4}) / 2 ))
-  printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg4" $padding ''
+  printf "\\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg4" $padding ''
   sleep 0.05
   padding=$(( ($width - ${#exit_msg5}) / 2 ))
-  printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg5" $padding ''
+  printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg5" $padding ''
   sleep 0.05
   padding=$(( ($width - ${#exit_msg6}) / 2 ))
-  printf "\033[1;34m%*s%s%*s\033[0m\n" $padding '' "$exit_msg6" $padding ''
+  printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg6" $padding ''
   echo
 
-#  sleep 1
 
-
-#  tput sc
   show_cursor
-
-#  clear && printf '\e[3J'
-
-
 
   exit 1
 }
@@ -806,15 +854,17 @@ fn_menu_block_ir_websites_0(){
 
 # block_ir_websites > view_existing_settings
 fn_menu_block_ir_websites_1(){
+  install_iptables_persistent
   view_existing_settings
   hit_enter
 }
 
 # block_ir_websites > block all
 fn_menu_block_ir_websites_2(){
-
+  install_iptables_persistent
+  load_iranips
   show_cursor
-  read -p "$(bluebold "Are you absolutely sure you want to block outgoing traffic from your server to Iranian websites? [y/N]: ")" response
+  read -p "$(print "[bold][blue]Are you absolutely sure you want to block outgoing traffic from your server to Iranian websites? [y/N]: ")" response
   response=${response:-N}
 
   if [[ $response =~ ^[Yy]$ ]]; then
@@ -822,27 +872,27 @@ fn_menu_block_ir_websites_2(){
     while true; do
 
         show_cursor
-        read -p "$(bluebold "Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): ")" response
+        read -p "$(print "[bold][blue]Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): ")" response
 
         hide_cursor
 
         if [ -z "$response" ]; then
           # no tunneling
-            blue "Blocking all..."
+            print "[blue]Blocking all..."
             block_all
             break
         elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            blue "Blocking all excluding your Iranian server..."
+            print "[blue]Blocking all excluding your Iranian server..."
             block_all
             # exclude irsrv ip addr
             iptables -A OUTPUT -d $response -p tcp --dport 443 -j ACCEPT
             break
         else
-            redbold "IP address '$response' is not valid. Please try again."
+            print "[bold][red]IP address [bold][yellow]$response' [bold][red]is not valid. Please try again."
         fi
     done
 
-    greenbold "All Iranian websites are blocked."
+    print "[bold][green]All Iranian websites are blocked."
   fi
 
   hide_cursor
@@ -851,29 +901,31 @@ fn_menu_block_ir_websites_2(){
 
 # block_ir_websites > allow arvancloud
 fn_menu_block_ir_websites_3(){
+  install_iptables_persistent
+  load_arvancloud_ips
   allow_arvancloud
   hit_enter
 }
 
 # block_ir_websites > clear rules
 fn_menu_block_ir_websites_4(){
+  install_iptables_persistent
   clear_rules
   hit_enter
 }
 
 # block_ir_websites > save settings
 fn_menu_block_ir_websites_5(){
+  install_iptables_persistent
   save_rules
   hit_enter
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare
 prepare_screen
 show_headers
+check_os
 set_run_mode
-install_required_packages
 install_or_update_wepn
-load_iranips
-load_arvancloud_ips
 #----------------------------------------------------------------------------------------------------------------------- RUN
 show_headers
 menu_handler "menu"
