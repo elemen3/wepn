@@ -620,6 +620,7 @@ view_existing_settings(){
           done
       fi
   else
+      echo
       print "[bold][yellow]No rules are applied yet."
   fi
 
