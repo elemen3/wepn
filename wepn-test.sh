@@ -641,6 +641,7 @@ block_all(){
 }
 
 clear_rules(){
+  echo
   print "[blue]Cleaning up..."
 
   index=0
@@ -664,6 +665,7 @@ clear_rules(){
     fi
   done
 
+  echo
   print "[bold][green]Cleaned up."
 }
 
@@ -675,6 +677,7 @@ allow_arvancloud(){
       fi
     done
 
+    echo
     print "[bold][green]Arvancloud is whitelisted."
 }
 
@@ -1010,8 +1013,10 @@ fn_menu_block_ir_websites_2(){
         fi
     done
 
+    echo
     print "[bold][green]All Iranian websites are blocked."
     back_to_menu enter
+
   else
     back_to_menu
   fi
