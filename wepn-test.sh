@@ -574,6 +574,9 @@ show_headers(){
 #------------------------------------------------------------------------------------------------------- ssh
 
 #------------------------------------------------------------------------------------------------------- block iran ips
+show_table(){
+
+}
 view_existing_settings(){
 #  iptables-save | grep -i "443"
 
@@ -583,6 +586,7 @@ view_existing_settings(){
 
   # check if they are not epmty
   if [[ ${#rejected_ips[@]} -gt 0 || ${#accepted_ips[@]} -gt 0 ]]; then
+      echo
 
       # Find the longest value in the arrays
       max_length=0
