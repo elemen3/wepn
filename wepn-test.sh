@@ -41,6 +41,7 @@ arvancloud_ips=()
 
 global_menu_size=0
 selected_menu=""
+selected_menu_index=0
 selected_menu_item=""
 #----------------------------------------------------------------------------------------------------------------------- print with text style
 print() {
@@ -144,6 +145,110 @@ print() {
 
   # Print the formatted text
   echo -e "$formatted_text"
+}
+#----------------------------------------------------------------------------------------------------------------------- confirmation dialog
+confirmation_dialog(){
+
+  yesorno="${1:-n}"
+
+  local print_confirmation_dialog
+  print_confirmation_dialog() {
+
+      # Set variables for button text and dimensions
+      local yes_button="      Yes"
+      local no_button="      No"
+      local button_width=15
+      local padding_width=$(( ($width - 2*button_width - 10) / 2 ))
+      selected_color="\e[48;5;27m\e[1m\e[97m"
+      unselected_color="\e[48;5;240m\e[1m\e[38;5;253m"
+
+      if [ "$yesorno" = "y" ]; then
+        local yes_button_color="$selected_color"
+        local no_button_color="$unselected_color"
+      else
+        local no_button_color="$selected_color"
+        local yes_button_color="$unselected_color"
+      fi
+
+
+      echo
+      echo    "╭──────────────────────────────────────────────────────────────╮"
+  #    echo   "│                        Confirmation                          │"
+      echo -e "│                         \033[1;97mConfirmation\033[0m                         │"
+      #echo   "│──────────────────────────────────────────────────────────────│"
+      echo    "│--------------------------------------------------------------│"
+      echo    "│                                                              │"
+
+
+      # Print the left margin
+      printf '│%*s' $(( padding_width + 2 )) ""
+
+      # Print YES button
+  #    printf '\e[48;5;27m\e[1m\e[97m%-*s\e[0m' $(( button_width )) "$yes_button"
+      printf "$yes_button_color%-*s\e[0m" $(( button_width )) "$yes_button"
+
+      # Print the space between buttons
+      printf '%*s' $(( 4 )) ""
+
+      # Print NO button
+      printf "$no_button_color%-*s\e[0m" $(( button_width -1)) "$no_button"
+
+      # Print the right margin
+     printf '%*s│\n' $(( padding_width + 3 )) ""
+
+
+     echo    "│                                                              │"
+     echo    "╰──────────────────────────────────────────────────────────────╯"
+
+  }
+
+  # render the dialog for the first time
+  print_confirmation_dialog
+
+
+  # clear dialog
+  local clear_confirmation_dialog
+  clear_confirmation_dialog(){
+    tput cuu 8 && tput el1 && tput ed
+  }
+
+
+ # choose by left and right keys
+ while read -rsn1 input
+ do
+   case "$input"
+   in
+     $'\x1B')  # ESC ASCII code
+       read -rsn1 -t 0.01 input
+       if [ "$input" = "[" ]  # occurs before arrow code
+       then
+         read -rsn1 -t 0.01 input
+         case "$input"
+         in
+           D)  # Left Arrow
+              if [ "$yesorno" = "n" ]; then
+                yesorno="y"
+                clear_confirmation_dialog
+                print_confirmation_dialog
+              fi
+             ;;
+           C)  # Right Arrow
+              if [ "$yesorno" = "y" ]; then
+                yesorno="n"
+                clear_confirmation_dialog
+                print_confirmation_dialog
+              fi
+             ;;
+         esac
+       fi
+       ;;
+     "")  # Enter key
+       clear_confirmation_dialog
+       [ "$yesorno" = "n" ] && return 0 || return 1
+       ;;
+   esac
+ done
+
 }
 #----------------------------------------------------------------------------------------------------------------------- check root
 check_root(){
@@ -579,16 +684,20 @@ save_rules(){
   print "[bold][green]Saved."
 }
 #----------------------------------------------------------------------------------------------------------------------- menu core functions
-hit_enter(){
-  selected_menu_index=0
-  echo
-  print "[bold][cyan]Press Enter to continue..."
-  echo
-  read -p ""
+back_to_menu(){
+  # ask to hit enter to continue
+  if [ "$1" = "enter" ]; then
+    echo
+    print "[bold][cyan]Press Enter to continue..."
+    echo
+    read -s -p ""
+  fi
+
   clear
   show_headers
+#  selected_menu_index=0
   global_menu_size=0
-  menu_handler "$selected_menu"
+  menu_handler "$selected_menu" 1
 }
 
 clear_menu(){
@@ -608,6 +717,7 @@ print_menu(){
 
 	for (( i = 0; i < $menu_size; ++i ))
 	do
+	  # selected
 		if [ "$i" = "$selected_menu_index" ]
 		then
 
@@ -616,14 +726,11 @@ print_menu(){
         icon="←"
       fi
 
+      # selected
       if [ "${menu_items[i]}" != "-" ]; then
           printf -v item "%-$((width+2))b" " $icon ${menu_items[i]}"
           echo -e "\e[48;5;27m\e[1m\e[97m${item}\e[0m"
-      else
-          printf -v item "%-${width}b" " $icon ${menu_items[i]}"
-          seperator
       fi
-
 
 
 
@@ -636,6 +743,9 @@ print_menu(){
 #      normal "${separator// /-}"
 
 
+    # not selected
+
+    iconssss="⦿○⚙←→"
 
     else
 
@@ -657,15 +767,9 @@ print_menu(){
 }
 
 run_menu(){
-#	local function_arguments=($@)
-
 	selected_menu="$1"
 
-	if [ -z "$2" ]; then
-    selected_menu_index=0
-  else
-    selected_menu_index="$2"
-  fi
+
 
 	eval "local menu_items=(\"\${$selected_menu[@]}\")"
 	local menu_size="${#menu_items[@]}"
@@ -714,6 +818,14 @@ run_menu(){
                 print_menu
 							fi
 							;;
+						C)  # Right Arrow
+              selected_menu_index=$((${#menu_items[@]} - 1))
+              print_menu
+							;;
+						D)  # Left Arrow
+              selected_menu_index=0
+              print_menu
+							;;
 					esac
 				fi
 #				read -rsn5 -t 0.1  # flushing stdin
@@ -729,7 +841,13 @@ run_menu(){
 }
 
 menu_handler(){
-    run_menu "$1" 0
+    if [ -z "$2" ]; then
+      selected_menu_index=0
+#    else
+#      selected_menu_index="$2"
+    fi
+
+    run_menu "$1" selected_menu_index
     selected_menu_index_result="$?"
 
     function_name="fn_$selected_menu""_$selected_menu_index_result"
@@ -828,7 +946,7 @@ fn_menu_ssh_0(){
 fn_menu_ssh_1(){
   green "TODO..." #TODO
 #  view_existing_settings
-  hit_enter
+  back_to_menu enter
 }
 #------------------------------------------------------------------------------------------------------- cloudflare
 # back
@@ -840,7 +958,7 @@ fn_menu_cloudflare_0(){
 fn_menu_cloudflare_1(){
   green "TODO..." #TODO
 #  view_existing_settings
-  hit_enter
+  back_to_menu enter
 }
 #------------------------------------------------------------------------------------------------------- block iran ips
 # back
@@ -852,19 +970,19 @@ fn_menu_block_ir_websites_0(){
 fn_menu_block_ir_websites_1(){
   install_iptables_persistent
   view_existing_settings
-  hit_enter
+  back_to_menu enter
 }
 
 # block_ir_websites > block all
 fn_menu_block_ir_websites_2(){
   install_iptables_persistent
   load_iranips
-  show_cursor
-  echo
-  read -p "$(print "[bold][white]Are you sure you want to block outgoing traffic from your server to Iranian websites? [y/N]: ")" response
-  response=${response:-N}
 
-  if [[ $response =~ ^[Yy]$ ]]; then
+  echo
+  print "[bold][white]Are you sure you want to block outgoing traffic from your server to Iranian websites?"
+  confirmation_dialog
+  response="$?"
+  if [ $response -eq 1 ]; then
 
     while true; do
 
@@ -892,34 +1010,63 @@ fn_menu_block_ir_websites_2(){
         fi
     done
 
-    echo
     print "[bold][green]All Iranian websites are blocked."
+    back_to_menu enter
+  else
+    back_to_menu
   fi
 
-  hide_cursor
-  hit_enter
 }
 
 # block_ir_websites > allow arvancloud
 fn_menu_block_ir_websites_3(){
   install_iptables_persistent
   load_arvancloud_ips
-  allow_arvancloud
-  hit_enter
+
+  echo
+  print "[bold][white]Are you sure you want to whitelist Arvancloud?"
+  confirmation_dialog
+  response="$?"
+  if [ $response -eq 1 ]; then
+    allow_arvancloud
+    back_to_menu enter
+  else
+    back_to_menu
+  fi
+
 }
 
 # block_ir_websites > clear rules
 fn_menu_block_ir_websites_4(){
   install_iptables_persistent
-  clear_rules
-  hit_enter
+
+  echo
+  print "[bold][white]Are you sure you want to unblock all the websites blocked by this script?"
+  confirmation_dialog
+  response="$?"
+  if [ $response -eq 1 ]; then
+    clear_rules
+    back_to_menu enter
+  else
+    back_to_menu
+  fi
 }
 
 # block_ir_websites > save settings
 fn_menu_block_ir_websites_5(){
   install_iptables_persistent
-  save_rules
-  hit_enter
+
+  echo
+  print "[bold][white]Are you sure you want the save the current settings?"
+  print "[white]In this case the settings persist if you even reboot the system."
+  confirmation_dialog
+  response="$?"
+  if [ $response -eq 1 ]; then
+    save_rules
+    back_to_menu enter
+  else
+    back_to_menu
+  fi
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare
 prepare_screen
