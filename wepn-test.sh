@@ -575,7 +575,7 @@ show_headers(){
 
 #------------------------------------------------------------------------------------------------------- block iran ips
 show_table(){
-
+  echo 1
 }
 view_existing_settings(){
 #  iptables-save | grep -i "443"
