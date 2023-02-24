@@ -509,7 +509,7 @@ show_progress() {
     local bar_size=$(($width - 7))
     local progress=$((current * bar_size / total))
     local rest=$((bar_size - progress))
-    local bar=$(printf "%${progress}s" | tr ' ' '#')
+    local bar=$(printf "%${progress}s" | tr ' ' '■')
     local restbar=$(printf "%${rest}s")
     color_code="\033[38;5;39m"
     printf "\033[1;34m[%s%s]\033[0m \033[1;34m%d%%\033[0m" "$bar" "$restbar" $((current * 100 / total)) #todo change color
