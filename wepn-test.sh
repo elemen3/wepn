@@ -509,13 +509,12 @@ show_progress() {
     local bar_size=$(($width - 7))
     local progress=$((current * bar_size / total))
     local rest=$((bar_size - progress))
-    local bar=$(printf "%10s" | sed 's/ /■/g')
+    local bar=$(printf "%${progress}s" | sed 's/ /■/g')
     local restbar=$(printf "%${rest}s")
     color_code="\033[38;5;39m"
     printf "\033[1;34m[%s%s]\033[0m \033[1;34m%d%%\033[0m" "$bar" "$restbar" $((current * 100 / total))
     printf "\r"
 }
-bar=$(printf "%10s" | tr ' ' '■')
 #----------------------------------------------------------------------------------------------------------------------- seperator
 seperator(){
 #  printf -v s "%-${width}b" ""
@@ -949,7 +948,6 @@ fn_menu_ssh_0(){
 # ssh > change ssh port
 fn_menu_ssh_1(){
   green "TODO..." #TODO
-#  view_existing_settings
   back_to_menu enter
 }
 #------------------------------------------------------------------------------------------------------- cloudflare
@@ -961,7 +959,6 @@ fn_menu_cloudflare_0(){
 # cloudflare > show scannet IPs
 fn_menu_cloudflare_1(){
   green "TODO..." #TODO
-#  view_existing_settings
   back_to_menu enter
 }
 #------------------------------------------------------------------------------------------------------- block iran ips
@@ -973,6 +970,8 @@ fn_menu_block_ir_websites_0(){
 # block_ir_websites > view_existing_settings
 fn_menu_block_ir_websites_1(){
   install_iptables_persistent
+  load_iranips
+  load_arvancloud_ips
   view_existing_settings
   back_to_menu enter
 }
@@ -1045,6 +1044,8 @@ fn_menu_block_ir_websites_3(){
 # block_ir_websites > clear rules
 fn_menu_block_ir_websites_4(){
   install_iptables_persistent
+  load_iranips
+  load_arvancloud_ips
 
   echo
   print "[bold][white]Are you sure you want to unblock all the websites blocked by this script?"
