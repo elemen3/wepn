@@ -439,7 +439,7 @@ update_package_lists(){
 
               # Fix error for Debian 11
               print "[blue]Resolving the problem..."
-              sleep 0.5
+              sleep 1
               cp /etc/apt/sources.list /etc/apt/sources.list.bak
               sed -i '/debian-security/d; /^deb-src/d' /etc/apt/sources.list
               echo "deb http://security.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
