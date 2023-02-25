@@ -1015,8 +1015,7 @@ fn_menu_4(){
 
 
   show_cursor
-  tput cnorm
-  stty echo
+  echo "\n"
 
   exit 1
 }
