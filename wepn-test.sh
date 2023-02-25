@@ -411,14 +411,17 @@ install_packages() {
 
   for package in "$@"
   do
+
     # check if package is not installed
-    print "[blue]Installing $package..."
+    if ! (dpkg -s $package >/dev/null 2>&1); then
+      print "[blue]Installing $package..."
 
-    # install iptables
-    [ $os != "macOS" ] && apt install $package -y &> /dev/null
+      # install iptables
+      [ $os != "macOS" ] && apt install $package -y &> /dev/null
 
-    sleep 0.5
-    clear_logs 1
+      sleep 0.5
+      clear_logs 1
+    fi
 
   done
 }
