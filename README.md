@@ -13,11 +13,5 @@ sudo apt install curl -y &> /dev/null && bash <(curl -s https://raw.githubuserco
 
 
 
-mention distros.  ubuntu debian centos ...
 
-sudo apt install curl -y &> /dev/null && bash <(curl -s https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh)
-
-up down left and right arrow keys
-Q key
-wepn command
 
