@@ -987,8 +987,8 @@ fn_menu_2(){
 fn_menu_4(){
 
   # restore resolv.conf
-  cp /etc/resolv.conf.bak /etc/resolv.conf
-  rm /etc/resolv.conf.bak
+  cp -f /etc/resolv.conf.bak /etc/resolv.conf
+  rm -f /etc/resolv.conf.bak
 
   echo
   width=$((width-2))
