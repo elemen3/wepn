@@ -225,7 +225,8 @@ confirmation_dialog(){
   # clear dialog
   local clear_confirmation_dialog
   clear_confirmation_dialog(){
-    tput cuu 8
+#    tput cuu 8 #&& tput el1 && tput ed
+  echo
   }
 
 
