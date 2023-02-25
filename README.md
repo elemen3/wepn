@@ -5,6 +5,19 @@
 
 
 ## Installation
+
+#### Ubuntu 18.04, Ubuntu 20.04, Ubuntu 22.04, Ubuntu 22.10, Debian 10 and Debian 11
 ``` bash
-bash <(curl -s https://raw.githubusercontent.com/elemen3/wepn/master/wepn.sh)
+sudo apt install curl -y &> /dev/null && bash <(curl -s https://raw.githubusercontent.com/elemen3/wepn/master/wepn.sh)
 ```
+
+
+
+mention distros.  ubuntu debian centos ...
+
+sudo apt install curl -y &> /dev/null && bash <(curl -s https://raw.githubusercontent.com/elemen3/wepn/master/wepn-test.sh)
+
+up down left and right arrow keys
+Q key
+wepn command
+

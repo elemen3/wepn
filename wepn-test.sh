@@ -225,7 +225,8 @@ confirmation_dialog(){
   # clear dialog
   local clear_confirmation_dialog
   clear_confirmation_dialog(){
-    tput cuu 8
+#    tput cuu 8 && tput el1 && tput ed
+    echo
   }
 
 
@@ -1013,11 +1014,6 @@ fn_menu_4(){
   printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg6" $padding ''
   echo
 
-
-  tput cnorm
-  sleep 1
-  stty echo
-  sleep 1
 
   exit 1
 }
