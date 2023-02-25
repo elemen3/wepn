@@ -441,8 +441,8 @@ update_package_lists(){
               print "[blue]Resolving the problem..."
               sleep 0.5
               cp /etc/apt/sources.list /etc/apt/sources.list.bak
-              sed -i '/^deb http:\/\/security.debian.org\/debian-security bullseye\/updates Release$/s/^/#/' /etc/apt/sources.list
-              echo "deb http://security.debian.org/debian-security bullseye-security main" >> /etc/apt/sources.list
+              sed -i '/debian-security/d; /^deb-src/d' /etc/apt/sources.list
+              echo "deb http://security.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
 
               print "[bold][green]The issue has been resolved :)"
 
