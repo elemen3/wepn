@@ -1016,6 +1016,7 @@ fn_menu_4(){
 
   show_cursor
   echo
+  echo
 
   exit 1
 }
