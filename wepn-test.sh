@@ -412,9 +412,9 @@ install_iptables_persistent(){
       sleep 0.5
 
       # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
-      if [[ $os != "macOS" && -x "$(command -v apt)" ]]; then
-          apt update &> /dev/null
-          apt install iptables -y &> /dev/null
+      if [ -x "$(command -v apt)" ]; then
+          [ $os != "macOS" ] && apt update &> /dev/null
+          [ $os != "macOS" ] && apt install iptables -y &> /dev/null
       fi
 
       clear_logs 1
@@ -427,13 +427,13 @@ install_iptables_persistent(){
       print "[blue]Installing iptables-persistent..."
 
       # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
-      if [[ $os != "macOS" && -x "$(command -v apt)" ]]; then
-          apt update &> /dev/null
-          echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
-          echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
-          apt install -y iptables-persistent &> /dev/null
+      if [ -x "$(command -v apt)" ]; then
+          [ $os != "macOS" ] && apt update &> /dev/null
+          [ $os != "macOS" ] && echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
+          [ $os != "macOS" ] && echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
+          [ $os != "macOS" ] && echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
+          [ $os != "macOS" ] && echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
+          [ $os != "macOS" ] && apt install -y iptables-persistent &> /dev/null
       fi
 
       clear_logs 1
@@ -643,8 +643,8 @@ block_all(){
   for (( i=0; i<${#iranips[@]}; i++ ))
   do
     ip="${iranips[$i]}"
-    if [[ $os != "macOS" && ! $(iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null) ]]; then
-      iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
+    if ! iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null; then
+      [ $os != "macOS" ] && iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
     fi
     show_progress $((i + 1)) ${#iranips[@]}
   done
@@ -658,9 +658,8 @@ clear_rules(){
   for (( i=0; i<${#iranips[@]}; i++ ))
   do
     ip="${iranips[$i]}"
-    if [[ $os != "macOS" && $(iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null) ]]; then
-      echo "-> $ip"
-      iptables -D OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
+    if iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null; then
+      [ $os != "macOS" ] && iptables -D OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
     fi
     show_progress $((i + 1)) ${#iranips[@]}
   done
@@ -669,8 +668,8 @@ clear_rules(){
   # also delete rules which are added for Arvancloud
   for aip in "${arvancloud_ips[@]}"
   do
-    if [[ $os != "macOS" && $(iptables -C OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT &> /dev/null) ]]; then
-      iptables -D OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT
+    if iptables -C OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
+      [ $os != "macOS" ] && iptables -D OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT
     fi
   done
 
@@ -681,8 +680,8 @@ clear_rules(){
 allow_arvancloud(){
     for ip in "${arvancloud_ips[@]}"
     do
-      if [[ $os != "macOS" && ! $(iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT &> /dev/null) ]]; then
-         iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT
+      if ! iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
+         [ $os != "macOS" ] && iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT
       fi
     done
 
