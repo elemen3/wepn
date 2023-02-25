@@ -423,7 +423,7 @@ update_package_lists(){
 
         print "[bold][yellow]Apt update encountered the following errors:"
         echo
-        print "$apt_update_output"
+        print "[bold][red]$apt_update_error"
         echo
 
         # debian 11 error
@@ -983,6 +983,7 @@ fn_menu_4(){
 
   # restore resolv.conf
   cp /etc/resolv.conf.bak /etc/resolv.conf
+  rm /etc/resolv.conf.bak
 
   echo
   width=$((width-2))
