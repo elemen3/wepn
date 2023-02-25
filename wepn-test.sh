@@ -1015,7 +1015,7 @@ fn_menu_4(){
 
 
   show_cursor
-  echo "\n"
+  echo -e "\n"
 
   exit 1
 }
