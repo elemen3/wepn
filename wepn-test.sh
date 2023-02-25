@@ -452,12 +452,12 @@ update_package_lists(){
               show_headers
               update_package_lists
             else
-              print center "[bold][yellow]Kindly note that in order to address the issues you are currently experiencing, we recommend fixing them manually or sharing the error messages along with your distribution details via our channel [bold][green]@wepn_group[bold][yellow]. This will allow us to streamline the fixing process and implement automated solutions in future versions. We appreciate your cooperation in resolving these matters and look forward to hearing from you."
+              print center "[bold][yellow]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][yellow]This will streamline fixing and aid in automating solutions for future versions."
               #exit
               fn_menu_4
             fi
         else
-          print center "[bold][yellow]Kindly note that in order to address the issues you are currently experiencing, we recommend fixing them manually or sharing the error messages along with your distribution details via our channel [bold][green]@wepn_group[bold][yellow]. This will allow us to streamline the fixing process and implement automated solutions in future versions. We appreciate your cooperation in resolving these matters and look forward to hearing from you."
+          print center "[bold][yellow]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][yellow]This will streamline fixing and aid in automating solutions for future versions."
           #exit
           fn_menu_4
         fi
