@@ -270,8 +270,8 @@ confirmation_dialog(){
 check_root(){
   # Check if the user has root privileges
   if [[ $EUID -ne 0 ]]; then
-      echo "This script must be run as root."
-      exit 1
+      print "[bold][red]This script must be run as [bold][yellow]root[bold][red]." #todo ask user to enable root
+      fn_menu_4
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- check OS
@@ -324,6 +324,12 @@ set_run_mode(){
     running_locally=true
   fi
 }
+#----------------------------------------------------------------------------------------------------------------------- fix /etc/hosts
+fix_etc_hosts(){
+  if ! grep -q $(hostname) /etc/hosts; then
+    echo "127.0.0.1 $(hostname)" | tee -a /etc/hosts > /dev/null
+  fi
+}
 #----------------------------------------------------------------------------------------------------------------------- get latest version number
 get_latest_version_number(){
   # Set the username and repository name
@@ -356,8 +362,10 @@ install_or_update_wepn(){
 
   # not installed
   if ! test -f "/usr/local/bin/wepn"; then
+
       # apt update once
       update_package_lists
+
 
       print "[blue]Installing WePN..."
       sleep 0.5
@@ -435,7 +443,7 @@ update_package_lists(){
 
             print "[bold][blue]Would you like to resolve it?"
             #todo ask user to fix it
-            confirmation_dialog
+            confirmation_dialog y
             response="$?"
             clear_logs 1
             if [ $response -eq 1 ]; then
@@ -1168,7 +1176,9 @@ fn_menu_block_ir_websites_5(){
 #----------------------------------------------------------------------------------------------------------------------- prepare
 prepare_screen
 show_headers
+check_root
 check_os
+fix_etc_hosts
 set_run_mode
 install_or_update_wepn
 install_packages sqlite3
