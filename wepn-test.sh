@@ -445,7 +445,7 @@ update_package_lists(){
               echo "deb http://security.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
 
               print "[bold][green]The issue has been resolved :)"
-
+              sleep 0.5
               # try again
               print "[blue]Trying again..."
               sleep 0.5
@@ -462,6 +462,7 @@ update_package_lists(){
           fn_menu_4
         fi
     else
+      sleep 0.5
       clear_logs 1
     fi
   fi
