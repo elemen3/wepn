@@ -1014,9 +1014,12 @@ fn_menu_4(){
   echo
 
 
-  show_cursor
+  tput cnorm
+  sleep 1
+  stty echo
+  sleep 1
 
-  exit 0
+  exit 1
 }
 #------------------------------------------------------------------------------------------------------- ssh
 # back
