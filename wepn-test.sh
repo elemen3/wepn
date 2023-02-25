@@ -401,60 +401,39 @@ install_or_update_wepn(){
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- install sqlite3
-install_sqlite(){
+install_packages() {
 
-  # check if sqlite3 is not installed
-  if ! (dpkg -s iptables-persistent >/dev/null 2>&1);
-  then
-      print "[blue]Installing sqlite3..."
+  [ $os != "macOS" ] &&  echo "nameserver 1.1.1.1" > /etc/resolv.conf #todo backup and restore on exit
+  [ $os != "macOS" ] && apt update &> /dev/null #todo do it on startup?
 
-      # install sqlite3
-      if [ -x "$(command -v apt)" ]; then
-          apt install sqlite3 -y &> /dev/null
-      fi
+  for package in "$@"
+  do
+    # check if package is not installed
+    print "[blue]Installing $package..."
+    sleep 0.5
 
-      clear_logs 1
+    # install iptables
+    [ $os != "macOS" ] && apt install $package -y &> /dev/null
 
-  fi
+    clear_logs 1
+  done
 }
 #----------------------------------------------------------------------------------------------------------------------- install iptables and iptables-persistent
 install_iptables_persistent(){
 
-  [ $os != "macOS" ] &&  echo "nameserver 1.1.1.1" > /etc/resolv.conf
-
-  # check if iptables is not installed
-  if ! command -v iptables-save &> /dev/null
-  then
-      print "[blue]Installing iptables..."
-      sleep 0.5
-
-      # install iptables
-      if [ -x "$(command -v apt)" ]; then
-          [ $os != "macOS" ] && apt update &> /dev/null
-          [ $os != "macOS" ] && apt install iptables -y &> /dev/null
-      fi
-
-      clear_logs 1
-
-  fi
-
   # check if iptables-persistent is not installed
-  if ! (dpkg -s iptables-persistent >/dev/null 2>&1);
-  then
+  if ! (dpkg -s iptables-persistent >/dev/null 2>&1); then
       print "[blue]Installing iptables-persistent..."
 
       # install iptables-persistent
-      if [ -x "$(command -v apt)" ]; then
-          [ $os != "macOS" ] && apt update &> /dev/null
-          [ $os != "macOS" ] && echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
-          [ $os != "macOS" ] && echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
-          [ $os != "macOS" ] && echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
-          [ $os != "macOS" ] && echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
-          [ $os != "macOS" ] && apt install -y iptables-persistent &> /dev/null
-      fi
+      apt update &> /dev/null
+      echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
+      echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
+      echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
+      echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
+      apt install -y iptables-persistent &> /dev/null
 
       clear_logs 1
-
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- load required data
@@ -999,6 +978,7 @@ fn_menu_block_ir_websites_0(){
 
 # block_ir_websites > view_existing_settings
 fn_menu_block_ir_websites_1(){
+  install_packages iptables
   install_iptables_persistent
   load_iranips
   load_arvancloud_ips
@@ -1008,6 +988,7 @@ fn_menu_block_ir_websites_1(){
 
 # block_ir_websites > block all
 fn_menu_block_ir_websites_2(){
+  install_packages iptables
   install_iptables_persistent
   load_iranips
 
@@ -1041,7 +1022,7 @@ fn_menu_block_ir_websites_2(){
             break
         else
             print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
-            sleep 2
+            sleep 1
             clear_logs 1
         fi
     done
@@ -1056,6 +1037,7 @@ fn_menu_block_ir_websites_2(){
 
 # block_ir_websites > allow arvancloud
 fn_menu_block_ir_websites_3(){
+  install_packages iptables
   install_iptables_persistent
   load_arvancloud_ips
 
@@ -1074,6 +1056,7 @@ fn_menu_block_ir_websites_3(){
 
 # block_ir_websites > clear rules
 fn_menu_block_ir_websites_4(){
+  install_packages iptables
   install_iptables_persistent
   load_iranips
   load_arvancloud_ips
@@ -1092,6 +1075,7 @@ fn_menu_block_ir_websites_4(){
 
 # block_ir_websites > save settings
 fn_menu_block_ir_websites_5(){
+  install_packages iptables
   install_iptables_persistent
 
   print "[bold][blue]Are you sure you want the save the current settings?"
@@ -1112,6 +1096,6 @@ show_headers
 check_os
 set_run_mode
 install_or_update_wepn
-install_sqlite
+install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
 menu_handler "menu"
