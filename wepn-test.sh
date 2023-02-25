@@ -404,18 +404,22 @@ install_or_update_wepn(){
 install_packages() {
 
   [ $os != "macOS" ] &&  echo "nameserver 1.1.1.1" > /etc/resolv.conf #todo backup and restore on exit
+
+  print "[blue]Updating package lists..."
   [ $os != "macOS" ] && apt update &> /dev/null #todo do it on startup?
+  clear_logs 1
 
   for package in "$@"
   do
     # check if package is not installed
     print "[blue]Installing $package..."
-    sleep 0.5
 
     # install iptables
     [ $os != "macOS" ] && apt install $package -y &> /dev/null
 
+    sleep 0.5
     clear_logs 1
+
   done
 }
 #----------------------------------------------------------------------------------------------------------------------- install iptables and iptables-persistent
@@ -425,14 +429,15 @@ install_iptables_persistent(){
   if ! (dpkg -s iptables-persistent >/dev/null 2>&1); then
       print "[blue]Installing iptables-persistent..."
 
-      # install iptables-persistent
-      apt update &> /dev/null
-      echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
-      echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
-      echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
-      echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
-      apt install -y iptables-persistent &> /dev/null
-
+      if [ $os != "macOS" ]; then
+        # install iptables-persistent
+        apt update &> /dev/null
+        echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
+        echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
+        echo "iptables-persistent iptables-persistent/autosave_v4 seen true" | debconf-set-selections
+        echo "iptables-persistent iptables-persistent/autosave_v6 seen true" | debconf-set-selections
+        apt install -y iptables-persistent &> /dev/null
+      fi
       clear_logs 1
   fi
 }
