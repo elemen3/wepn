@@ -463,12 +463,12 @@ update_package_lists(){
               show_headers
               update_package_lists
             else
-              print center "[bold][yellow]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][yellow]This will streamline fixing and aid in automating solutions for future versions."
+              print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
               #exit
               fn_menu_4
             fi
         else
-          print center "[bold][yellow]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][yellow]This will streamline fixing and aid in automating solutions for future versions."
+          print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
           #exit
           fn_menu_4
         fi
