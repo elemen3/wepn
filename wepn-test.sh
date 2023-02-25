@@ -658,6 +658,7 @@ clear_rules(){
   for (( i=0; i<${#iranips[@]}; i++ ))
   do
     ip="${iranips[$i]}"
+    echo $ip
     if [[ $os != "macOS" && $(iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null) ]]; then
       iptables -D OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
     fi
