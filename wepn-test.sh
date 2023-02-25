@@ -987,7 +987,7 @@ fn_menu_2(){
 fn_menu_4(){
 
   # restore resolv.conf
-  cp -f /etc/resolv.conf.bak /etc/resolv.conf
+  cp -f /etc/resolv.conf.bak /etc/resolv.conf 2>/dev/null || :
   rm -f /etc/resolv.conf.bak
 
   echo
