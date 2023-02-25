@@ -400,18 +400,35 @@ install_or_update_wepn(){
 
   fi
 }
+#----------------------------------------------------------------------------------------------------------------------- install sqlite3
+install_sqlite(){
+
+  # check if sqlite3 is not installed
+  if ! (dpkg -s iptables-persistent >/dev/null 2>&1);
+  then
+      print "[blue]Installing sqlite3..."
+
+      # install sqlite3
+      if [ -x "$(command -v apt)" ]; then
+          apt install sqlite3 -y &> /dev/null
+      fi
+
+      clear_logs 1
+
+  fi
+}
 #----------------------------------------------------------------------------------------------------------------------- install iptables and iptables-persistent
 install_iptables_persistent(){
 
   [ $os != "macOS" ] &&  echo "nameserver 1.1.1.1" > /etc/resolv.conf
 
-  # Check if iptables-save is installed
+  # check if iptables is not installed
   if ! command -v iptables-save &> /dev/null
   then
       print "[blue]Installing iptables..."
       sleep 0.5
 
-      # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
+      # install iptables
       if [ -x "$(command -v apt)" ]; then
           [ $os != "macOS" ] && apt update &> /dev/null
           [ $os != "macOS" ] && apt install iptables -y &> /dev/null
@@ -421,12 +438,12 @@ install_iptables_persistent(){
 
   fi
 
-  # Check if iptables-persistent is installed
+  # check if iptables-persistent is not installed
   if ! (dpkg -s iptables-persistent >/dev/null 2>&1);
   then
       print "[blue]Installing iptables-persistent..."
 
-      # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
+      # install iptables-persistent
       if [ -x "$(command -v apt)" ]; then
           [ $os != "macOS" ] && apt update &> /dev/null
           [ $os != "macOS" ] && echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
@@ -1095,6 +1112,6 @@ show_headers
 check_os
 set_run_mode
 install_or_update_wepn
+install_sqlite
 #----------------------------------------------------------------------------------------------------------------------- RUN
-#show_headers
 menu_handler "menu"
