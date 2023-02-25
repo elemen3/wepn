@@ -40,7 +40,7 @@ iranips=()
 arvancloud_ips=()
 
 global_menu_size=0
-selected_menu=""
+selected_menu="menu"
 selected_menu_index=0
 selected_menu_item=""
 #----------------------------------------------------------------------------------------------------------------------- print with text style
@@ -354,7 +354,8 @@ install_or_update_wepn(){
   if ! test -f "/usr/local/bin/wepn"; then
       print "[blue]Installing WePN..."
       sleep 0.5
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
+#      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
+      cp /Users/ben/Projects/intellij/shell/wepn/wepn-test.sh /usr/local/bin/wepn # TODO replace in production
       chmod +x /usr/local/bin/wepn
 
       latest_version="$(get_latest_version_number)"
@@ -365,8 +366,7 @@ install_or_update_wepn(){
       print center "[bold][blue]From now on, simply issue [bold][white]wepn [bold][blue]command to run the script."
       echo
 
-      print "[bold][cyan]Press Enter to continue..."
-      read -p ""
+     back_to_menu enter
 
   # already installed and running via wepn cmd
   elif $running_installed ; then
@@ -382,25 +382,28 @@ install_or_update_wepn(){
       print "[blue]Installing the new version ([bold][green]$latest_version)[blue]..."
       sleep 0.5
 
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
+#      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
+      cp /Users/ben/Projects/intellij/shell/wepn/wepn-test.sh /usr/local/bin/wepn # TODO replace in production
       chmod +x /usr/local/bin/wepn
 
       latest_version="$(get_latest_version_number)"
       sed -i.bak "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings" && rm "$HOME/.wepn/settings.bak"
 
       print "[bold][blue]WePN is updated :)"
-      sleep 1
+      clear_logs 4
 
-#    else
-#      bluebold "WePN is UP-TO-DATE."
+    else
+      # WePN is up to date.
+      clear_logs 1
     fi
+
 
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- install iptables and iptables-persistent
 install_iptables_persistent(){
 
-  echo "nameserver 1.1.1.1" > /etc/resolv.conf
+  [ $os != "macOS" ] &&  echo "nameserver 1.1.1.1" > /etc/resolv.conf
 
   # Check if iptables-save is installed
   if ! command -v iptables-save &> /dev/null
@@ -409,10 +412,12 @@ install_iptables_persistent(){
       sleep 0.5
 
       # Install iptables using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
-      if [ -x "$(command -v apt)" ]; then
+      if [[ $os != "macOS" && -x "$(command -v apt)" ]]; then
           apt update &> /dev/null
           apt install iptables -y &> /dev/null
       fi
+
+      clear_logs 1
 
   fi
 
@@ -422,7 +427,7 @@ install_iptables_persistent(){
       print "[blue]Installing iptables-persistent..."
 
       # Install iptables-persistent using apt on Debian 11, Ubuntu 18.04, and Ubuntu 20.04
-      if [ -x "$(command -v apt)" ]; then
+      if [[ $os != "macOS" && -x "$(command -v apt)" ]]; then
           apt update &> /dev/null
           echo "iptables-persistent iptables-persistent/autosave_v4 boolean true" | debconf-set-selections
           echo "iptables-persistent iptables-persistent/autosave_v6 boolean true" | debconf-set-selections
@@ -431,79 +436,89 @@ install_iptables_persistent(){
           apt install -y iptables-persistent &> /dev/null
       fi
 
+      clear_logs 1
+
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- load required data
 load_iranips(){
-  #normal "Loading the most up-to-date IP addresses..."
-  print "[blue]Loading Iran IP ranges..."
-  sleep 0.5
+  if [ "${#iranips[@]}" -eq 0 ]; then
+    print "[blue]Loading Iran IP ranges..."
+    sleep 0.5
 
-  # URL of the text file to read
-  url="https://raw.githubusercontent.com/elemen3/wepn/master/iran_ip_ranges.txt"
-
-  # Read the file from the URL line by line
-  while read -r line; do
-    #Ignore blank lines and lines starting with #
-    if [[ -n "$line" && "${line:0:1}" != "#" ]]; then
-      # Add the current line to the array
-      iranips+=("$line")
-    fi
-  done < <(curl -s "$url")
-}
-load_arvancloud_ips(){
-
-  print "[blue]Loading Arvancloud IP ranges..."
-  sleep 0.5
-
-  # URL of the text file to read
-    url="https://www.arvancloud.ir/fa/ips.txt"
+    # URL of the text file to read
+    url="https://raw.githubusercontent.com/elemen3/wepn/master/iran_ip_ranges.txt"
 
     # Read the file from the URL line by line
-   while read line || [ -n "$line" ] ; do
+    while read -r line; do
       #Ignore blank lines and lines starting with #
       if [[ -n "$line" && "${line:0:1}" != "#" ]]; then
         # Add the current line to the array
-        arvancloud_ips+=("$line")
+        iranips+=("$line")
       fi
     done < <(curl -s "$url")
 
-    # set it manually
-    if [[ ${#arvancloud_ips[@]} -eq 0 || " ${arvancloud_ips[*]} " =~ " <html " ]]; then
-      arvancloud_ips=(
-      185.143.232.0/22
-      92.114.16.80/28
-      2.146.0.0/28
-      46.224.2.32/29
-      83.123.255.56/31
-      188.229.116.16/29
-      164.138.128.28/31
-      94.182.182.28/30
-      185.17.115.176/30
-      5.213.255.36/31
-      185.228.238.0/28
-      94.182.153.24/29
-      94.101.182.0/27
-      158.255.77.238/31
-      81.12.28.16/29
-      176.65.192.202/31
-      2.144.3.128/28
-      89.45.48.64/28
-      37.32.16.0/27
-      37.32.17.0/27
-      37.32.18.0/27
-      37.32.19.0/27
-      185.215.232.0/22
-      )
-    fi
+    clear_logs 1
+  fi
+}
+load_arvancloud_ips(){
+  if [ "${#arvancloud_ips[@]}" -eq 0 ]; then
+    print "[blue]Loading Arvancloud IP ranges..."
+    sleep 0.5
+
+    # URL of the text file to read
+      url="https://www.arvancloud.ir/fa/ips.txt"
+
+      # Read the file from the URL line by line
+     while read line || [ -n "$line" ] ; do
+        #Ignore blank lines and lines starting with #
+        if [[ -n "$line" && "${line:0:1}" != "#" ]]; then
+          # Add the current line to the array
+          arvancloud_ips+=("$line")
+        fi
+      done < <(curl -s "$url")
+
+      # set it manually
+      if [[ ${#arvancloud_ips[@]} -eq 0 || " ${arvancloud_ips[*]} " =~ " <html " ]]; then
+        arvancloud_ips=(
+        185.143.232.0/22
+        92.114.16.80/28
+        2.146.0.0/28
+        46.224.2.32/29
+        83.123.255.56/31
+        188.229.116.16/29
+        164.138.128.28/31
+        94.182.182.28/30
+        185.17.115.176/30
+        5.213.255.36/31
+        185.228.238.0/28
+        94.182.153.24/29
+        94.101.182.0/27
+        158.255.77.238/31
+        81.12.28.16/29
+        176.65.192.202/31
+        2.144.3.128/28
+        89.45.48.64/28
+        37.32.16.0/27
+        37.32.17.0/27
+        37.32.18.0/27
+        37.32.19.0/27
+        185.215.232.0/22
+        )
+      fi
+
+      clear_logs 1
+  fi
 
 }
 #----------------------------------------------------------------------------------------------------------------------- hide/show cursor
 hide_cursor(){
   tput civis
+  stty -echo
 }
 show_cursor(){
   tput cnorm
+  stty echo
 }
 #----------------------------------------------------------------------------------------------------------------------- progressbar
 # normal
@@ -519,13 +534,12 @@ show_progress() {
     printf "\033[1;34m[%s%s]\033[0m \033[1;34m%d%%\033[0m" "$bar" "$restbar" $((current * 100 / total))
     printf "\r"
 }
-#----------------------------------------------------------------------------------------------------------------------- seperator
-seperator(){
-#  printf -v s "%-${width}b" ""
-#  s="----------------------------------------------------------------"
-  s="────────────────────────────────────────────────────────────────"
-  echo -e "\033[38;5;240m${s// /-}\033[0m"
-#  print "[normal]${s// /-}"
+#----------------------------------------------------------------------------------------------------------------------- separator
+separator(){
+  if [ -z "$_seperator" ]; then
+    printf -v _seperator "%-${width}b" ""
+  fi
+  echo -e "\033[38;5;240m${_seperator// /─}\033[0m"
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare screen
 prepare_screen(){
@@ -559,16 +573,13 @@ show_headers(){
   cat "$HOME/.wepn/logo"
 
   #header
-
-#  printf '▬%.0s' {1..64} | sed 's/.\{64\}/&\n/g'
-  seperator
+  separator
   echo -e "\e[1;37;48;5;21m                                                                \e[0m"
   echo -e "\e[1;37;48;5;20m                    [ WePN MASTER SCRIPT ]                      \e[0m"
   echo -e "\e[1;37;48;5;19m                      Author: macromicro                        \e[0m"
   echo -e "\e[1;37;48;5;18m                 Telegram Group: @wepn_group                    \e[0m"
   echo -e "\e[1;37;48;5;17m                                                                \e[0m"
-  seperator
-
+  separator
 }
 #----------------------------------------------------------------------------------------------------------------------- menu functions
 #------------------------------------------------------------------------------------------------------- ssh
@@ -581,8 +592,8 @@ view_existing_settings(){
 #  iptables-save | grep -i "443"
 
   # Define the arrays
-  rejected_ips=($(iptables-save | grep -- '--dport 443.*REJECT\>' | awk '{print $4}'))
-  accepted_ips=($(iptables-save | grep -- '--dport 443.*ACCEPT\>' | awk '{print $4}'))
+  [ $os != "macOS" ] &&  rejected_ips=($(iptables-save | grep -- '--dport 443.*REJECT\>' | awk '{print $4}'))
+  [ $os != "macOS" ] &&  accepted_ips=($(iptables-save | grep -- '--dport 443.*ACCEPT\>' | awk '{print $4}'))
 
   # check if they are not epmty
   if [[ ${#rejected_ips[@]} -gt 0 || ${#accepted_ips[@]} -gt 0 ]]; then
@@ -624,56 +635,40 @@ view_existing_settings(){
           done
       fi
   else
-      echo
       print "[bold][yellow]No rules are applied yet."
   fi
-
-
 }
 
 block_all(){
-
-  index=0
-  for ip in "${iranips[@]}"
-  #  for (( i=0; i<${#iranips[@]}; i++ ))
+  for (( i=0; i<${#iranips[@]}; i++ ))
   do
-#    ip="${iranips[$i]}"
-    if ! iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null; then
+    ip="${iranips[$i]}"
+    if [[ $os != "macOS" && ! $(iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null) ]]; then
       iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
     fi
-    show_progress $((index + 1)) ${#iranips[@]}
-    ((index++))
+    show_progress $((i + 1)) ${#iranips[@]}
   done
   echo
-
-  # allow arvancloud
-#  for ip in "${arvancloud_ips[@]}"
-#  do
-#    iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT
-#  done
 }
 
 clear_rules(){
-  echo
   print "[blue]Cleaning up..."
 
-  index=0
-  # for (( i=0; i<${#iranips[@]}; i++ ))
-  for ip in "${iranips[@]}"
+  # delete rules added to block iranian websites
+  for (( i=0; i<${#iranips[@]}; i++ ))
   do
-#    ip="${iranips[$i]}"
-    if iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null; then
+    ip="${iranips[$i]}"
+    if [[ $os != "macOS" && $(iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null) ]]; then
       iptables -D OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
     fi
-    show_progress $((index + 1)) ${#iranips[@]}
-    ((index++))
+    show_progress $((i + 1)) ${#iranips[@]}
   done
   echo
 
-  # also delete rules which are added for ArvanCloud
+  # also delete rules which are added for Arvancloud
   for aip in "${arvancloud_ips[@]}"
   do
-    if iptables -C OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
+    if [[ $os != "macOS" && $(iptables -C OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT &> /dev/null) ]]; then
       iptables -D OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT
     fi
   done
@@ -685,21 +680,31 @@ clear_rules(){
 allow_arvancloud(){
     for ip in "${arvancloud_ips[@]}"
     do
-      if ! iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
+      if [[ $os != "macOS" && ! $(iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT &> /dev/null) ]]; then
          iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT
       fi
     done
 
-    echo
     print "[bold][green]Arvancloud is whitelisted."
 }
 
 save_rules(){
-  iptables-save > /etc/iptables/rules.v4
+  [ $os != "macOS" ] && iptables-save > /etc/iptables/rules.v4
 #  ip6tables-save > /etc/iptables/rules.v6
   print "[bold][green]Saved."
 }
 #----------------------------------------------------------------------------------------------------------------------- menu core functions
+clear_logs(){
+  lines="$1"
+  tput cuu $((lines)) && tput ed
+}
+
+clear_menu(){
+  if [ $global_menu_size -ne 0 ]; then
+     tput cuu $((global_menu_size+1)) && tput ed
+  fi
+}
+
 back_to_menu(){
   # ask to hit enter to continue
   if [ "$1" = "enter" ]; then
@@ -716,11 +721,6 @@ back_to_menu(){
   menu_handler "$selected_menu" 1
 }
 
-clear_menu(){
-  if [ $global_menu_size -ne 0 ]; then
-     tput cuu $((global_menu_size+1)) && tput ed
-  fi
-}
 
 print_menu(){
   clear_menu
@@ -773,13 +773,13 @@ print_menu(){
       if [ "${menu_items[i]}" != "-" ]; then
           echo -e "\e[1m\e[97m $icon ${menu_items[i]}\e[0m"
       else
-          seperator
+          separator
       fi
 
-#      seperator
+#      separator
 		fi
 	done
-	seperator
+	separator
 }
 
 run_menu(){
@@ -994,40 +994,41 @@ fn_menu_block_ir_websites_2(){
   install_iptables_persistent
   load_iranips
 
-  echo
-  print "[bold][white]Are you sure you want to block outgoing traffic from your server to Iranian websites?"
+  print "[bold][blue]Are you sure you want to block outgoing traffic from your server to Iranian websites?"
   confirmation_dialog
   response="$?"
+  clear_logs 2
   if [ $response -eq 1 ]; then
 
     while true; do
 
         show_cursor
-        echo
-        read -p "$(print "[bold][white]Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): ")" response
-
+        read -e -p "$(print "[bold][blue]Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): ")" response
+        clear_logs 3
         hide_cursor
 
         if [ -z "$response" ]; then
           # no tunneling
-            echo
             print "[blue]Blocking all..."
             block_all
+            echo
+            print "[bold][green]All Iranian websites are blocked."
             break
         elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            print "[blue]Blocking all excluding your Iranian server..."
+            print "[blue]Blocking all except your Iranian server ([bold][green]$response[end][blue])..."
             block_all
             # exclude irsrv ip addr
-            iptables -A OUTPUT -d $response -p tcp --dport 443 -j ACCEPT
+            [ $os != "macOS" ] &&  iptables -A OUTPUT -d $response -p tcp --dport 443 -j ACCEPT
+            echo
+            print "[bold][green]All Iranian websites are blocked except your Iranian server."
             break
         else
-            echo
-            print "[bold][red]IP address [bold][yellow]$response' [bold][red]is not valid. Please try again."
+            print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
+            sleep 2
+            clear_logs 1
         fi
     done
 
-    echo
-    print "[bold][green]All Iranian websites are blocked."
     back_to_menu enter
 
   else
@@ -1041,10 +1042,10 @@ fn_menu_block_ir_websites_3(){
   install_iptables_persistent
   load_arvancloud_ips
 
-  echo
-  print "[bold][white]Are you sure you want to whitelist Arvancloud?"
+  print "[bold][blue]Are you sure you want to whitelist Arvancloud?"
   confirmation_dialog
   response="$?"
+  clear_logs 1
   if [ $response -eq 1 ]; then
     allow_arvancloud
     back_to_menu enter
@@ -1060,10 +1061,10 @@ fn_menu_block_ir_websites_4(){
   load_iranips
   load_arvancloud_ips
 
-  echo
-  print "[bold][white]Are you sure you want to unblock all the websites blocked by this script?"
+  print "[bold][blue]Are you sure you want to unblock all the websites blocked by this script?"
   confirmation_dialog
   response="$?"
+  clear_logs 2
   if [ $response -eq 1 ]; then
     clear_rules
     back_to_menu enter
@@ -1076,11 +1077,11 @@ fn_menu_block_ir_websites_4(){
 fn_menu_block_ir_websites_5(){
   install_iptables_persistent
 
-  echo
-  print "[bold][white]Are you sure you want the save the current settings?"
-  print "[white]In this case the settings persist if you even reboot the system."
+  print "[bold][blue]Are you sure you want the save the current settings?"
+  print "[blue]In this case the settings persist if you even reboot the system."
   confirmation_dialog
   response="$?"
+  clear_logs 2
   if [ $response -eq 1 ]; then
     save_rules
     back_to_menu enter
@@ -1095,5 +1096,5 @@ check_os
 set_run_mode
 install_or_update_wepn
 #----------------------------------------------------------------------------------------------------------------------- RUN
-show_headers
+#show_headers
 menu_handler "menu"
