@@ -452,12 +452,12 @@ update_package_lists(){
               show_headers
               update_package_lists
             else
-              print "[bold][yellow]Please fix them manually or send me the error message in [bold][green]@wepn_group [bold][yellow]and let me make the fixing process automatic in future versions."
+              print center "[bold][yellow]Please fix them manually or send me the error messages in [bold][green]@wepn_group [bold][yellow]and let me make the fixing process automatic in future versions."
               #exit
               fn_menu_4
             fi
         else
-          print "[bold][yellow]Please fix them manually or send me the error message in [bold][green]@wepn_group [bold][yellow]and let me make the fixing process automatic in future versions."
+          print center "[bold][yellow]Please fix them manually or send me the error messages in [bold][green]@wepn_group [bold][yellow]and let me make the fixing process automatic in future versions."
           #exit
           fn_menu_4
         fi
