@@ -421,7 +421,8 @@ update_package_lists(){
 
     if [ -n "$apt_update_error" ]; then
 
-        print "[bold][yellow]Apt update encountered the following errors:"
+        echo
+        print "[bold][yellow]The apt-get update encountered the following errors:"
         echo
         print "[bold][red]$apt_update_error"
         echo
