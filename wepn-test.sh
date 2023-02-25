@@ -356,6 +356,7 @@ install_or_update_wepn(){
 
   # not installed
   if ! test -f "/usr/local/bin/wepn"; then
+      update_package_lists
       print "[blue]Installing WePN..."
       sleep 0.5
 #      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
@@ -1168,7 +1169,6 @@ show_headers
 check_os
 set_run_mode
 install_or_update_wepn
-update_package_lists
 install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
 menu_handler "menu"
