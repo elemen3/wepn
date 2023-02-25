@@ -1167,8 +1167,8 @@ prepare_screen
 show_headers
 check_os
 set_run_mode
-update_package_lists
 install_or_update_wepn
+update_package_lists
 install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
 menu_handler "menu"
