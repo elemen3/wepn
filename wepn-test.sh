@@ -356,7 +356,9 @@ install_or_update_wepn(){
 
   # not installed
   if ! test -f "/usr/local/bin/wepn"; then
+      # apt update once
       update_package_lists
+
       print "[blue]Installing WePN..."
       sleep 0.5
 #      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
