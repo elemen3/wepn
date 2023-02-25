@@ -268,7 +268,11 @@ confirmation_dialog(){
 }
 #----------------------------------------------------------------------------------------------------------------------- check root
 check_root(){
-  redbold "Unsupported distribution. Exiting..." #todo
+  # Check if the user has root privileges
+  if [[ $EUID -ne 0 ]]; then
+      echo "This script must be run as root."
+      exit 1
+  fi
 }
 #----------------------------------------------------------------------------------------------------------------------- check OS
 check_os(){
@@ -400,14 +404,72 @@ install_or_update_wepn(){
 
   fi
 }
-#----------------------------------------------------------------------------------------------------------------------- install sqlite3
+#----------------------------------------------------------------------------------------------------------------------- update package lists
+update_package_lists(){
+  if [ $os != "macOS" ]; then
+    cp /etc/resolv.conf /etc/resolv.conf.bak
+    echo "nameserver 1.1.1.1" > /etc/resolv.conf
+  fi
+
+
+#  [ $os != "macOS" ] && apt update &> /dev/null
+  if [ $os != "macOS" ]; then
+
+    print "[blue]Updating package lists..."
+    apt_update_error=$(apt-get update -q 2>&1 >/dev/null)
+
+    if [ -n "$apt_update_error" ]; then
+
+        print "[bold][yellow]Apt update encountered the following errors:"
+        echo
+        print "$apt_update_output"
+        echo
+
+        # debian 11 error
+        if echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
+
+            print "[bold][blue]Would you like to resolve it?"
+            #todo ask user to fix it
+            confirmation_dialog
+            response="$?"
+            clear_logs 1
+            if [ $response -eq 1 ]; then
+
+              # Fix error for Debian 11
+              print "[blue]Resolving the problem..."
+              sleep 0.5
+              cp /etc/apt/sources.list /etc/apt/sources.list.bak
+              sed -i '/^deb http:\/\/security.debian.org\/debian-security bullseye\/updates Release$/s/^/#/' /etc/apt/sources.list
+              echo "deb http://security.debian.org/debian-security bullseye-security main" >> /etc/apt/sources.list
+
+              print "[bold][green]The issue has been resolved :)"
+
+              # try again
+              print "[blue]Trying again..."
+              sleep 0.5
+              show_headers
+              update_package_lists
+            else
+              print "[bold][yellow]Please fix them manually or send me the error message in [bold][green]@wepn_group [bold][yellow]and let me make the fixing process automatic in future versions."
+              #exit
+              fn_menu_4
+            fi
+        else
+          print "[bold][yellow]Please fix them manually or send me the error message in [bold][green]@wepn_group [bold][yellow]and let me make the fixing process automatic in future versions."
+          #exit
+          fn_menu_4
+        fi
+    else
+      clear_logs 1
+    fi
+
+
+
+  fi
+
+}
+#----------------------------------------------------------------------------------------------------------------------- install package(s)
 install_packages() {
-
-  [ $os != "macOS" ] &&  echo "nameserver 1.1.1.1" > /etc/resolv.conf #todo backup and restore on exit
-
-  print "[blue]Updating package lists..."
-  [ $os != "macOS" ] && apt update &> /dev/null #todo do it on startup?
-  clear_logs 1
 
   for package in "$@"
   do
@@ -922,6 +984,9 @@ fn_menu_2(){
 # exit
 fn_menu_4(){
 
+  # restore resolv.conf
+  cp /etc/resolv.conf.bak /etc/resolv.conf
+
   echo
   width=$((width-2))
   exit_msg1="Appreciate your taking the time to play with my script."
@@ -1103,6 +1168,7 @@ prepare_screen
 show_headers
 check_os
 set_run_mode
+update_package_lists
 install_or_update_wepn
 install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
