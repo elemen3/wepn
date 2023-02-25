@@ -1013,6 +1013,7 @@ fn_menu_4(){
   printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg6" $padding ''
   echo
 
+  show_cursor
 
   exit 1
 }
