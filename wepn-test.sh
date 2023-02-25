@@ -406,13 +406,14 @@ install_or_update_wepn(){
 }
 #----------------------------------------------------------------------------------------------------------------------- update package lists
 update_package_lists(){
+
+  # fix nameserver possible issue
   if [ $os != "macOS" ]; then
     cp /etc/resolv.conf /etc/resolv.conf.bak
     echo "nameserver 1.1.1.1" > /etc/resolv.conf
   fi
 
-
-#  [ $os != "macOS" ] && apt update &> /dev/null
+  # apt update (catch errors)
   if [ $os != "macOS" ]; then
 
     print "[blue]Updating package lists..."
@@ -462,11 +463,7 @@ update_package_lists(){
     else
       clear_logs 1
     fi
-
-
-
   fi
-
 }
 #----------------------------------------------------------------------------------------------------------------------- install package(s)
 install_packages() {
