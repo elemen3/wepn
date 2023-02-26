@@ -266,14 +266,6 @@ confirmation_dialog(){
  done
 
 }
-#----------------------------------------------------------------------------------------------------------------------- check root
-check_root(){
-  # Check if the user has root privileges
-  if [[ $EUID -ne 0 ]]; then
-      print "[bold][red]This script must be run as [bold][yellow]root[bold][red]." #todo ask user to enable root
-      fn_menu_4
-  fi
-}
 #----------------------------------------------------------------------------------------------------------------------- check OS
 check_os(){
 
@@ -314,6 +306,14 @@ check_os(){
       fn_menu_4
   fi
 }
+#----------------------------------------------------------------------------------------------------------------------- check root
+check_root(){
+  # Check if the user has root privileges
+  if [[ $os != "macOS" && $EUID -ne 0 ]]; then
+      print "[bold][red]This script must be run as [bold][yellow]root[bold][red]." #todo ask user to enable root
+      fn_menu_4
+  fi
+}
 #----------------------------------------------------------------------------------------------------------------------- set run mode
 set_run_mode(){
   if [[ "$0" == /dev* ]]; then
@@ -326,7 +326,8 @@ set_run_mode(){
 }
 #----------------------------------------------------------------------------------------------------------------------- fix /etc/hosts
 fix_etc_hosts(){
-  if ! grep -q $(hostname) /etc/hosts; then
+  if [[ $os != "macOS" && ! $(grep -q "$(hostname)" /etc/hosts) ]]; then
+#  if ! grep -q $(hostname) /etc/hosts; then
     echo "127.0.0.1 $(hostname)" | tee -a /etc/hosts > /dev/null
   fi
 }
@@ -1176,11 +1177,11 @@ fn_menu_block_ir_websites_5(){
 #----------------------------------------------------------------------------------------------------------------------- prepare
 prepare_screen
 show_headers
-check_root
 check_os
+check_root
 fix_etc_hosts
 set_run_mode
 install_or_update_wepn
-install_packages sqlite3
+#install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
 menu_handler "menu"
