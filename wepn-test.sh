@@ -479,7 +479,7 @@ install_packages() {
     if ! (dpkg -s $package >/dev/null 2>&1); then
       print "[blue]Installing $package..."
 
-      # install iptables
+      # install package
       [ $os != "macOS" ] && apt install $package -y &> /dev/null
 
       sleep 0.5
