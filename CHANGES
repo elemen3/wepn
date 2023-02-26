@@ -1,11 +1,11 @@
 ------------------------------------------------------------------------------------------------------------------------ 2023.02.26.214854
-fix: iptables-persistent not found
-fix: circle icon rendering
+fix: iptables-persistent not found issue
+fix: circle icon rendering issue
 add script installation
 support other distors (Ubuntu 18.04, Ubuntu 20.04, Ubuntu 22.04, Ubuntu 22.10, Debian 10 and Debian 11)
-make menu navigation faster
-add pressing Q to exit
-add left and right arrow keys in menu navigation
+make menu navigation faster and smoother
+add pressing Q key to exit
+add left and right arrow keys in menu navigation (jump to the first and last items)
 add confirmation dialog
 warn to fix apt update errors
 
