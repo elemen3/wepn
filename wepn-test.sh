@@ -1027,7 +1027,7 @@ fn_menu_ssh_0(){
 
 # ssh > change ssh port
 fn_menu_ssh_1(){
-  green "TODO..." #TODO
+  print "[bold][yellow]TODO..." #TODO
   back_to_menu enter
 }
 #------------------------------------------------------------------------------------------------------- cloudflare
@@ -1038,7 +1038,7 @@ fn_menu_cloudflare_0(){
 
 # cloudflare > show scannet IPs
 fn_menu_cloudflare_1(){
-  green "TODO..." #TODO
+  print "[bold][yellow]TODO..." #TODO
   back_to_menu enter
 }
 #------------------------------------------------------------------------------------------------------- block iran ips
