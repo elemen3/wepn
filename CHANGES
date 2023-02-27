@@ -1,12 +1,10 @@
 ------------------------------------------------------------------------------------------------------------------------ 2023.02.26.214854
-fix: iptables-persistent not found issue
-fix: circle icon rendering issue
-add script installation
-support other distors (Ubuntu 18.04, Ubuntu 20.04, Ubuntu 22.04, Ubuntu 22.10, Debian 10 and Debian 11)
-make menu navigation faster and smoother
-add pressing Q key to exit
-add left and right arrow keys in menu navigation (jump to the first and last items)
-add confirmation dialog
-warn to fix apt update errors
-
-
+🟢 Script Installation: Installs the script and will be accessible later via `wepn` command
+🟢 Expanded Compatibility: Now supporting Ubuntu 18.04, 20.04, 22.04, 22.10, Debian 10 and 11 - so you can use our product on your preferred OS.
+🟢 Improved Menu Navigation: Experience faster and smoother navigation with our newly optimized menu.
+🟢 Quick Exit: Press Q to quickly exit the menu.
+🟢 Easy Item Selection: Jump to the first and last items in the menu with the left and right arrow keys.
+🟢 Confirmation Dialog: Avoid mistakes with a confirmation dialog that appears before executing important commands.
+🟢 Apt Update Error Warnings: We'll help you fix apt update errors by providing timely warnings.
+🟢 Bug Fix: iptables-persistent not found issue
+🟢 Bug Fix: circle icon rendering issue
