@@ -459,17 +459,29 @@ update_package_lists(){
             fi
         # certbot error
         elif echo "$apt_update_error" | grep -q "ppa.launchpad.net/certbot/certbot/ubuntu" ; then
-            # Fix error for Debian 11
-            print "[blue]Resolving the problem..."
-            sleep 1
-            rm -f "/etc/apt/sources.list.d/certbot-*.list"
-            print "[bold][green]The issue has been resolved :)"
-            sleep 1
-            # try again
-            print "[blue]Trying again..."
-            sleep 1
-            show_headers
-            update_package_lists
+
+            print "[bold][blue]Would you like to resolve it?"
+            confirmation_dialog y
+            response="$?"
+            clear_logs 1
+            if [ $response -eq 1 ]; then
+
+              # Fix certbot error
+              print "[blue]Resolving the problem..."
+              sleep 1
+              rm -f "/etc/apt/sources.list.d/certbot-*.list"
+              print "[bold][green]The issue has been resolved :)"
+              sleep 1
+              # try again
+              print "[blue]Trying again..."
+              sleep 1
+              show_headers
+              update_package_lists
+            else
+              print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+              #exit
+              fn_menu_4
+            fi
         else
           print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
           #exit
