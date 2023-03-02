@@ -467,7 +467,7 @@ update_package_lists(){
               # Fix certbot error
               print "[blue]Resolving the problem..."
               sleep 1
-              rm -f "/etc/apt/sources.list.d/certbot-*.list"
+              rm -f /etc/apt/sources.list.d/certbot-*.list
               print "[bold][green]The issue has been resolved :)"
               sleep 1
               # try again
