@@ -433,7 +433,6 @@ update_package_lists(){
         if echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
 
             print "[bold][blue]Would you like to resolve it?"
-            #todo ask user to fix it
             confirmation_dialog y
             response="$?"
             clear_logs 1
@@ -458,6 +457,19 @@ update_package_lists(){
               #exit
               fn_menu_4
             fi
+        # certbot error
+        elif echo "$apt_update_error" | grep -q "ppa.launchpad.net/certbot/certbot/ubuntu" ; then
+            # Fix error for Debian 11
+            print "[blue]Resolving the problem..."
+            sleep 1
+            rm -f "/etc/apt/sources.list.d/certbot-*.list"
+            print "[bold][green]The issue has been resolved :)"
+            sleep 1
+            # try again
+            print "[blue]Trying again..."
+            sleep 1
+            show_headers
+            update_package_lists
         else
           print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
           #exit
