@@ -480,7 +480,6 @@ update_package_lists(){
               #exit
               fn_menu_4
             fi
-
         else
           print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
           #exit
@@ -694,6 +693,8 @@ view_existing_settings(){
           max_length=$len
         fi
       done
+
+      max_length=50 #todo calculate it?
 
       # Print the top border line
       printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"

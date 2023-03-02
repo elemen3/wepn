@@ -696,6 +696,8 @@ view_existing_settings(){
         fi
       done
 
+      max_length=50 #todo calculate it?
+
       # Print the top border line
       printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
 
