@@ -388,8 +388,8 @@ install_or_update_wepn(){
       print "[blue]Installing the new version ([bold][green]$latest_version)[blue]..."
       sleep 0.5
 
-#      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
-      cp /Users/ben/Projects/intellij/shell/wepn/wepn-test.sh /usr/local/bin/wepn # TODO replace in production
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
+#      cp /Users/ben/Projects/intellij/shell/wepn/wepn-test.sh /usr/local/bin/wepn # TODO replace in production
       chmod +x /usr/local/bin/wepn
 
       latest_version="$(get_latest_version_number)"
