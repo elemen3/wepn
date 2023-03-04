@@ -730,6 +730,15 @@ view_existing_settings(){
 }
 
 block_all(){
+
+  # Check if uwf is installed
+  if command -v ufw &> /dev/null
+  then
+      # ufw is installed, stop and disable it
+      service ufw stop
+      ufw disable > /dev/null
+  fi
+
   for (( i=0; i<${#iranips[@]}; i++ ))
   do
     ip="${iranips[$i]}"
