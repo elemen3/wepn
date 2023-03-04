@@ -8,8 +8,9 @@ Confirmation Dialog: Avoid mistakes with a confirmation dialog that appears befo
 Apt Update Error Warnings: We'll help you fix apt update errors by providing timely warnings.
 Bug Fix: iptables-persistent not found issue
 Bug Fix: circle icon rendering issue
-------------------------------------------------------------------------------------------------------------------------
-Blue logo
-Bug Fix: Certbot error during apt-update
-Bug Fix: Fit datagrid based on the width
-Bug Fix: Disable and stop ufw.
+------------------------------------------------------------------------------------------------------------------------ 2023.03.04.171835
+Updated the logo to use the blue variant.
+Expanded the list of IP ranges to provide more comprehensive coverage.
+Adjusted the datagrid to resize based on the width of the content.
+Bug Fix: Resolved an issue where certbot was generating errors during apt-update.
+Bug Fix: Corrected an issue where the UFW firewall was interfering with iptables rules by disabling and stopping the UFW service.
