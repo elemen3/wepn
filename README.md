@@ -1,4 +1,4 @@
-# WePN Master Script
+# WePN Script
 
 
 [فارسی](README.fa.md)
