@@ -603,7 +603,7 @@ load_arvancloud_ips(){
   fi
 
 }
-load_derak_ips(){
+load_derakcloud_ips(){
   if [ "${#derakcloud_ips[@]}" -eq 0 ]; then
     print "[blue]Loading Derak Cloud IP ranges..."
     sleep 0.5
@@ -1149,6 +1149,7 @@ fn_menu_block_ir_websites_1(){
   install_iptables_persistent
   load_iranips
   load_arvancloud_ips
+  load_derakcloud_ips
   view_existing_settings
   back_to_menu enter
 }
@@ -1225,7 +1226,7 @@ fn_menu_block_ir_websites_3(){
 fn_menu_block_ir_websites_4(){
   install_packages iptables
   install_iptables_persistent
-  load_arvancloud_ips
+  load_derakcloud_ips
 
   print "[bold][blue]Are you sure you want to whitelist Derak Cloud?"
   confirmation_dialog
@@ -1245,6 +1246,7 @@ fn_menu_block_ir_websites_5(){
   install_iptables_persistent
   load_iranips
   load_arvancloud_ips
+  load_derakcloud_ips
 
   print "[bold][blue]Are you sure you want to unblock all the websites blocked by this script?"
   confirmation_dialog
