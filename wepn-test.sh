@@ -38,6 +38,7 @@ width=64
 
 iranips=()
 arvancloud_ips=()
+derakcloud_ips=()
 
 global_menu_size=0
 selected_menu="menu"
@@ -602,6 +603,54 @@ load_arvancloud_ips(){
   fi
 
 }
+load_derak_ips(){
+  if [ "${#derakcloud_ips[@]}" -eq 0 ]; then
+    print "[blue]Loading Derak Cloud IP ranges..."
+    sleep 0.5
+
+    # URL of the text file to read
+      url="https://api.derak.cloud/public/ipv4"
+
+      # Read the file from the URL line by line
+     while read line || [ -n "$line" ] ; do
+        #Ignore blank lines and lines starting with #
+        if [[ -n "$line" && "${line:0:1}" != "#" ]]; then
+          # Add the current line to the array
+          derakcloud_ips+=("$line")
+        fi
+      done < <(curl -s "$url")
+
+      # set it manually
+      if [[ ${#derakcloud_ips[@]} -eq 0 || " ${derakcloud_ips[*]} " =~ " <html " ]]; then
+        derakcloud_ips=(
+        5.145.115.0/24
+        5.145.112.0/24
+        185.24.255.0/24
+        185.169.6.0/24
+        5.145.117.0/24
+        5.145.118.0/24
+        5.145.119.0/24
+        178.62.222.208/28
+        159.69.229.224/28
+        116.202.90.176/28
+        165.232.92.112/28
+        216.155.152.176/28
+        139.180.159.176/28
+        45.77.71.48/28
+        45.77.87.48/28
+        209.246.143.48/28
+        139.180.159.192/28
+        45.76.37.144/28
+        185.24.252.192/28
+        217.69.10.128/28
+        5.145.113.192/28
+        )
+      fi
+
+      clear_logs 1
+  fi
+
+}
 #----------------------------------------------------------------------------------------------------------------------- hide/show cursor
 hide_cursor(){
   tput civis
@@ -785,6 +834,17 @@ allow_arvancloud(){
     done
 
     print "[bold][green]Arvancloud is whitelisted."
+}
+
+allow_derakcloud(){
+    for ip in "${derakcloud_ips[@]}"
+    do
+      if ! iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
+         [ $os != "macOS" ] && iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT
+      fi
+    done
+
+    print "[bold][green]Derak Cloud is whitelisted."
 }
 
 save_rules(){
@@ -995,6 +1055,7 @@ menu_block_ir_websites=(
 'View applied rules'
 'Block outgoing traffic from this server to Iranian websites'
 'Allow Arvancloud CDN and Servers'
+'Allow Derak Cloud CDN and Servers'
 'Clear all rules applied by this script'
 'Save settings'
 )
@@ -1160,8 +1221,26 @@ fn_menu_block_ir_websites_3(){
 
 }
 
-# block_ir_websites > clear rules
+# block_ir_websites > allow derak.cloud
 fn_menu_block_ir_websites_4(){
+  install_packages iptables
+  install_iptables_persistent
+  load_arvancloud_ips
+
+  print "[bold][blue]Are you sure you want to whitelist Derak Cloud?"
+  confirmation_dialog
+  response="$?"
+  clear_logs 1
+  if [ $response -eq 1 ]; then
+    allow_derakcloud
+    back_to_menu enter
+  else
+    back_to_menu
+  fi
+}
+
+# block_ir_websites > clear rules
+fn_menu_block_ir_websites_5(){
   install_packages iptables
   install_iptables_persistent
   load_iranips
@@ -1180,7 +1259,7 @@ fn_menu_block_ir_websites_4(){
 }
 
 # block_ir_websites > save settings
-fn_menu_block_ir_websites_5(){
+fn_menu_block_ir_websites_6(){
   install_packages iptables
   install_iptables_persistent
 
