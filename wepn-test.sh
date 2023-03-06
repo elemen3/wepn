@@ -821,6 +821,14 @@ clear_rules(){
     fi
   done
 
+  # also delete rules which are added for DerakCloud
+  for aip in "${derakcloud_ips[@]}"
+  do
+    if iptables -C OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
+      [ $os != "macOS" ] && iptables -D OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT
+    fi
+  done
+
   echo
   print "[bold][green]Cleaned up."
 }
