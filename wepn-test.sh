@@ -459,7 +459,7 @@ update_package_lists(){
               fn_menu_4
             fi
         # certbot error
-        elif echo "$apt_update_error" | grep -q "ppa.launchpad.net/certbot/certbot/ubuntu" ; then
+        elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
 
             print "[bold][blue]Would you like to resolve it?"
             confirmation_dialog y
