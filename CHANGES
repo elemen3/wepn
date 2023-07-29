@@ -1,4 +1,4 @@
------------------------------------------------------------------------------------------------------------------------- 2023.02.27.005050
+------------------------------------------------------------------------------------------------------------------------ 2023.02.27
 Script Installation: Installs the script and will be accessible later via `wepn` command
 Expanded Compatibility: Now supporting Ubuntu 18.04, 20.04, 22.04, 22.10, Debian 10 and 11 - so you can use our product on your preferred OS.
 Improved Menu Navigation: Experience faster and smoother navigation with the newly optimized menu.
@@ -8,11 +8,12 @@ Confirmation Dialog: Avoid mistakes with a confirmation dialog that appears befo
 Apt Update Error Warnings: We'll help you fix apt update errors by providing timely warnings.
 Bug Fix: iptables-persistent not found issue
 Bug Fix: circle icon rendering issue
------------------------------------------------------------------------------------------------------------------------- 2023.03.04.171835
+------------------------------------------------------------------------------------------------------------------------ 2023.03.04
 Updated the logo to use the blue variant.
 Expanded the list of IP ranges to provide more comprehensive coverage.
 Adjusted the datagrid to resize based on the width of the content.
 Bug Fix: Resolved an issue where certbot was generating errors during apt-update.
 Bug Fix: Corrected an issue where the UFW firewall was interfering with iptables rules by disabling and stopping the UFW service.
------------------------------------------------------------------------------------------------------------------------- 2023.03.06.203131
+------------------------------------------------------------------------------------------------------------------------ 2023.03.06
 Option to whitelist derak.cloud
+------------------------------------------------------------------------------------------------------------------------ 2023.xx.xxxxxx
