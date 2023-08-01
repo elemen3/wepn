@@ -1949,7 +1949,7 @@ delete_table(){
 
 
 
-clear_old_iptables_rules_and _run(){
+clear_old_iptables_rules_and_run(){
   if command -v iptables-save >/dev/null && iptables-save | grep -i "443" | grep -Ev "^-A wepn_" >/dev/null; then
      print "[yellow]You have applied some rules using the previous version of the script which may cause conflicts."
      echo
@@ -2022,4 +2022,4 @@ set_run_mode
 #install_or_update_wepn
 #install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
-clear_old_iptables_rules_and _run
+clear_old_iptables_rules_and_run
