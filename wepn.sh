@@ -34,15 +34,22 @@ running_url=false
 running_installed=false
 running_locally=false
 
+logo_shown=false
+
 width=64
 
-iranips=()
+iran_ips=()
 arvancloud_ips=()
 derakcloud_ips=()
+porn_ips=()
+china_ips=()
+russia_ips=()
+
 
 global_menu_size=0
 selected_menu="menu"
 selected_menu_index=0
+reserved_selected_menu_index=0
 selected_menu_item=""
 #----------------------------------------------------------------------------------------------------------------------- print with text style
 print() {
@@ -95,14 +102,29 @@ print() {
   }
 
 
+
   # Read the alignment parameter and set the default to left
-  if [ "$1" == "left" ] || [ "$1" == "center" ] || [ "$1" == "right" ]; then
-    align=$1
-    text=$2
-  else
-    align="left"
-    text=$1
-  fi
+  if [ "$1" == "y" ] || [ "$1" == "n" ]; then
+    if [ "$2" == "left" ] || [ "$2" == "center" ] || [ "$2" == "right" ]; then
+      squeeze_spaces=$1
+      align=$2
+      text=$3
+    else
+      squeeze_spaces=$1
+      align="left"
+      text=$2
+    fi
+   elif [ "$1" == "left" ] || [ "$1" == "center" ] || [ "$1" == "right" ]; then
+     squeeze_spaces="y"
+     align=$1
+     text=$2
+   else
+     squeeze_spaces="y"
+     align="left"
+     text=$1
+   fi
+
+
 
   # Define color codes
   end="\\\033[0m"
@@ -123,25 +145,48 @@ print() {
 
 
   # cleanup and fold
-  if [ $(echo -e "$formatted_text" | tr -s ' ' | tr -d '\n' | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | wc -c) -le $width ]; then
-    formatted_text=$(echo -en "$formatted_text" | tr -s ' ' | sed 's/^ *//;s/ *$//' | sed 's/^ //')
+  if [ $squeeze_spaces == "y" ]; then
+    if [ $(echo -e "$formatted_text" | tr -s ' ' | tr -d '\n' | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | wc -c) -le $width ]; then
+      formatted_text=$(echo -en "$formatted_text" | tr -s ' ' | sed 's/^ *//;s/ *$//' | sed 's/^ //')
+    else
+      formatted_text=$(echo -en "$formatted_text" | tr -s ' ' | sed 's/^ *//;s/ *$//' | fold_text $width | sed 's/^ //')
+    fi
   else
-    formatted_text=$(echo -en "$formatted_text" | tr -s ' ' | sed 's/^ *//;s/ *$//' | fold_text $width | sed 's/^ //')
+    if [ $(echo -e "$formatted_text" | tr -d '\n' | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | wc -c) -le $width ]; then
+      formatted_text=$(echo -en "$formatted_text" | sed 's/^ *//;s/ *$//' | sed 's/^ //')
+    else
+      formatted_text=$(echo -en "$formatted_text" | sed 's/^ *//;s/ *$//' | fold_text $width | sed 's/^ //')
+    fi
   fi
 
 
   # center alignment
+  if [ $squeeze_spaces" == "y ]; then
+    if [ "$align" = "center" ]; then
+      formatted_text=$(echo -e "$formatted_text" | while read line; do
+        line_length=$(echo -n "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | tr -s ' ' | sed 's/^ *//;s/ *$//' | wc -m)
+        printf "%*s%s%*s\n" $(((width-line_length)/2)) '' "$(echo $line | tr -s ' ' | sed 's/^ *//;s/ *$//')" $(((width-line_length+1)/2)) ''
+      done)
+    # right alignment
+    elif [ "$align" = "right" ]; then
+      formatted_text=$(echo -e "$formatted_text" | while read line; do
+        line_length=$(echo -n "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | tr -s ' ' | sed 's/^ *//;s/ *$//' | wc -m)
+        printf "%*s%s\n" $((width-line_length)) '' "$(echo $line | tr -s ' ' | sed 's/^ *//;s/ *$//')"
+      done)
+    fi
+  else
   if [ "$align" = "center" ]; then
     formatted_text=$(echo -e "$formatted_text" | while read line; do
-      line_length=$(echo -n "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | tr -s ' ' | sed 's/^ *//;s/ *$//' | wc -m)
-      printf "%*s%s%*s\n" $(((width-line_length)/2)) '' "$(echo $line | tr -s ' ' | sed 's/^ *//;s/ *$//')" $(((width-line_length+1)/2)) ''
+      line_length=$(echo -n "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | sed 's/^ *//;s/ *$//' | wc -m)
+      printf "%*s%s%*s\n" $(((width-line_length)/2)) '' "$(echo $line | sed 's/^ *//;s/ *$//')" $(((width-line_length+1)/2)) ''
     done)
   # right alignment
   elif [ "$align" = "right" ]; then
     formatted_text=$(echo -e "$formatted_text" | while read line; do
-      line_length=$(echo -n "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | tr -s ' ' | sed 's/^ *//;s/ *$//' | wc -m)
-      printf "%*s%s\n" $((width-line_length)) '' "$(echo $line | tr -s ' ' | sed 's/^ *//;s/ *$//')"
+      line_length=$(echo -n "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | sed 's/^ *//;s/ *$//' | wc -m)
+      printf "%*s%s\n" $((width-line_length)) '' "$(echo $line | sed 's/^ *//;s/ *$//')"
     done)
+  fi
   fi
 
   # Print the formatted text
@@ -280,21 +325,21 @@ check_os(){
       if ! [[ "$os_version" == "18.04" || "$os_version" == "20.04" || "$os_version" == "22.04" || "$os_version" == "22.10" ]]; then
           echo
           print center "[bold][red]This script has not been tested on\n [bold][yellow]$os $os_version [bold][red]yet!"
-          fn_menu_4
+          fn_menu_2
       fi
   elif [[ "$os" == "Debian" ]]; then
       if ! [[ "$os_version" == "10" || "$os_version" == "11" ]]; then
           echo
           print center "[bold][red]This script has not been tested on [bold][yellow]$os $os_version [bold][red]yet."
-          fn_menu_4
+          fn_menu_2
       fi
-  elif [[ "$os" == "macOS" ]]; then
+  elif [[ "$os" == "macOS" ]]; then #todo macOS_ for production
     # FOR TESTING PURPOSES ONLY!
     echo > /dev/null
   else
       echo
       print center "[bold][red]This script is designed to work only on\n [bold][yellow]Ubuntu [bold][red]and [bold][yellow]Debian [bold][red]systems."
-      fn_menu_4
+      fn_menu_2
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- check root
@@ -302,7 +347,7 @@ check_root(){
   # Check if the user has root privileges
   if [[ $os != "macOS" && $EUID -ne 0 ]]; then
       print "[bold][red]This script must be run as [bold][yellow]root[bold][red]." #todo ask user to enable root
-      fn_menu_4
+      fn_menu_2
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- set run mode
@@ -317,9 +362,18 @@ set_run_mode(){
 }
 #----------------------------------------------------------------------------------------------------------------------- fix /etc/hosts
 fix_etc_hosts(){
-  if [[ $os != "macOS" && ! $(grep -q "$(hostname)" /etc/hosts) ]]; then
-#  if ! grep -q $(hostname) /etc/hosts; then
-    echo "127.0.0.1 $(hostname)" | tee -a /etc/hosts > /dev/null
+  if ! grep -q "$(hostname)" /etc/hosts; then
+      echo "127.0.0.1 $(hostname)" | tee -a /etc/hosts > /dev/null
+  fi
+}
+#----------------------------------------------------------------------------------------------------------------------- disable ufw
+disable_ufw(){
+  # Check if uwf is installed
+  if command -v ufw &> /dev/null
+  then
+      # ufw is installed, stop and disable it
+      service ufw stop
+      ufw disable > /dev/null
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- get latest version number
@@ -456,7 +510,7 @@ update_package_lists(){
             else
               print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
               #exit
-              fn_menu_4
+              fn_menu_2
             fi
         # certbot error
         elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
@@ -481,12 +535,12 @@ update_package_lists(){
             else
               print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
               #exit
-              fn_menu_4
+              fn_menu_2
             fi
         else
           print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
           #exit
-          fn_menu_4
+          fn_menu_2
         fi
     else
       sleep 0.5
@@ -533,8 +587,8 @@ install_iptables_persistent(){
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- load required data
-load_iranips(){
-  if [ "${#iranips[@]}" -eq 0 ]; then
+load_iran_ips(){
+  if [ "${#iran_ips[@]}" -eq 0 ]; then
     print "[blue]Loading Iran IP ranges..."
     sleep 0.5
 
@@ -546,7 +600,7 @@ load_iranips(){
       #Ignore blank lines and lines starting with #
       if [[ -n "$line" && "${line:0:1}" != "#" ]]; then
         # Add the current line to the array
-        iranips+=("$line")
+        iran_ips+=("$line")
       fi
     done < <(curl -s "$url")
 
@@ -568,7 +622,7 @@ load_arvancloud_ips(){
           # Add the current line to the array
           arvancloud_ips+=("$line")
         fi
-      done < <(curl -s "$url")
+      done < <(timeout 2 curl -s "$url")
 
       # set it manually
       if [[ ${#arvancloud_ips[@]} -eq 0 || " ${arvancloud_ips[*]} " =~ " <html " ]]; then
@@ -605,7 +659,7 @@ load_arvancloud_ips(){
 }
 load_derakcloud_ips(){
   if [ "${#derakcloud_ips[@]}" -eq 0 ]; then
-    print "[blue]Loading Derak Cloud IP ranges..."
+    print "[blue]Loading Derakcloud IP ranges..."
     sleep 0.5
 
     # URL of the text file to read
@@ -618,7 +672,7 @@ load_derakcloud_ips(){
           # Add the current line to the array
           derakcloud_ips+=("$line")
         fi
-      done < <(curl -s "$url")
+      done < <(timeout 2 curl -s "$url")
 
       # set it manually
       if [[ ${#derakcloud_ips[@]} -eq 0 || " ${derakcloud_ips[*]} " =~ " <html " ]]; then
@@ -651,6 +705,66 @@ load_derakcloud_ips(){
   fi
 
 }
+load_china_ips(){
+  if [ "${#china_ips[@]}" -eq 0 ]; then
+    print "[blue]Loading China IP ranges..."
+    sleep 0.5
+
+    # URL of the text file to read
+    url="https://raw.githubusercontent.com/elemen3/wepn/master/china_ip_ranges.txt"
+
+    # Read the file from the URL line by line
+    while read -r line; do
+      #Ignore blank lines and lines starting with #
+      if [[ -n "$line" && "${line:0:1}" != "#" ]]; then
+        # Add the current line to the array
+        china_ips+=("$line")
+      fi
+    done < <(curl -s "$url")
+
+    clear_logs 1
+  fi
+}
+load_russia_ips(){
+  if [ "${#russia_ips[@]}" -eq 0 ]; then
+    print "[blue]Loading Russia IP ranges..."
+    sleep 0.5
+
+    # URL of the text file to read
+    url="https://raw.githubusercontent.com/elemen3/wepn/master/russia_ip_ranges.txt"
+
+    # Read the file from the URL line by line
+    while read -r line; do
+      #Ignore blank lines and lines starting with #
+      if [[ -n "$line" && "${line:0:1}" != "#" ]]; then
+        # Add the current line to the array
+        russia_ips+=("$line")
+      fi
+    done < <(curl -s "$url")
+
+    clear_logs 1
+  fi
+}
+load_porn_ips(){
+  if [ "${#porn_ips[@]}" -eq 0 ]; then
+    print "[blue]Loading Porn websites IPs..."
+    sleep 0.5
+
+    # URL of the text file to read
+    url="https://raw.githubusercontent.com/elemen3/wepn/master/porn_ips.txt"
+
+    # Read the file from the URL line by line
+    while read -r line; do
+      # Ignore blank lines and lines starting with #
+      if [[ -n "$line" && "${line:0:1}" != "-" ]]; then
+        # Add the current line to the array
+        porn_ips+=("$line")
+      fi
+    done < <(curl -s "$url")
+
+    clear_logs 1
+  fi
+}
 #----------------------------------------------------------------------------------------------------------------------- hide/show cursor
 hide_cursor(){
   tput civis
@@ -679,7 +793,12 @@ separator(){
   if [ -z "$_seperator" ]; then
     printf -v _seperator "%-${width}b" ""
   fi
-  echo -e "\033[38;5;240m${_seperator// /─}\033[0m"
+  if [ -n "$1" ]; then
+    echo -e "\033[38;5;240m${_seperator// /$1}\033[0m"
+  else
+    echo -e "\033[38;5;240m${_seperator// /─}\033[0m"
+  fi
+
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare screen
 prepare_screen(){
@@ -698,7 +817,7 @@ prepare_screen(){
   hide_cursor
 
   # Set up the trap to call the exit function when the script is interrupted
-  trap fn_menu_4 INT
+  trap fn_menu_2 INT
 }
 #----------------------------------------------------------------------------------------------------------------------- show headers
 show_headers(){
@@ -710,155 +829,23 @@ show_headers(){
     curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt > "$HOME/.wepn/logo"
   fi
 
-  cat "$HOME/.wepn/logo"
+  if [ "$logo_shown" = "false" ]; then
+    cat "$HOME/.wepn/logo"
+    logo_shown=true
+
+    sleep 1
+    clear && printf '\e[3J'
+  fi
+
 
   #header
   separator
   echo -e "\e[1;37;48;5;21m                                                                \e[0m"
   echo -e "\e[1;37;48;5;20m                    [ WePN MASTER SCRIPT ]                      \e[0m"
-  echo -e "\e[1;37;48;5;19m                      Author: macromicro                        \e[0m"
-  echo -e "\e[1;37;48;5;18m                 Telegram Group: @wepn_group                    \e[0m"
+  echo -e "\e[1;37;48;5;19m                          2023.08.01                            \e[0m"
+  echo -e "\e[1;37;48;5;18m                     Author: @macromicro                        \e[0m"
   echo -e "\e[1;37;48;5;17m                                                                \e[0m"
   separator
-}
-#----------------------------------------------------------------------------------------------------------------------- menu functions
-#------------------------------------------------------------------------------------------------------- ssh
-
-#------------------------------------------------------------------------------------------------------- block iran ips
-view_existing_settings(){
-#  iptables-save | grep -i "443"
-
-  # Define the arrays
-  [ $os != "macOS" ] &&  rejected_ips=($(iptables-save | grep -- '--dport 443.*REJECT\>' | awk '{print $4}'))
-  [ $os != "macOS" ] &&  accepted_ips=($(iptables-save | grep -- '--dport 443.*ACCEPT\>' | awk '{print $4}'))
-
-  # check if they are not epmty
-  if [[ ${#rejected_ips[@]} -gt 0 || ${#accepted_ips[@]} -gt 0 ]]; then
-      echo
-
-      # Find the longest value in the arrays
-      max_length=0
-      for val in "${rejected_ips[@]}" "${accepted_ips[@]}"; do
-        len=${#val}
-        if ((len > max_length)); then
-          max_length=$len
-        fi
-      done
-
-      max_length=50 #todo calculate it?
-
-      # Print the top border line
-      printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
-
-      # Print the header row
-#      printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "IP RANGE" "STATUS"
-      printf "|\033[1m %-${max_length}s\033[0m | \033[1;37m%-7s\033[0m |\n" "IP RANGE" "STATUS"
-
-
-      # Print the border line below the header row
-      printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
-
-
-      if [[ ${#rejected_ips[@]} -gt 0 ]]; then
-          # Print the rejected_ips in a grid
-          for val in "${rejected_ips[@]}"; do
-            printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
-            printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
-          done
-      fi
-      if [[ ${#accepted_ips[@]} -gt 0 ]]; then
-          # Print the accepted_ips in a grid
-          for val in "${accepted_ips[@]}"; do
-            printf "| %-${max_length}s | \033[1;32m%-7s\033[0m |\n" "${val}" "ALLOWED"
-            printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
-          done
-      fi
-  else
-      print "[bold][yellow]No rules are applied yet."
-  fi
-}
-
-block_all(){
-
-  # Check if uwf is installed
-  if command -v ufw &> /dev/null
-  then
-      # ufw is installed, stop and disable it
-      service ufw stop
-      ufw disable > /dev/null
-  fi
-
-  for (( i=0; i<${#iranips[@]}; i++ ))
-  do
-    ip="${iranips[$i]}"
-    if ! iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null; then
-      [ $os != "macOS" ] && iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
-    fi
-    show_progress $((i + 1)) ${#iranips[@]}
-  done
-  echo
-}
-
-clear_rules(){
-  print "[blue]Cleaning up..."
-
-  # delete rules added to block iranian websites
-  for (( i=0; i<${#iranips[@]}; i++ ))
-  do
-    ip="${iranips[$i]}"
-    if iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null; then
-      [ $os != "macOS" ] && iptables -D OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
-    fi
-    show_progress $((i + 1)) ${#iranips[@]}
-  done
-  echo
-
-  # also delete rules which are added for Arvancloud
-  for aip in "${arvancloud_ips[@]}"
-  do
-    if iptables -C OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
-      [ $os != "macOS" ] && iptables -D OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT
-    fi
-  done
-
-  # also delete rules which are added for DerakCloud
-  for aip in "${derakcloud_ips[@]}"
-  do
-    if iptables -C OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
-      [ $os != "macOS" ] && iptables -D OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT
-    fi
-  done
-
-  echo
-  print "[bold][green]Cleaned up."
-}
-
-allow_arvancloud(){
-    for ip in "${arvancloud_ips[@]}"
-    do
-      if ! iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
-         [ $os != "macOS" ] && iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT
-      fi
-    done
-
-    print "[bold][green]Arvancloud is whitelisted."
-}
-
-allow_derakcloud(){
-    for ip in "${derakcloud_ips[@]}"
-    do
-      if ! iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
-         [ $os != "macOS" ] && iptables -A OUTPUT -d "$ip" -p tcp --dport 443 -j ACCEPT
-      fi
-    done
-
-    print "[bold][green]Derak Cloud is whitelisted."
-}
-
-save_rules(){
-  [ $os != "macOS" ] && iptables-save > /etc/iptables/rules.v4
-#  ip6tables-save > /etc/iptables/rules.v6
-  print "[bold][green]Saved."
 }
 #----------------------------------------------------------------------------------------------------------------------- menu core functions
 clear_logs(){
@@ -885,9 +872,8 @@ back_to_menu(){
   show_headers
 #  selected_menu_index=0
   global_menu_size=0
-  menu_handler "$selected_menu" 1
+  menu_handler "$selected_menu"
 }
-
 
 print_menu(){
   clear_menu
@@ -961,15 +947,21 @@ run_menu(){
 
 	print_menu
 
-	while read -rsn1 input
+	while IFS=$'\n' read -rsn1 input
 	do
+
+	  # backspace
+	  if [ "$(printf '%d' "'$input")" -eq 127 ]; then
+	    menu_handler "menu"
+	  fi
+
 		case "$input"
 		in
 			$'\x1B')  # ESC ASCII code (https://dirask.com/posts/ASCII-Table-pJ3Y0j)
-				read -rsn1 -t 0.01 input
+				read -rsn1 input
 				if [ "$input" = "[" ]  # occurs before arrow code
 				then
-					read -rsn1 -t 0.01 input
+					read -rsn1 input
 					case "$input"
 					in
 						A)  # Up Arrow
@@ -1011,80 +1003,779 @@ run_menu(){
 							;;
 					esac
 				fi
-#				read -rsn5 -t 0.1  # flushing stdin
+				read -rsn5 -t 0.1  # flushing stdin
 				;;
 			"")  # Enter key
 				return "$selected_menu_index"
 				;;
 		  [qQ])  # Q key
-    			fn_menu_4
+    			fn_menu_2
     		;;
 		esac
 	done
 }
 
 menu_handler(){
-    if [ -z "$2" ]; then
+#    echo "$selected_menu $selected_menu_index -> $1" >> menu
+
+    if [ "$selected_menu" = "menu" ] && [ "$1" != "menu" ]; then
+      reserved_selected_menu_index=$selected_menu_index
       selected_menu_index=0
-#    else
-#      selected_menu_index="$2"
     fi
 
-    run_menu "$1" selected_menu_index
+   if [ "$selected_menu" != "menu" ] && [ "$1" = "menu" ]; then
+        selected_menu_index=$reserved_selected_menu_index
+    fi
+
+    run_menu "$1"
     selected_menu_index_result="$?"
 
     function_name="fn_$selected_menu""_$selected_menu_index_result"
+
+#    echo $function_name
+#    sleep 2
+#     function_name=$(function_name "$input")
 
     if type "$function_name" >/dev/null 2>&1; then
       eval "$function_name"
     fi
 }
+
+function_name() {
+  local input_string="$1"
+  local modified_string="${input_string// /_}" # Replace spaces with underscores
+  modified_string="${modified_string,,}"       # Convert to lowercase
+  modified_string="fn_$modified_string"        # Add "fn_" prefix
+  echo "$modified_string"
+}
 #----------------------------------------------------------------------------------------------------------------------- menu
 menu=(
-"SSH"
-"Cloudflare"
-"Block Iranian Websites"
+"Firewall"
 "-"
 "Exit"
 )
 
+menu_system=(
+"Back"
+"-"
+"sys info"
+"cpu and ram and hard"
+"Checkup"
+"Enable root"
+"set dns"
+"hostname"
+"Resolve apt locked"
+"Set time zone"
+)
+
+menu_network=(
+"Back"
+"-"
+"disable ipv6"
+"monitor"
+"Spoof Server IP Address"
+"Google Recapcha"
+"monitor port data usage"
+"Install Cloudflare Warp"
+"Install BBR"
+"sniff"
+)
+
+menu_firewall=(
+"Back"
+"-"
+"Block Iranian Websites"
+#"Block Iranian Banking and Payment Websites Only"
+#"Block Iranian Government Websites Only"
+#"Block Iranian Social Media Websites Only"
+#"Block Iranian Media Websites Only"
+"Allow Arvancloud"
+"Allow Derakcloud"
+"-"
+"Block Porn Websites"
+"Block Speedtest"
+"-"
+"Block Specific Website"
+"-"
+"Block Attacks from China"
+"Block Attacks from Russia"
+"Block Individual Attacker"
+"-"
+"Block IP Scan"
+"Block BitTorrent"
+#"Block Ads"
+"-"
+"View Rules"
+"Clear Rules"
+)
+
+
+
 menu_ssh=(
-'Back'
-'Change SSH Port'
+"Back"
+"-"
+"Change SSH Port"
+"Optimize SSH Server"
+"Enable UDP Gateway"
+"-"
+"View Users"
+"Add User"
+"Remove User"
+
+"limit user count per account"
 )
 
-menu_cloudflare=(
-'Back'
-'Show scanned IPs'
-)
 
-menu_block_ir_websites=(
-'Back'
-'View applied rules'
-'Block outgoing traffic from this server to Iranian websites'
-'Allow Arvancloud CDN and Servers'
-'Allow Derak Cloud CDN and Servers'
-'Clear all rules applied by this script'
-'Save settings'
-)
-#------------------------------------------------------------------------------------------------------- root
-# ssh
+#----------------------------------------------------------------------------------------------------------------------- menu functions
+#------------------------------------------------------------------------------------------------------- System
+fn_menu_00(){
+  menu_handler "menu_system"
+}
+#------------------------------------------------------------ back
+fn_menu_system_0(){
+  menu_handler "menu"
+}
+#------------------------------------------------------------------------------------------------------- Firewall
 fn_menu_0(){
-  menu_handler "menu_ssh"
+  menu_handler "menu_firewall"
+}
+#------------------------------------------------------------ back
+fn_menu_firewall_0(){
+  menu_handler "menu"
+}
+#------------------------------------------------------------ block iranian websites
+fn_menu_firewall_2(){
+  clear_menu
+
+  if ! ipset list wepn_iranian_websites_set &> /dev/null; then
+    install_packages iptables
+    install_iptables_persistent
+    install_packages ipset
+    load_iran_ips
+    load_arvancloud_ips
+    load_derakcloud_ips
+
+    print "[bold][blue]Are you sure you want to block outgoing traffic from your server to Iranian websites?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 2
+    if [ $response -eq 1 ]; then
+
+      while true; do
+
+          show_cursor
+          read -e -p "$(print "[bold][blue]Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling and hit Enter): ")" response
+          clear_logs 3
+          hide_cursor
+
+          if [ -z "$response" ]; then
+            # no tunneling
+              print "[blue]Blocking all Iranian Websites..."
+              create_or_add_to_table wepn_iranian_websites BLOCK_WEBSITE "${iran_ips[@]}"
+              echo
+              echo
+              print "[bold][green]All Iranian websites are blocked."
+              break
+          elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+              print "[blue]Blocking all except your Iranian server ([bold][green]$response[end][blue])..."
+              create_or_add_to_table wepn_iranian_websites BLOCK_WEBSITE "${iran_ips[@]}"
+              # exclude irsrv ip addr
+              tunnel_ips=("$response")
+              create_or_add_to_table wepn_tunnel ALLOW_WEBSITE "${tunnel_ips[@]}"
+              echo
+              echo
+              print "[bold][green]All Iranian websites are blocked except your Iranian server."
+              break
+          else
+              print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
+              sleep 2
+              clear_logs 1
+          fi
+      done
+
+      back_to_menu enter
+
+    else
+      back_to_menu
+    fi
+  else
+    print "[bold][green]Iranian websites are already blocked."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ allow arvancloud
+fn_menu_firewall_3(){
+  clear_menu
+  if ipset list wepn_iranian_websites_set &> /dev/null; then
+    if ! ipset list wepn_arvancloud_set &> /dev/null; then
+      install_packages iptables
+      install_iptables_persistent
+      install_packages ipset
+      load_arvancloud_ips
+
+      print "[blue]If you have block Iranian websites while tunneling through Arvancloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Arvancloud."
+      echo
+      print "[bold][blue]Are you sure you want to whitelist Arvancloud?"
+      confirmation_dialog
+      response="$?"
+      clear_logs 5
+      if [ $response -eq 1 ]; then
+        print "[blue]Whitelisting Arvancloud..."
+        create_or_add_to_table wepn_arvancloud ALLOW_WEBSITE "${arvancloud_ips[@]}"
+        echo
+        echo
+        print "[bold][green]Arvancloud is whitelisted."
+        back_to_menu enter
+      else
+        back_to_menu
+      fi
+    else
+      print "[bold][green]Arvancloud is already whitelisted."
+      back_to_menu enter
+    fi
+  else
+    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]Arvancloud [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ allow derakcloud
+fn_menu_firewall_4(){
+  clear_menu
+  if ipset list wepn_iranian_websites_set &> /dev/null; then
+  if ! ipset list wepn_derakcloud_set &> /dev/null; then
+    install_packages iptables
+    install_iptables_persistent
+    install_packages ipset
+    load_derakcloud_ips
+
+    print "[blue]If you have block Iranian websites while tunneling through Derakcloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Derakcloud."
+    echo
+    print "[bold][blue]Are you sure you want to whitelist Derakcloud?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 5
+    if [ $response -eq 1 ]; then
+      print "[blue]Whitelisting Derakcloud..."
+      create_or_add_to_table wepn_derakcloud ALLOW_WEBSITE "${derakcloud_ips[@]}"
+      echo
+      echo
+      print "[bold][green]Derakcloud is whitelisted."
+      back_to_menu enter
+    else
+      back_to_menu
+    fi
+  else
+    print "[bold][green]Derakcloud is already whitelisted."
+    back_to_menu enter
+  fi
+  else
+    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]Derakcloud [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ block porn websites
+fn_menu_firewall_6(){
+  clear_menu
+
+  if ! ipset list wepn_porn_websites_set &> /dev/null; then
+    install_packages iptables
+    install_iptables_persistent
+    install_packages ipset
+    load_porn_ips
+
+    print "[bold][blue]Are you sure you want to block Porn websites?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 1
+    if [ $response -eq 1 ]; then
+      print "[blue]Blocking Porn Websites..."
+      create_or_add_to_table wepn_porn_websites BLOCK_WEBSITE "${porn_ips[@]}"
+      echo
+      echo
+      print "[bold][green]All Porn websites are blocked."
+      back_to_menu enter
+    else
+      back_to_menu
+    fi
+  else
+    print "[bold][green]Porn websites are already blocked."
+    back_to_menu enter
+  fi
+
+}
+#------------------------------------------------------------ block speedtest
+fn_menu_firewall_7(){
+
+  domains=(
+  speedtest.net
+  www.speedtest.net
+  c.speedtest.net
+  speedcheck.org
+  www.speedcheck.org
+  a1.etrality.com
+  net.etrality.com
+  api.speedspot.org
+  fast.com
+  www.fast.com
+  )
+
+  speedtest_ips=()
+
+  clear_menu
+
+  if ! ipset list wepn_speedtest_set &> /dev/null; then
+
+
+    print "[bold][blue]Are you sure you want to block Speedtest?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 1
+    if [ $response -eq 1 ]; then
+      print "[bold][blue]Blocking speedtest related websites and apps..."
+
+      for domain in "${domains[@]}"; do
+        _speedtest_ips=($(host "$domain" | awk '/has address/ {print $NF}'))
+        speedtest_ips+=("${_speedtest_ips[@]}")
+      done
+
+      create_or_add_to_table wepn_speedtest BLOCK_WEBSITE "${speedtest_ips[@]}"
+      clear_logs 1
+      print "[bold][green][red]Speedtest[green], [red]Speedcheck[green] and [red]fast.com[green] websites and apps are all blocked."
+
+      back_to_menu enter
+    else
+      back_to_menu
+    fi
+
+
+  else
+    print "[bold][green]Speedtest is already blocked."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ block specific website
+fn_menu_firewall_9(){
+  clear_menu
+  install_packages iptables
+  install_iptables_persistent
+  install_packages ipset
+
+  while true; do
+
+      show_cursor
+      read -e -p "$(print "[bold][blue]Enter the Domain name: ")" response
+      clear_logs 1
+      hide_cursor
+
+      if [ -z "$response" ]; then
+        # left blank
+        print "[bold][red]Left blank."
+        break
+      # is valid domain name?
+      elif [[ $response =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$ ]]; then
+          print "[bold][blue]Blocking [red]$response[blue]..."
+          specific_domains=()
+          ip_addresses_plain=($(host "$response" | awk '/has address/ {print $NF}'))
+          ip_addresses_www=($(host "www.$response" | awk '/has address/ {print $NF}'))
+          ip_addresses=("${ip_addresses_plain[@]}" "${ip_addresses_www[@]}")
+
+
+
+          if [ -n "${ip_addresses[0]}" ]; then
+
+            for ip in "${ip_addresses[@]}"; do
+              specific_domains+=("$ip>$response")
+            done
+
+            create_or_add_to_table wepn_specific_websites BLOCK_WEBSITE "${specific_domains[@]}"
+            clear_logs 1
+            print "[bold][green]The website ([red]$response[blue]) is blocked."
+            break
+          else
+            clear_logs 1
+            print "[bold][yellow]Domain has no IP."
+            break
+          fi
+
+
+      else
+          print "[bold][red]Domain or IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
+          sleep 3
+          clear_logs 1
+      fi
+  done
+  back_to_menu enter
+}
+#------------------------------------------------------------ block External Attacks from China
+fn_menu_firewall_11(){
+  clear_menu
+
+  if ! ipset list wepn_china_set &> /dev/null; then
+    install_packages iptables
+    install_iptables_persistent
+    install_packages ipset
+    load_china_ips
+
+    print "[bold][blue]Are you sure you want to block attacks from China?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 1
+    if [ $response -eq 1 ]; then
+      print "[blue]Blocking Chinese attackers..."
+      create_or_add_to_table wepn_china BLOCK_ATTACK "${china_ips[@]}"
+      echo
+      echo
+      print "[bold][green]Chinese attackers are blocked."
+      back_to_menu enter
+    else
+      back_to_menu
+    fi
+  else
+    print "[bold][green]Chinese attackers are already blocked."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ block Attacks from Russia
+fn_menu_firewall_12(){
+  clear_menu
+
+  if ! ipset list wepn_russia_set &> /dev/null; then
+    install_packages iptables
+    install_iptables_persistent
+    install_packages ipset
+    load_russia_ips
+
+    print "[bold][blue]Are you sure you want to block attacks from Russia?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 1
+    if [ $response -eq 1 ]; then
+      print "[blue]Blocking Russian attackers..."
+      create_or_add_to_table wepn_russia BLOCK_ATTACK "${russia_ips[@]}"
+      echo
+      echo
+      print "[bold][green]Russian attackers are blocked."
+      back_to_menu enter
+    else
+      back_to_menu
+    fi
+  else
+    print "[bold][green]Russian attackers are already blocked."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ block Individual Attacker
+fn_menu_firewall_13(){
+  clear_menu
+  install_packages iptables
+  install_iptables_persistent
+  install_packages ipset
+
+  while true; do
+
+      show_cursor
+      read -e -p "$(print "[bold][blue]Enter the IP address: ")" response
+      clear_logs 1
+      hide_cursor
+
+      if [ -z "$response" ]; then
+        # left blank
+        print "[bold][red]Left blank."
+        break
+      # is valid IP address?
+      elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+          ip_addresses=("$response")
+
+          create_or_add_to_table wepn_attackers BLOCK_ATTACK "${ip_addresses[@]}"
+          print "[bold][green]The IP address ([red]$response[blue]) is blocked."
+          break
+      else
+          print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
+          sleep 3
+          clear_logs 1
+      fi
+  done
+  back_to_menu enter
+}
+#------------------------------------------------------------ block IP Scan
+fn_menu_firewall_15(){
+  clear_menu
+  if ! iptables -nL wepn_ipscan_chain >/dev/null 2>&1; then
+    install_packages iptables
+    install_iptables_persistent
+    install_packages ipset
+
+    print "[bold][blue]Are you sure you want to prevent IP scans from going through your server?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 2
+    if [ $response -eq 1 ]; then
+      print "[blue]Blocking IP Scans..."
+      create_or_add_to_table wepn_ipscan BLOCK_IPSCAN
+      sleep 1
+      clear_logs 1
+      print "[bold][green]IP Scans are blocked."
+      back_to_menu enter
+    else
+      back_to_menu
+    fi
+  else
+    print "[bold][green]IP Scans are already blocked."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ block BitTorrent
+fn_menu_firewall_16(){
+  clear_menu
+  if ! iptables -nL wepn_bittorrent_chain >/dev/null 2>&1; then
+    install_packages iptables
+    install_iptables_persistent
+    install_packages ipset
+
+    print "[bold][blue]Please consider that it will block ports from [yellow]6881[blue] to [yellow]6889[blue], as they are common BitTorrent ports."
+    echo
+    print "[bold][blue]Are you sure you want to block BitTorrent protocol?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 4
+    if [ $response -eq 1 ]; then
+      print "[blue]Blocking BitTorrent..."
+      create_or_add_to_table wepn_bittorrent BLOCK_BITTORRENT
+      sleep 1
+      clear_logs 1
+      print "[bold][green]BitTorrent is blocked."
+      back_to_menu enter
+    else
+      back_to_menu
+    fi
+  else
+    print "[bold][green]BitTorrent is already blocked."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ View Rules
+fn_menu_firewall_18(){
+  install_packages iptables
+  install_iptables_persistent
+  install_packages ipset
+  clear_menu
+  view_rules
 }
 
-# cloudflare
-fn_menu_1(){
-  menu_handler "menu_cloudflare"
-}
+view_rules(){
 
-# block_ir_websites
+    iran_ips=($(ipset -q list wepn_iranian_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+    tunnel_ips=($(ipset -q list wepn_tunnel_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+    arvancloud_ips=($(ipset -q list wepn_arvancloud_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+    derakcloud_ips=($(ipset -q list wepn_derakcloud_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+    porn_ips=($(ipset -q list wepn_porn_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+    speedtest_ips=($(ipset -q list wepn_speedtest_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+    _specific_domains=($(ipset -q list wepn_specific_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $3}'))
+    specific_domains=($(printf "%s\n" "${_specific_domains[@]}" | sort -u))
+    china_ips=($(ipset -q list wepn_china_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+    russia_ips=($(ipset -q list wepn_russia_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+    attacker_ips=($(ipset -q list wepn_attackers_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+
+
+
+
+    any_rules=0
+
+    [ ${#iran_ips[@]} -gt 0 ] &&  print n "[bold][white]Iranian Websites                                         [red]BLOCKED" && separator "-" && any_rules=1
+    printf -v _spaces_for_tunnel "%-$((15 - ${#tunnel_ips[0]}))b" ""
+    [ ${#tunnel_ips[@]} -gt 0 ] &&  print n "[bold][white]Tunnel ([green]${tunnel_ips[0]}[white])${_spaces_for_tunnel// /" "}                                 [green]ALLOWED" && separator "-" && any_rules=1
+    [ ${#arvancloud_ips[@]} -gt 0 ] &&  print n "[bold][white]Arvancloud                                               [green]ALLOWED" && separator "-" && any_rules=1
+    [ ${#derakcloud_ips[@]} -gt 0 ] &&  print n "[bold][white]Deracloud                                                [green]ALLOWED" && separator "-" && any_rules=1
+    [ ${#porn_ips[@]} -gt 0 ] &&  print n "[bold][white]Porn Websites                                            [red]BLOCKED" && separator "-" && any_rules=1
+    [ ${#speedtest_ips[@]} -gt 0 ] &&  print n "[bold][white]Speedtest                                                [red]BLOCKED" && separator "-" && any_rules=1
+
+    if [ ${#specific_domains[@]} -gt 0 ]; then
+      for item in "${specific_domains[@]}"; do
+        domain=$(echo "$item" | tr -d '"')
+        printf -v _spaces_for_domain "%-$((50 - ${#domain}))b" ""
+        print n "[bold][white]$domain[white]${_spaces_for_domain// /" "}       [red]BLOCKED" && separator "-" && any_rules=1
+      done
+    fi
+
+    [ ${#china_ips[@]} -gt 0 ] &&  print n "[bold][white]Chinese attackers                                        [red]BLOCKED" && separator "-" && any_rules=1
+    [ ${#russia_ips[@]} -gt 0 ] &&  print n "[bold][white]Russian attackers                                        [red]BLOCKED" && separator "-" && any_rules=1
+
+    if [ ${#attacker_ips[@]} -gt 0 ]; then
+      for ip in "${attacker_ips[@]}"; do
+        printf -v _spaces_for_attacker "%-$((15 - ${#ip}))b" ""
+        print n "[bold][white]Attacker ([red]$ip[white])${_spaces_for_attacker// /" "}                               [red]BLOCKED" && separator "-" && any_rules=1
+      done
+    fi
+    iptables -L wepn_ipscan_chain >/dev/null 2>&1 &&  print n "[bold][white]IP Scans                                                 [red]BLOCKED" && separator "-" && [ "$any_rules" -ne 1 ] && any_rules=2
+    iptables -L wepn_bittorrent_chain >/dev/null 2>&1 &&  print n "[bold][white]BitTorrent                                               [red]BLOCKED" && separator "-" && [ "$any_rules" -ne 1 ] && any_rules=2
+
+
+
+    if [ "$any_rules" -eq 0 ]; then
+      print "[bold][yellow]No rules applied yet."
+      back_to_menu enter
+    elif [ "$any_rules" -eq 1 ]; then
+      echo
+      print "[bold][blue]Interested in detailed rules?"
+      confirmation_dialog
+      response="$?"
+      clear_logs 2
+      if [ $response -eq 1 ]; then
+        view_rules_in_detail
+      fi
+      back_to_menu enter
+    else
+      back_to_menu enter
+    fi
+}
+view_rules_in_detail(){
+  # Find the longest value in the arrays
+  max_length=0
+  for val in "${iran_ips[@]}" "${arvancloud_ips[@]}" "${derakcloud_ips[@]}" "${allowed_ips[@]}" "${porn_ips[@]}" "${speedtest_ips[@]}" "${specific_domains[@]}" "${china_ips[@]}" "${russia_ips[@]}"  "${attacker_ips[@]}"; do
+    len=${#val}
+    if ((len > max_length)); then
+      max_length=$len
+    fi
+  done
+
+  max_length=50 #todo calculate it?
+
+  # Print the top border line
+  printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+
+  # Print the header row
+#      printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "IP RANGE" "STATUS"
+  printf "|\033[1m %-${max_length}s\033[0m | \033[1;37m%-7s\033[0m |\n" "IP RANGE" "STATUS"
+
+
+  # Print the border line below the header row
+  printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+
+
+  if [[ ${#iran_ips[@]} -gt 0 ]]; then
+      # Print the iran_ips in a grid
+      for val in "${iran_ips[@]}"; do
+        printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#tunnel_ips[@]} -gt 0 ]]; then
+      # Print the tunnel_ips in a grid
+      for val in "${tunnel_ips[@]}"; do
+        printf "| %-${max_length}s | \033[1;32m%-7s\033[0m |\n" "${val}" "ALLOWED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#arvancloud_ips[@]} -gt 0 ]]; then
+      # Print the arvancloud_ips in a grid
+      for val in "${arvancloud_ips[@]}"; do
+        printf "| %-${max_length}s | \033[1;32m%-7s\033[0m |\n" "${val}" "ALLOWED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#derakcloud_ips[@]} -gt 0 ]]; then
+      # Print the derakcloud_ips in a grid
+      for val in "${derakcloud_ips[@]}"; do
+        printf "| %-${max_length}s | \033[1;32m%-7s\033[0m |\n" "${val}" "ALLOWED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#porn_ips[@]} -gt 0 ]]; then
+      # Print the porn_ips in a grid
+      for val in "${porn_ips[@]}"; do
+        printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#speedtest_ips[@]} -gt 0 ]]; then
+      # Print the porn_ips in a grid
+      for val in "${speedtest_ips[@]}"; do
+        printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#specific_domains[@]} -gt 0 ]]; then
+      # Print the porn_ips in a grid
+      for val in "${specific_domains[@]}"; do
+        printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "$(echo "$item" | tr -d '"')" "BLOCKED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#china_ips[@]} -gt 0 ]]; then
+      # Print the china_ips in a grid
+      for val in "${china_ips[@]}"; do
+        printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#russia_ips[@]} -gt 0 ]]; then
+      # Print the russia_ips in a grid
+      for val in "${russia_ips[@]}"; do
+        printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#attacker_ips[@]} -gt 0 ]]; then
+      # Print the attacker_ips in a grid
+      for val in "${attacker_ips[@]}"; do
+        printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+
+
+
+}
+#------------------------------------------------------------ Clear Rules
+fn_menu_firewall_19(){
+  install_packages iptables
+  install_iptables_persistent
+  install_packages ipset
+  clear_menu
+
+
+#  if ipset -q list wepn_iranian_websites_set &>/dev/null || ipset -q list wepn_tunnel_set &>/dev/null || ipset -q list wepn_arvancloud_set &>/dev/null || ipset -q list wepn_derakcloud_set &>/dev/null || ipset -q list wepn_porn_websites_set &>/dev/null; then
+  if iptables-save | grep -q -E '^:(wepn_[^ ]+)'; then
+    print "[bold][blue]Are you sure you want to delete all the rules?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 1
+    if [ $response -eq 1 ]; then
+      print "[blue]Cleaning up..."
+
+      ipset -q list wepn_iranian_websites_set &>/dev/null && delete_table wepn_iranian_websites
+      ipset -q list wepn_tunnel_set &>/dev/null && delete_table wepn_tunnel
+      ipset -q list wepn_arvancloud_set &>/dev/null && delete_table wepn_arvancloud
+      ipset -q list wepn_derakcloud_set &>/dev/null && delete_table wepn_derakcloud
+      ipset -q list wepn_porn_websites_set &>/dev/null && delete_table wepn_porn_websites
+      ipset -q list wepn_speedtest_set &>/dev/null && delete_table wepn_speedtest
+      ipset -q list wepn_specific_websites_set &>/dev/null && delete_table wepn_specific_websites
+      ipset -q list wepn_china_set &>/dev/null && delete_table wepn_china
+      ipset -q list wepn_russia_set &>/dev/null && delete_table wepn_russia
+      ipset -q list wepn_attackers_set &>/dev/null && delete_table wepn_attackers
+      iptables -L wepn_ipscan_chain >/dev/null 2>&1 &&  delete_table wepn_ipscan
+      iptables -L wepn_bittorrent_chain >/dev/null 2>&1 &&  delete_table wepn_bittorrent
+
+
+      # save
+      iptables-save > /etc/iptables/rules.v4
+
+      clear_logs 1
+      print "[bold][green]Cleaned up."
+      back_to_menu enter
+    else
+      back_to_menu
+    fi
+  else
+     print "[bold][yellow]No rules applied yet."
+     back_to_menu enter
+  fi
+
+
+
+}
+#------------------------------------------------------------------------------------------------------- Exit
 fn_menu_2(){
-  menu_handler "menu_block_ir_websites"
-}
-
-# exit
-fn_menu_4(){
 
   # restore resolv.conf
   cp -f /etc/resolv.conf.bak /etc/resolv.conf 2>/dev/null || :
@@ -1095,9 +1786,10 @@ fn_menu_4(){
   exit_msg1="Appreciate your taking the time to play with my script."
   exit_msg2="I hope you found it helpful."
   exit_msg3="Feedback and bug reports are warmly welcomed."
-  exit_msg4="❤ ❤ ❤"
-  exit_msg5="❤ ❤"
-  exit_msg6="❤"
+  exit_msg4="Telegram: @wepn_group"
+  exit_msg5="❤ ❤ ❤"
+  exit_msg6="❤ ❤"
+  exit_msg7="❤"
 
   padding=$(( ($width - ${#exit_msg1}) / 2 ))
   printf "\\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg1" $padding ''
@@ -1110,179 +1802,213 @@ fn_menu_4(){
   sleep 0.05
   echo
   padding=$(( ($width - ${#exit_msg4}) / 2 ))
-  printf "\\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg4" $padding ''
+ printf "\033[1;32m%*s%s%*s\033[0m\n" $padding '' "$exit_msg4" $padding ''
+
+
   sleep 0.05
+  echo
   padding=$(( ($width - ${#exit_msg5}) / 2 ))
   printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg5" $padding ''
   sleep 0.05
   padding=$(( ($width - ${#exit_msg6}) / 2 ))
   printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg6" $padding ''
+  sleep 0.05
+  padding=$(( ($width - ${#exit_msg7}) / 2 ))
+  printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg7" $padding ''
   echo
 
   show_cursor
 
   exit 1
 }
-#------------------------------------------------------------------------------------------------------- ssh
-# back
-fn_menu_ssh_0(){
-  menu_handler "menu"
-}
+#----------------------------------------------------------------------------------------------------------------------- iptables functions
+create_or_add_to_table(){
+  local set="$1_set"
+  local chain="$1_chain"
+  local rule="$2"
+  shift 2
+  local ips=("$@")
 
-# ssh > change ssh port
-fn_menu_ssh_1(){
-  print "[bold][yellow]TODO..." #TODO
-  back_to_menu enter
-}
-#------------------------------------------------------------------------------------------------------- cloudflare
-# back
-fn_menu_cloudflare_0(){
-  menu_handler "menu"
-}
 
-# cloudflare > show scannet IPs
-fn_menu_cloudflare_1(){
-  print "[bold][yellow]TODO..." #TODO
-  back_to_menu enter
-}
-#------------------------------------------------------------------------------------------------------- block iran ips
-# back
-fn_menu_block_ir_websites_0(){
-  menu_handler "menu"
-}
+  if [ "$rule" != "BLOCK_IPSCAN" ] && [ "$rule" != "BLOCK_BITTORRENT" ] ; then
+    # create set if does not exist
+    if ! ipset list "$set" &>/dev/null; then
+      ipset create $set hash:net comment maxelem 20000 #65536
+    fi
 
-# block_ir_websites > view_existing_settings
-fn_menu_block_ir_websites_1(){
-  install_packages iptables
-  install_iptables_persistent
-  load_iranips
-  load_arvancloud_ips
-  load_derakcloud_ips
-  view_existing_settings
-  back_to_menu enter
-}
+    # add all ips to set
+    for (( i=0; i<${#ips[@]}; i++ ))
+    do
 
-# block_ir_websites > block all
-fn_menu_block_ir_websites_2(){
-  install_packages iptables
-  install_iptables_persistent
-  load_iranips
+      # ip and comment  1.2.3.4>some_comment
+      if [[ "${ips[$i]}" =~ ">" ]]; then
+        ip=$(echo "${ips[$i]}" | cut -d '>' -f 1)
+        comment=$(echo "${ips[$i]}" | cut -d '>' -f 2)
+      else
+        ip="${ips[$i]}"
+      fi
 
-  print "[bold][blue]Are you sure you want to block outgoing traffic from your server to Iranian websites?"
-  confirmation_dialog
-  response="$?"
-  clear_logs 2
-  if [ $response -eq 1 ]; then
 
-    while true; do
 
-        show_cursor
-        read -e -p "$(print "[bold][blue]Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling): ")" response
-        clear_logs 3
-        hide_cursor
-
-        if [ -z "$response" ]; then
-          # no tunneling
-            print "[blue]Blocking all..."
-            block_all
-            echo
-            print "[bold][green]All Iranian websites are blocked."
-            break
-        elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            print "[blue]Blocking all except your Iranian server ([bold][green]$response[end][blue])..."
-            block_all
-            # exclude irsrv ip addr
-            [ $os != "macOS" ] &&  iptables -A OUTPUT -d $response -p tcp --dport 443 -j ACCEPT
-            echo
-            print "[bold][green]All Iranian websites are blocked except your Iranian server."
-            break
+      if ! ipset test $set "$ip" &> /dev/null; then
+        if [[ -z "$comment" ]]; then
+          ipset add $set "$ip"
         else
-            print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
-            sleep 1
-            clear_logs 1
+          ipset add $set "$ip" comment "$comment"
         fi
+      fi
+
+      [ "${#ips[@]}" -gt 10 ] && show_progress $((i + 1)) ${#ips[@]}
+
     done
-
-    back_to_menu enter
-
-  else
-    back_to_menu
   fi
+
+    # create chain
+    if ! iptables -nL $chain >/dev/null 2>&1; then
+      iptables -N $chain
+
+      if [ "$rule" == "BLOCK_WEBSITE" ]; then
+        iptables -I $chain -p tcp --dport 443 -m set --match-set $set dst -j REJECT
+        iptables -I OUTPUT 1 -j $chain
+        iptables -I FORWARD 1 -j $chain
+      elif [ "$rule" == "ALLOW_WEBSITE" ]; then
+        iptables -I $chain -p tcp --dport 443 -m set --match-set $set dst -j ACCEPT
+        iptables -I OUTPUT 1 -j $chain
+        iptables -I FORWARD 1 -j $chain
+      elif [ "$rule" == "BLOCK_ATTACK" ]; then
+        iptables -I $chain -m set --match-set $set src -j DROP
+        iptables -I INPUT 1 -j $chain
+      elif [ "$rule" == "BLOCK_IPSCAN" ]; then
+
+        iptables -I $chain 1 -d 10.0.0.0/8 -j DROP
+        iptables -I $chain 2 -d 172.16.0.0/12 -j DROP
+        iptables -I $chain 3 -d 192.168.0.0/16 -j DROP
+        iptables -I $chain 4 -d 100.64.0.0/10 -j DROP
+        iptables -I $chain 5 -d 198.18.0.0/15 -j DROP
+        iptables -I $chain 6 -d 169.254.0.0/16 -j DROP
+
+        # Apply the wepn_ipscan_chain chain to the OUTPUT chain
+        iptables -I OUTPUT 1 -j wepn_ipscan_chain
+
+      elif [ "$rule" == "BLOCK_BITTORRENT" ]; then
+
+        # Add rules to the custom chain to match BitTorrent traffic
+        iptables -I $chain -m string --algo bm --string "BitTorrent" -j DROP
+        iptables -I $chain -m string --algo bm --string "BitTorrent protocol" -j DROP
+        iptables -I $chain -m string --algo bm --string "peer_id=" -j DROP
+        iptables -I $chain -m string --algo bm --string ".torrent" -j DROP
+        iptables -I $chain -m string --algo bm --string "announce.php?passkey=" -j DROP
+        iptables -I $chain -m string --algo bm --string "torrent/announce" -j DROP
+        iptables -I $chain -m string --algo bm --string "announce?info_hash" -j DROP
+        iptables -I $chain -m string --algo bm --string "find_node" -j DROP
+        iptables -I $chain -m string --algo bm --string "info_hash" -j DROP
+        iptables -I $chain -m string --algo bm --string "get_peers" -j DROP
+        iptables -I $chain -m string --algo bm --string "announce" -j DROP
+        iptables -I $chain -m string --algo bm --string "magnet:" -j DROP
+
+        # block bittorrent common port
+        iptables -I $chain -p tcp --dport 6881:6889 -j DROP
+        iptables -I $chain -p udp --dport 6881:6889 -j DROP
+
+        # Apply the custom chain to the INPUT and OUTPUT chains:
+        iptables -I INPUT -j $chain
+        iptables -I OUTPUT -j $chain
+
+      fi
+    fi
+
+  # save
+  iptables-save > /etc/iptables/rules.v4
+}
+
+delete_table(){
+
+  local set="$1_set"
+  local chain="$1_chain"
+
+  # Delete the rules from the INPUT, OUTPUT and FORWARD chains
+  iptables -D INPUT -j $chain 2>/dev/null
+  iptables -D OUTPUT -j $chain 2>/dev/null
+  iptables -D FORWARD -j $chain 2>/dev/null
+  # PREROUTING
+  # POSTROUTING
+
+
+  # Flush (delete all rules) in the chain
+  iptables -F $chain
+
+  # Delete the chain
+  iptables -X $chain
+
+
+  # destroy set
+  sleep 3
+  ipset -q destroy $set
 
 }
 
-# block_ir_websites > allow arvancloud
-fn_menu_block_ir_websites_3(){
-  install_packages iptables
-  install_iptables_persistent
-  load_arvancloud_ips
 
-  print "[bold][blue]Are you sure you want to whitelist Arvancloud?"
-  confirmation_dialog
-  response="$?"
-  clear_logs 1
-  if [ $response -eq 1 ]; then
-    allow_arvancloud
-    back_to_menu enter
+
+clear_old_iptables_rules_and _run(){
+  if command -v iptables-save >/dev/null && iptables-save | grep -i "443" | grep -Ev "^-A wepn_" >/dev/null; then
+     print "[yellow]You have applied some rules using the previous version of the script which may cause conflicts."
+     echo
+     print "[blue]Kindly clear all existing rules. Subsequently, you may re-apply them using the new script."
+     echo
+     print "[bold][blue]Would you like to proceed?"
+     confirmation_dialog y
+     response="$?"
+     clear_logs 2
+     if [ $response -eq 1 ]; then
+       clear_logs 5
+
+       load_iran_ips
+       load_arvancloud_ips
+       load_derakcloud_ips
+
+       print "[blue]CLeaning up old settings..."
+
+       # delete rules added to block iranian websites
+         for (( i=0; i<${#iran_ips[@]}; i++ ))
+         do
+           ip="${iran_ips[$i]}"
+           if iptables -C OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT &> /dev/null; then
+             iptables -D OUTPUT -d "$ip" -p tcp --dport 443 -j REJECT
+           fi
+           show_progress $((i + 1)) ${#iran_ips[@]}
+         done
+         echo
+
+         # also delete rules which are added for Arvancloud
+         for aip in "${arvancloud_ips[@]}"
+         do
+           if iptables -C OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
+             iptables -D OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT
+           fi
+         done
+
+         # also delete rules which are added for DerakCloud
+         for aip in "${derakcloud_ips[@]}"
+         do
+           if iptables -C OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT &> /dev/null; then
+             iptables -D OUTPUT -d "$aip" -p tcp --dport 443 -j ACCEPT
+           fi
+         done
+
+         # tunneling ip
+         tunneling_ip=$(iptables-save | grep -- '--dport 443.*ACCEPT\>' | awk '{print $4}')
+         if [ -n "$tunneling_ip" ]; then
+            iptables -D OUTPUT -d "$tunneling_ip" -p tcp --dport 443 -j ACCEPT
+         fi
+
+       clear_logs 2
+       menu_handler "menu"
+     else
+       clear_logs 5
+       fn_menu_2
+     fi
   else
-    back_to_menu
-  fi
-
-}
-
-# block_ir_websites > allow derak.cloud
-fn_menu_block_ir_websites_4(){
-  install_packages iptables
-  install_iptables_persistent
-  load_derakcloud_ips
-
-  print "[bold][blue]Are you sure you want to whitelist Derak Cloud?"
-  confirmation_dialog
-  response="$?"
-  clear_logs 1
-  if [ $response -eq 1 ]; then
-    allow_derakcloud
-    back_to_menu enter
-  else
-    back_to_menu
-  fi
-}
-
-# block_ir_websites > clear rules
-fn_menu_block_ir_websites_5(){
-  install_packages iptables
-  install_iptables_persistent
-  load_iranips
-  load_arvancloud_ips
-  load_derakcloud_ips
-
-  print "[bold][blue]Are you sure you want to unblock all the websites blocked by this script?"
-  confirmation_dialog
-  response="$?"
-  clear_logs 2
-  if [ $response -eq 1 ]; then
-    clear_rules
-    back_to_menu enter
-  else
-    back_to_menu
-  fi
-}
-
-# block_ir_websites > save settings
-fn_menu_block_ir_websites_6(){
-  install_packages iptables
-  install_iptables_persistent
-
-  print "[bold][blue]Are you sure you want the save the current settings?"
-  print "[blue]In this case the settings persist if you even reboot the system."
-  confirmation_dialog
-  response="$?"
-  clear_logs 2
-  if [ $response -eq 1 ]; then
-    save_rules
-    back_to_menu enter
-  else
-    back_to_menu
+     menu_handler "menu"
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare
@@ -1291,8 +2017,9 @@ show_headers
 check_os
 check_root
 fix_etc_hosts
+disable_ufw
 set_run_mode
-install_or_update_wepn
+#install_or_update_wepn
 #install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
-menu_handler "menu"
+clear_old_iptables_rules_and _run
