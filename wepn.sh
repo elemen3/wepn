@@ -27,8 +27,7 @@
 
 #----------------------------------------------------------------------------------------------------------------------- vars
 main_script_file="wepn.sh"
-installed_version=""
-latest_version=""
+version="2023.08.01"
 
 running_url=false
 running_installed=false
@@ -832,8 +831,20 @@ show_headers(){
   if [ "$logo_shown" = "false" ]; then
     cat "$HOME/.wepn/logo"
     logo_shown=true
-
-    sleep 2
+    separator -
+    sleep 0.05
+    echo
+    print center "[bold][blue]WePN MASTER SCRIPT"
+    sleep 0.05
+    print center "[blue]$version"
+    sleep 0.05
+    print center "[bold][blue]Author: @macromicro"
+    sleep 0.05
+    print center "[bold][blue]Telegram: @wepn_group"
+    sleep 0.05
+    echo
+    separator -
+    sleep 3
     clear && printf '\e[3J'
   fi
 
@@ -842,7 +853,7 @@ show_headers(){
   separator
   echo -e "\e[1;37;48;5;21m                                                                \e[0m"
   echo -e "\e[1;37;48;5;20m                    [ WePN MASTER SCRIPT ]                      \e[0m"
-  echo -e "\e[1;37;48;5;19m                          2023.08.01                            \e[0m"
+  echo -e "\e[1;37;48;5;19m                          $version                            \e[0m"
   echo -e "\e[1;37;48;5;18m                     Author: @macromicro                        \e[0m"
   echo -e "\e[1;37;48;5;17m                                                                \e[0m"
   separator
