@@ -1332,7 +1332,11 @@ fn_menu_firewall_7(){
 
   speedtest_ips=()
 
+
   clear_menu
+  install_packages iptables
+  install_iptables_persistent
+  install_packages ipset
 
   if ! ipset list wepn_speedtest_set &> /dev/null; then
 
@@ -1813,7 +1817,7 @@ fn_menu_2(){
   sleep 0.05
   echo
   padding=$(( ($width - ${#exit_msg4}) / 2 ))
- printf "\033[1;32m%*s%s%*s\033[0m\n" $padding '' "$exit_msg4" $padding ''
+  printf "\033[1;32m%*s%s%*s\033[0m\n" $padding '' "$exit_msg4" $padding ''
 
 
   sleep 0.05
