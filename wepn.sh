@@ -833,7 +833,7 @@ show_headers(){
     cat "$HOME/.wepn/logo"
     logo_shown=true
 
-    sleep 1
+    sleep 2
     clear && printf '\e[3J'
   fi
 
