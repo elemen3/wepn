@@ -27,7 +27,7 @@
 
 #----------------------------------------------------------------------------------------------------------------------- vars
 main_script_file="wepn.sh"
-version="2023.08.01"
+version="2023.08.02"
 
 running_url=false
 running_installed=false
@@ -460,6 +460,23 @@ install_or_update_wepn(){
 
   fi
 }
+#----------------------------------------------------------------------------------------------------------------------- create wepn.service
+create_wepn_service(){
+  # create service.sh
+  if [ ! -f "/root/.wepn/service.sh" ]; then
+    curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/service.sh > "/root/.wepn/service.sh"
+    chmod +x /root/.wepn/service.sh
+  fi
+
+  # create wepn.service
+  if [ ! -f "/etc/systemd/system/wepn.service" ]; then
+    curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/wepn.service > "/etc/systemd/system/wepn.service"
+
+    # activate wepn.service
+    systemctl daemon-reload
+    systemctl enable wepn.service
+  fi
+}
 #----------------------------------------------------------------------------------------------------------------------- update package lists
 update_package_lists(){
 
@@ -554,11 +571,16 @@ install_packages() {
   do
 
     # check if package is not installed
-    if ! (dpkg -s $package >/dev/null 2>&1); then
+#    if ! (dpkg -s $package >/dev/null 2>&1); then
+    if ! dpkg -l | grep -wq "^ii\s*$package\s"; then
       print "[blue]Installing $package..."
 
+
       # install package
-      [ $os != "macOS" ] && apt install $package -y &> /dev/null
+      if ! apt install $package -y &> /dev/null; then
+        apt --fix-broken install
+        apt install $package -y &> /dev/null
+      fi
 
       sleep 0.5
       clear_logs 1
@@ -1159,9 +1181,7 @@ fn_menu_firewall_2(){
   clear_menu
 
   if ! ipset list wepn_iranian_websites_set &> /dev/null; then
-    install_packages iptables
-    install_iptables_persistent
-    install_packages ipset
+    install_packages iptables ipset
     load_iran_ips
     load_arvancloud_ips
     load_derakcloud_ips
@@ -1219,9 +1239,7 @@ fn_menu_firewall_3(){
   clear_menu
   if ipset list wepn_iranian_websites_set &> /dev/null; then
     if ! ipset list wepn_arvancloud_set &> /dev/null; then
-      install_packages iptables
-      install_iptables_persistent
-      install_packages ipset
+      install_packages iptables ipset
       load_arvancloud_ips
 
       print "[blue]If you have block Iranian websites while tunneling through Arvancloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Arvancloud."
@@ -1233,8 +1251,7 @@ fn_menu_firewall_3(){
       if [ $response -eq 1 ]; then
         print "[blue]Whitelisting Arvancloud..."
         create_or_add_to_table wepn_arvancloud ALLOW_WEBSITE "${arvancloud_ips[@]}"
-        echo
-        echo
+        clear_logs 1
         print "[bold][green]Arvancloud is whitelisted."
         back_to_menu enter
       else
@@ -1254,9 +1271,7 @@ fn_menu_firewall_4(){
   clear_menu
   if ipset list wepn_iranian_websites_set &> /dev/null; then
   if ! ipset list wepn_derakcloud_set &> /dev/null; then
-    install_packages iptables
-    install_iptables_persistent
-    install_packages ipset
+    install_packages iptables ipset
     load_derakcloud_ips
 
     print "[blue]If you have block Iranian websites while tunneling through Derakcloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Derakcloud."
@@ -1268,8 +1283,7 @@ fn_menu_firewall_4(){
     if [ $response -eq 1 ]; then
       print "[blue]Whitelisting Derakcloud..."
       create_or_add_to_table wepn_derakcloud ALLOW_WEBSITE "${derakcloud_ips[@]}"
-      echo
-      echo
+      clear_logs 1
       print "[bold][green]Derakcloud is whitelisted."
       back_to_menu enter
     else
@@ -1289,9 +1303,7 @@ fn_menu_firewall_6(){
   clear_menu
 
   if ! ipset list wepn_porn_websites_set &> /dev/null; then
-    install_packages iptables
-    install_iptables_persistent
-    install_packages ipset
+    install_packages iptables ipset
     load_porn_ips
 
     print "[bold][blue]Are you sure you want to block Porn websites?"
@@ -1334,9 +1346,7 @@ fn_menu_firewall_7(){
 
 
   clear_menu
-  install_packages iptables
-  install_iptables_persistent
-  install_packages ipset
+  install_packages iptables ipset
 
   if ! ipset list wepn_speedtest_set &> /dev/null; then
 
@@ -1371,9 +1381,7 @@ fn_menu_firewall_7(){
 #------------------------------------------------------------ block specific website
 fn_menu_firewall_9(){
   clear_menu
-  install_packages iptables
-  install_iptables_persistent
-  install_packages ipset
+  install_packages iptables ipset
 
   while true; do
 
@@ -1415,7 +1423,7 @@ fn_menu_firewall_9(){
 
       else
           print "[bold][red]Domain or IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
-          sleep 3
+          sleep 2
           clear_logs 1
       fi
   done
@@ -1426,9 +1434,7 @@ fn_menu_firewall_11(){
   clear_menu
 
   if ! ipset list wepn_china_set &> /dev/null; then
-    install_packages iptables
-    install_iptables_persistent
-    install_packages ipset
+    install_packages iptables ipset
     load_china_ips
 
     print "[bold][blue]Are you sure you want to block attacks from China?"
@@ -1455,9 +1461,7 @@ fn_menu_firewall_12(){
   clear_menu
 
   if ! ipset list wepn_russia_set &> /dev/null; then
-    install_packages iptables
-    install_iptables_persistent
-    install_packages ipset
+    install_packages iptables ipset
     load_russia_ips
 
     print "[bold][blue]Are you sure you want to block attacks from Russia?"
@@ -1482,9 +1486,7 @@ fn_menu_firewall_12(){
 #------------------------------------------------------------ block Individual Attacker
 fn_menu_firewall_13(){
   clear_menu
-  install_packages iptables
-  install_iptables_persistent
-  install_packages ipset
+  install_packages iptables ipset
 
   while true; do
 
@@ -1506,7 +1508,7 @@ fn_menu_firewall_13(){
           break
       else
           print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
-          sleep 3
+          sleep 2
           clear_logs 1
       fi
   done
@@ -1516,9 +1518,7 @@ fn_menu_firewall_13(){
 fn_menu_firewall_15(){
   clear_menu
   if ! iptables -nL wepn_ipscan_chain >/dev/null 2>&1; then
-    install_packages iptables
-    install_iptables_persistent
-    install_packages ipset
+    install_packages iptables ipset
 
     print "[bold][blue]Are you sure you want to prevent IP scans from going through your server?"
     confirmation_dialog
@@ -1543,9 +1543,7 @@ fn_menu_firewall_15(){
 fn_menu_firewall_16(){
   clear_menu
   if ! iptables -nL wepn_bittorrent_chain >/dev/null 2>&1; then
-    install_packages iptables
-    install_iptables_persistent
-    install_packages ipset
+    install_packages iptables ipset
 
     print "[bold][blue]Please consider that it will block ports from [yellow]6881[blue] to [yellow]6889[blue], as they are common BitTorrent ports."
     echo
@@ -1570,9 +1568,7 @@ fn_menu_firewall_16(){
 }
 #------------------------------------------------------------ View Rules
 fn_menu_firewall_18(){
-  install_packages iptables
-  install_iptables_persistent
-  install_packages ipset
+  install_packages iptables ipset
   clear_menu
   view_rules
 }
@@ -1743,9 +1739,7 @@ view_rules_in_detail(){
 }
 #------------------------------------------------------------ Clear Rules
 fn_menu_firewall_19(){
-  install_packages iptables
-  install_iptables_persistent
-  install_packages ipset
+  install_packages iptables ipset
   clear_menu
 
 
@@ -1772,8 +1766,14 @@ fn_menu_firewall_19(){
       iptables -L wepn_bittorrent_chain >/dev/null 2>&1 &&  delete_table wepn_bittorrent
 
 
-      # save
-      iptables-save > /etc/iptables/rules.v4
+
+      # truncate
+      echo > /root/.wepn/iptables-rules
+      echo > /root/.wepn/ipset-rules
+      grep -q 'wepn_' /etc/iptables/rules.v4 && echo > /etc/iptables/rules.v4
+      systemctl restart netfilter-persistent
+
+
 
       clear_logs 1
       print "[bold][green]Cleaned up."
@@ -1801,10 +1801,15 @@ fn_menu_2(){
   exit_msg1="Appreciate your taking the time to play with my script."
   exit_msg2="I hope you found it helpful."
   exit_msg3="Feedback and bug reports are warmly welcomed."
+
   exit_msg4="Telegram: @wepn_group"
-  exit_msg5="❤ ❤ ❤"
-  exit_msg6="❤ ❤"
-  exit_msg7="❤"
+
+  exit_msg5="DONATE IN TRON"
+  exit_msg6="TUPQdSRd2XW9AUo1MCX1SnmTJkbrjqmRtC"
+
+  exit_msg7="❤ ❤ ❤"
+  exit_msg8="❤ ❤"
+  exit_msg9="❤"
 
   padding=$(( ($width - ${#exit_msg1}) / 2 ))
   printf "\\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg1" $padding ''
@@ -1816,20 +1821,28 @@ fn_menu_2(){
   printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg3" $padding ''
   sleep 0.05
   echo
+
   padding=$(( ($width - ${#exit_msg4}) / 2 ))
   printf "\033[1;32m%*s%s%*s\033[0m\n" $padding '' "$exit_msg4" $padding ''
-
-
   sleep 0.05
   echo
+
   padding=$(( ($width - ${#exit_msg5}) / 2 ))
   printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg5" $padding ''
   sleep 0.05
   padding=$(( ($width - ${#exit_msg6}) / 2 ))
   printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg6" $padding ''
   sleep 0.05
+  echo
+
   padding=$(( ($width - ${#exit_msg7}) / 2 ))
   printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg7" $padding ''
+  sleep 0.05
+  padding=$(( ($width - ${#exit_msg8}) / 2 ))
+  printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg8" $padding ''
+  sleep 0.05
+  padding=$(( ($width - ${#exit_msg9}) / 2 ))
+  printf "\033[1m\033[38;5;39m%*s%s%*s\033[0m\n" $padding '' "$exit_msg9" $padding ''
   echo
 
   show_cursor
@@ -1848,7 +1861,7 @@ create_or_add_to_table(){
   if [ "$rule" != "BLOCK_IPSCAN" ] && [ "$rule" != "BLOCK_BITTORRENT" ] ; then
     # create set if does not exist
     if ! ipset list "$set" &>/dev/null; then
-      ipset create $set hash:net comment maxelem 20000 #65536
+      ipset create $set hash:net comment maxelem 20000
     fi
 
     # add all ips to set
@@ -1860,6 +1873,7 @@ create_or_add_to_table(){
         ip=$(echo "${ips[$i]}" | cut -d '>' -f 1)
         comment=$(echo "${ips[$i]}" | cut -d '>' -f 2)
       else
+        comment=""
         ip="${ips[$i]}"
       fi
 
@@ -1873,67 +1887,70 @@ create_or_add_to_table(){
         fi
       fi
 
-      [ "${#ips[@]}" -gt 10 ] && show_progress $((i + 1)) ${#ips[@]}
+      [ "${#ips[@]}" -gt 50 ] && show_progress $((i + 1)) ${#ips[@]}
 
     done
   fi
 
-    # create chain
-    if ! iptables -nL $chain >/dev/null 2>&1; then
-      iptables -N $chain
+  # create chain
+  if ! iptables -nL $chain >/dev/null 2>&1; then
+    iptables -N $chain
 
-      if [ "$rule" == "BLOCK_WEBSITE" ]; then
-        iptables -I $chain -p tcp --dport 443 -m set --match-set $set dst -j REJECT
-        iptables -I OUTPUT 1 -j $chain
-        iptables -I FORWARD 1 -j $chain
-      elif [ "$rule" == "ALLOW_WEBSITE" ]; then
-        iptables -I $chain -p tcp --dport 443 -m set --match-set $set dst -j ACCEPT
-        iptables -I OUTPUT 1 -j $chain
-        iptables -I FORWARD 1 -j $chain
-      elif [ "$rule" == "BLOCK_ATTACK" ]; then
-        iptables -I $chain -m set --match-set $set src -j DROP
-        iptables -I INPUT 1 -j $chain
-      elif [ "$rule" == "BLOCK_IPSCAN" ]; then
+    if [ "$rule" == "BLOCK_WEBSITE" ]; then
+      iptables -I $chain -p tcp --dport 80 -m set --match-set $set dst -j REJECT
+      iptables -I $chain -p tcp --dport 443 -m set --match-set $set dst -j REJECT
+      iptables -I OUTPUT 1 -j $chain
+      iptables -I FORWARD 1 -j $chain
+    elif [ "$rule" == "ALLOW_WEBSITE" ]; then
+      iptables -I $chain -p tcp --dport 80 -m set --match-set $set dst -j ACCEPT
+      iptables -I $chain -p tcp --dport 443 -m set --match-set $set dst -j ACCEPT
+      iptables -I OUTPUT 1 -j $chain
+      iptables -I FORWARD 1 -j $chain
+    elif [ "$rule" == "BLOCK_ATTACK" ]; then
+      iptables -I $chain -m set --match-set $set src -j DROP
+      iptables -I INPUT 1 -j $chain
+    elif [ "$rule" == "BLOCK_IPSCAN" ]; then
 
-        iptables -I $chain 1 -d 10.0.0.0/8 -j DROP
-        iptables -I $chain 2 -d 172.16.0.0/12 -j DROP
-        iptables -I $chain 3 -d 192.168.0.0/16 -j DROP
-        iptables -I $chain 4 -d 100.64.0.0/10 -j DROP
-        iptables -I $chain 5 -d 198.18.0.0/15 -j DROP
-        iptables -I $chain 6 -d 169.254.0.0/16 -j DROP
+      iptables -I $chain -d 10.0.0.0/8 -j DROP
+      iptables -I $chain -d 172.16.0.0/12 -j DROP
+      iptables -I $chain -d 192.168.0.0/16 -j DROP
+      iptables -I $chain -d 100.64.0.0/10 -j DROP
+      iptables -I $chain -d 198.18.0.0/15 -j DROP
+      iptables -I $chain -d 169.254.0.0/16 -j DROP
 
-        # Apply the wepn_ipscan_chain chain to the OUTPUT chain
-        iptables -I OUTPUT 1 -j wepn_ipscan_chain
+      # Apply the wepn_ipscan_chain chain to the OUTPUT chain
+      iptables -I OUTPUT -j wepn_ipscan_chain
 
-      elif [ "$rule" == "BLOCK_BITTORRENT" ]; then
+    elif [ "$rule" == "BLOCK_BITTORRENT" ]; then
 
-        # Add rules to the custom chain to match BitTorrent traffic
-        iptables -I $chain -m string --algo bm --string "BitTorrent" -j DROP
-        iptables -I $chain -m string --algo bm --string "BitTorrent protocol" -j DROP
-        iptables -I $chain -m string --algo bm --string "peer_id=" -j DROP
-        iptables -I $chain -m string --algo bm --string ".torrent" -j DROP
-        iptables -I $chain -m string --algo bm --string "announce.php?passkey=" -j DROP
-        iptables -I $chain -m string --algo bm --string "torrent/announce" -j DROP
-        iptables -I $chain -m string --algo bm --string "announce?info_hash" -j DROP
-        iptables -I $chain -m string --algo bm --string "find_node" -j DROP
-        iptables -I $chain -m string --algo bm --string "info_hash" -j DROP
-        iptables -I $chain -m string --algo bm --string "get_peers" -j DROP
-        iptables -I $chain -m string --algo bm --string "announce" -j DROP
-        iptables -I $chain -m string --algo bm --string "magnet:" -j DROP
+      # Add rules to the custom chain to match BitTorrent traffic
+      iptables -I $chain -m string --algo bm --string "BitTorrent" -j DROP
+      iptables -I $chain -m string --algo bm --string "BitTorrent protocol" -j DROP
+      iptables -I $chain -m string --algo bm --string "peer_id=" -j DROP
+      iptables -I $chain -m string --algo bm --string ".torrent" -j DROP
+      iptables -I $chain -m string --algo bm --string "announce.php?passkey=" -j DROP
+      iptables -I $chain -m string --algo bm --string "torrent/announce" -j DROP
+      iptables -I $chain -m string --algo bm --string "announce?info_hash" -j DROP
+      iptables -I $chain -m string --algo bm --string "find_node" -j DROP
+      iptables -I $chain -m string --algo bm --string "info_hash" -j DROP
+      iptables -I $chain -m string --algo bm --string "get_peers" -j DROP
+      iptables -I $chain -m string --algo bm --string "announce" -j DROP
+      iptables -I $chain -m string --algo bm --string "magnet:" -j DROP
 
-        # block bittorrent common port
-        iptables -I $chain -p tcp --dport 6881:6889 -j DROP
-        iptables -I $chain -p udp --dport 6881:6889 -j DROP
+      # block bittorrent common port
+      iptables -I $chain -p tcp --dport 6881:6889 -j DROP
+      iptables -I $chain -p udp --dport 6881:6889 -j DROP
 
-        # Apply the custom chain to the INPUT and OUTPUT chains:
-        iptables -I INPUT -j $chain
-        iptables -I OUTPUT -j $chain
+      # Apply the custom chain to the INPUT and OUTPUT chains:
+      iptables -I INPUT -j $chain
+      iptables -I OUTPUT -j $chain
 
-      fi
     fi
+  fi
 
   # save
-  iptables-save > /etc/iptables/rules.v4
+  iptables-save > /root/.wepn/iptables-rules
+  ipset save > /root/.wepn/ipset-rules
 }
 
 delete_table(){
@@ -2028,6 +2045,7 @@ clear_old_iptables_rules_and_run(){
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare
 prepare_screen
+create_wepn_service
 show_headers
 check_os
 check_root
