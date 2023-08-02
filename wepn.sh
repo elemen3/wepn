@@ -1472,7 +1472,7 @@ fn_menu_firewall_12(){
   fi
 }
 #------------------------------------------------------------ block Attacks from Russia
-fn_menu_firewall_12(){
+fn_menu_firewall_13(){
   clear_menu
 
   if ! ipset list wepn_russia_set &> /dev/null; then
