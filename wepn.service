@@ -1,0 +1,12 @@
+[Unit]
+Description=WePN Service
+
+[Service]
+Type=oneshot
+ExecStart=/root/.wepn/service.sh
+User=root
+Group=root
+UMask=0022
+
+[Install]
+WantedBy=multi-user.target
