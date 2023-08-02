@@ -1180,6 +1180,7 @@ fn_menu_firewall_0(){
 #------------------------------------------------------------ block iranian websites
 fn_menu_firewall_2(){
   clear_menu
+  install_packages iptables ipset
 
   if ! ipset list wepn_iranian_websites_set &> /dev/null; then
     print "[bold][blue]Are you sure you want to block outgoing traffic from your server to Iranian websites?"
@@ -1187,7 +1188,6 @@ fn_menu_firewall_2(){
     response="$?"
     clear_logs 2
     if [ $response -eq 1 ]; then
-      install_packages iptables ipset
       load_iran_ips
       load_arvancloud_ips
       load_derakcloud_ips
@@ -1208,8 +1208,9 @@ fn_menu_firewall_2(){
 #------------------------------------------------------------ allow tunneling server
 fn_menu_firewall_3(){
   clear_menu
+  install_packages iptables ipset
+
   if ipset list wepn_iranian_websites_set &> /dev/null; then
-     install_packages iptables ipset
 
       while true; do
 
@@ -1284,10 +1285,10 @@ fn_menu_firewall_4(){
 #------------------------------------------------------------ allow derakcloud
 fn_menu_firewall_5(){
   clear_menu
+  install_packages iptables ipset
+
   if ipset list wepn_iranian_websites_set &> /dev/null; then
   if ! ipset list wepn_derakcloud_set &> /dev/null; then
-    install_packages iptables ipset
-    load_derakcloud_ips
 
     print "[blue]If you have block Iranian websites while tunneling through Derakcloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Derakcloud."
     echo
@@ -1296,6 +1297,7 @@ fn_menu_firewall_5(){
     response="$?"
     clear_logs 5
     if [ $response -eq 1 ]; then
+      load_derakcloud_ips
       print "[blue]Whitelisting Derakcloud..."
       create_or_add_to_table wepn_derakcloud ALLOW_WEBSITE "${derakcloud_ips[@]}"
       clear_logs 1
@@ -1316,16 +1318,16 @@ fn_menu_firewall_5(){
 #------------------------------------------------------------ block porn websites
 fn_menu_firewall_7(){
   clear_menu
+  install_packages iptables ipset
 
   if ! ipset list wepn_porn_websites_set &> /dev/null; then
-    install_packages iptables ipset
-    load_porn_ips
 
     print "[bold][blue]Are you sure you want to block Porn websites?"
     confirmation_dialog
     response="$?"
     clear_logs 1
     if [ $response -eq 1 ]; then
+      load_porn_ips
       print "[blue]Blocking Porn Websites..."
       create_or_add_to_table wepn_porn_websites BLOCK_WEBSITE "${porn_ips[@]}"
       echo
@@ -1364,7 +1366,6 @@ fn_menu_firewall_8(){
   install_packages iptables ipset
 
   if ! ipset list wepn_speedtest_set &> /dev/null; then
-
 
     print "[bold][blue]Are you sure you want to block Speedtest?"
     confirmation_dialog
@@ -1447,16 +1448,15 @@ fn_menu_firewall_10(){
 #------------------------------------------------------------ block External Attacks from China
 fn_menu_firewall_12(){
   clear_menu
+  install_packages iptables ipset
 
   if ! ipset list wepn_china_set &> /dev/null; then
-    install_packages iptables ipset
-    load_china_ips
-
     print "[bold][blue]Are you sure you want to block attacks from China?"
     confirmation_dialog
     response="$?"
     clear_logs 1
     if [ $response -eq 1 ]; then
+      load_china_ips
       print "[blue]Blocking Chinese attackers..."
       create_or_add_to_table wepn_china BLOCK_ATTACK "${china_ips[@]}"
       echo
@@ -1474,16 +1474,16 @@ fn_menu_firewall_12(){
 #------------------------------------------------------------ block Attacks from Russia
 fn_menu_firewall_13(){
   clear_menu
+  install_packages iptables ipset
 
   if ! ipset list wepn_russia_set &> /dev/null; then
-    install_packages iptables ipset
-    load_russia_ips
 
     print "[bold][blue]Are you sure you want to block attacks from Russia?"
     confirmation_dialog
     response="$?"
     clear_logs 1
     if [ $response -eq 1 ]; then
+      load_russia_ips
       print "[blue]Blocking Russian attackers..."
       create_or_add_to_table wepn_russia BLOCK_ATTACK "${russia_ips[@]}"
       echo
@@ -1532,8 +1532,9 @@ fn_menu_firewall_14(){
 #------------------------------------------------------------ block IP Scan
 fn_menu_firewall_16(){
   clear_menu
+  install_packages iptables ipset
+
   if ! iptables -nL wepn_ipscan_chain >/dev/null 2>&1; then
-    install_packages iptables ipset
 
     print "[bold][blue]Are you sure you want to prevent IP scans from going through your server?"
     confirmation_dialog
@@ -1557,8 +1558,9 @@ fn_menu_firewall_16(){
 #------------------------------------------------------------ block BitTorrent
 fn_menu_firewall_17(){
   clear_menu
+  install_packages iptables ipset
+
   if ! iptables -nL wepn_bittorrent_chain >/dev/null 2>&1; then
-    install_packages iptables ipset
 
     print "[bold][blue]Please consider that it will block ports from [yellow]6881[blue] to [yellow]6889[blue], as they are common BitTorrent ports."
     echo
