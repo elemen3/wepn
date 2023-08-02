@@ -1122,6 +1122,7 @@ menu_firewall=(
 #"Block Iranian Government Websites Only"
 #"Block Iranian Social Media Websites Only"
 #"Block Iranian Media Websites Only"
+"Allow Tunneling Server"
 "Allow Arvancloud"
 "Allow Derakcloud"
 "-"
@@ -1181,51 +1182,21 @@ fn_menu_firewall_2(){
   clear_menu
 
   if ! ipset list wepn_iranian_websites_set &> /dev/null; then
-    install_packages iptables ipset
-    load_iran_ips
-    load_arvancloud_ips
-    load_derakcloud_ips
-
     print "[bold][blue]Are you sure you want to block outgoing traffic from your server to Iranian websites?"
     confirmation_dialog
     response="$?"
     clear_logs 2
     if [ $response -eq 1 ]; then
-
-      while true; do
-
-          show_cursor
-          read -e -p "$(print "[bold][blue]Please enter the IP address of your Iranian server which you are using to tunnel to this server (leave blank if you are not tunneling and hit Enter): ")" response
-          clear_logs 3
-          hide_cursor
-
-          if [ -z "$response" ]; then
-            # no tunneling
-              print "[blue]Blocking all Iranian Websites..."
-              create_or_add_to_table wepn_iranian_websites BLOCK_WEBSITE "${iran_ips[@]}"
-              echo
-              echo
-              print "[bold][green]All Iranian websites are blocked."
-              break
-          elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-              print "[blue]Blocking all except your Iranian server ([bold][green]$response[end][blue])..."
-              create_or_add_to_table wepn_iranian_websites BLOCK_WEBSITE "${iran_ips[@]}"
-              # exclude irsrv ip addr
-              tunnel_ips=("$response")
-              create_or_add_to_table wepn_tunnel ALLOW_WEBSITE "${tunnel_ips[@]}"
-              echo
-              echo
-              print "[bold][green]All Iranian websites are blocked except your Iranian server."
-              break
-          else
-              print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
-              sleep 2
-              clear_logs 1
-          fi
-      done
-
+      install_packages iptables ipset
+      load_iran_ips
+      load_arvancloud_ips
+      load_derakcloud_ips
+      print "[blue]Blocking all Iranian Websites..."
+      create_or_add_to_table wepn_iranian_websites BLOCK_WEBSITE "${iran_ips[@]}"
+      echo
+      echo
+      print "[bold][green]All Iranian websites are blocked."
       back_to_menu enter
-
     else
       back_to_menu
     fi
@@ -1234,8 +1205,52 @@ fn_menu_firewall_2(){
     back_to_menu enter
   fi
 }
-#------------------------------------------------------------ allow arvancloud
+#------------------------------------------------------------ allow tunneling server
 fn_menu_firewall_3(){
+  clear_menu
+  if ipset list wepn_iranian_websites_set &> /dev/null; then
+     install_packages iptables ipset
+
+      while true; do
+
+          show_cursor
+          read -r -p  "$(print "[bold][blue]Please enter the IP address of your Iranian Tunneling server which you are using to tunnel to this server (leave blank if you are not tunneling and hit Enter): ")" response
+          clear_logs 3
+          hide_cursor
+
+          # left blank
+          if [ -z "$response" ]; then
+            print "[bold][red]Left blank."
+            break
+          # ip is valid (1.1.1.1  1.1.1./24)
+          elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})?$ ]]; then
+            if ipset list wepn_tunnel_set | grep -q "$response"; then
+              print "[bold][green]This server is already whitelisted."
+              break
+            else
+              print "[blue]Whitelisting your Tunneling server ([bold][green]$response[end][blue])..."
+              tunnel_ips=("$response")
+              create_or_add_to_table wepn_tunnel ALLOW_WEBSITE "${tunnel_ips[@]}"
+              clear_logs 1
+              print "[bold][green]Your Tunneling server is whitelisted."
+              break
+            fi
+          else
+            print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
+            sleep 2
+            clear_logs 1
+          fi
+      done
+
+      back_to_menu enter
+
+  else
+    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]Your Iranian Server [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ allow arvancloud
+fn_menu_firewall_4(){
   clear_menu
   if ipset list wepn_iranian_websites_set &> /dev/null; then
     if ! ipset list wepn_arvancloud_set &> /dev/null; then
@@ -1267,7 +1282,7 @@ fn_menu_firewall_3(){
   fi
 }
 #------------------------------------------------------------ allow derakcloud
-fn_menu_firewall_4(){
+fn_menu_firewall_5(){
   clear_menu
   if ipset list wepn_iranian_websites_set &> /dev/null; then
   if ! ipset list wepn_derakcloud_set &> /dev/null; then
@@ -1299,7 +1314,7 @@ fn_menu_firewall_4(){
   fi
 }
 #------------------------------------------------------------ block porn websites
-fn_menu_firewall_6(){
+fn_menu_firewall_7(){
   clear_menu
 
   if ! ipset list wepn_porn_websites_set &> /dev/null; then
@@ -1327,7 +1342,7 @@ fn_menu_firewall_6(){
 
 }
 #------------------------------------------------------------ block speedtest
-fn_menu_firewall_7(){
+fn_menu_firewall_8(){
 
   domains=(
   speedtest.net
@@ -1379,7 +1394,7 @@ fn_menu_firewall_7(){
   fi
 }
 #------------------------------------------------------------ block specific website
-fn_menu_firewall_9(){
+fn_menu_firewall_10(){
   clear_menu
   install_packages iptables ipset
 
@@ -1430,7 +1445,7 @@ fn_menu_firewall_9(){
   back_to_menu enter
 }
 #------------------------------------------------------------ block External Attacks from China
-fn_menu_firewall_11(){
+fn_menu_firewall_12(){
   clear_menu
 
   if ! ipset list wepn_china_set &> /dev/null; then
@@ -1484,7 +1499,7 @@ fn_menu_firewall_12(){
   fi
 }
 #------------------------------------------------------------ block Individual Attacker
-fn_menu_firewall_13(){
+fn_menu_firewall_14(){
   clear_menu
   install_packages iptables ipset
 
@@ -1515,7 +1530,7 @@ fn_menu_firewall_13(){
   back_to_menu enter
 }
 #------------------------------------------------------------ block IP Scan
-fn_menu_firewall_15(){
+fn_menu_firewall_16(){
   clear_menu
   if ! iptables -nL wepn_ipscan_chain >/dev/null 2>&1; then
     install_packages iptables ipset
@@ -1540,7 +1555,7 @@ fn_menu_firewall_15(){
   fi
 }
 #------------------------------------------------------------ block BitTorrent
-fn_menu_firewall_16(){
+fn_menu_firewall_17(){
   clear_menu
   if ! iptables -nL wepn_bittorrent_chain >/dev/null 2>&1; then
     install_packages iptables ipset
@@ -1567,7 +1582,7 @@ fn_menu_firewall_16(){
   fi
 }
 #------------------------------------------------------------ View Rules
-fn_menu_firewall_18(){
+fn_menu_firewall_19(){
   install_packages iptables ipset
   clear_menu
   view_rules
@@ -1593,8 +1608,11 @@ view_rules(){
     any_rules=0
 
     [ ${#iran_ips[@]} -gt 0 ] &&  print n "[bold][white]Iranian Websites                                         [red]BLOCKED" && separator "-" && any_rules=1
-    printf -v _spaces_for_tunnel "%-$((15 - ${#tunnel_ips[0]}))b" ""
-    [ ${#tunnel_ips[@]} -gt 0 ] &&  print n "[bold][white]Tunnel ([green]${tunnel_ips[0]}[white])${_spaces_for_tunnel// /" "}                                 [green]ALLOWED" && separator "-" && any_rules=1
+
+    for ip in "${tunnel_ips[@]}"; do
+      printf -v _spaces_for_tunnel "%-$((18 - ${#ip}))b" ""
+      [ ${#tunnel_ips[@]} -gt 0 ] &&  print n "[bold][white]Tunnel ([green]$ip[white])${_spaces_for_tunnel// /" "}                              [green]ALLOWED" && separator "-" && any_rules=1
+    done
     [ ${#arvancloud_ips[@]} -gt 0 ] &&  print n "[bold][white]Arvancloud                                               [green]ALLOWED" && separator "-" && any_rules=1
     [ ${#derakcloud_ips[@]} -gt 0 ] &&  print n "[bold][white]Deracloud                                                [green]ALLOWED" && separator "-" && any_rules=1
     [ ${#porn_ips[@]} -gt 0 ] &&  print n "[bold][white]Porn Websites                                            [red]BLOCKED" && separator "-" && any_rules=1
@@ -1738,7 +1756,7 @@ view_rules_in_detail(){
 
 }
 #------------------------------------------------------------ Clear Rules
-fn_menu_firewall_19(){
+fn_menu_firewall_20(){
   install_packages iptables ipset
   clear_menu
 
@@ -2056,3 +2074,5 @@ set_run_mode
 #install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
 clear_old_iptables_rules_and_run
+
+}
