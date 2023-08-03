@@ -605,7 +605,7 @@ load_arvancloud_ips(){
 }
 load_derakcloud_ips(){
   if [ "${#derakcloud_ips[@]}" -eq 0 ]; then
-    print "[blue]Loading Derak Cloud IP ranges..."
+    print "[blue]Loading DerakCloud IP ranges..."
     sleep 0.5
 
     # URL of the text file to read
@@ -852,7 +852,7 @@ allow_derakcloud(){
       fi
     done
 
-    print "[bold][green]Derak Cloud is whitelisted."
+    print "[bold][green]DerakCloud is whitelisted."
 }
 
 save_rules(){
@@ -1040,6 +1040,18 @@ menu_handler(){
     fi
 }
 #----------------------------------------------------------------------------------------------------------------------- menu
+#menu=(
+#"Block Iranian Websites"
+#"Block Porn Websites"
+#"Block External Attacks from China and Russia"
+#"Block IP Scan"
+#"Block Speedtest"
+#"Block Bit Torrent"
+#"Block Ads"
+#"Block Custom IP or Website"
+#"Exit"
+#)
+
 menu=(
 "SSH"
 "Cloudflare"
@@ -1063,7 +1075,7 @@ menu_block_ir_websites=(
 'View applied rules'
 'Block outgoing traffic from this server to Iranian websites'
 'Allow Arvancloud CDN and Servers'
-'Allow Derak Cloud CDN and Servers'
+'Allow DerakCloud CDN and Servers'
 'Clear all rules applied by this script'
 'Save settings'
 )
@@ -1236,7 +1248,7 @@ fn_menu_block_ir_websites_4(){
   install_iptables_persistent
   load_derakcloud_ips
 
-  print "[bold][blue]Are you sure you want to whitelist Derak Cloud?"
+  print "[bold][blue]Are you sure you want to whitelist DerakCloud?"
   confirmation_dialog
   response="$?"
   clear_logs 1
@@ -1292,7 +1304,7 @@ check_os
 check_root
 fix_etc_hosts
 set_run_mode
-install_or_update_wepn
+#install_or_update_wepn
 #install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
 menu_handler "menu"
