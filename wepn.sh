@@ -578,7 +578,7 @@ install_packages() {
 
       # install package
       if ! apt install $package -y &> /dev/null; then
-        apt --fix-broken install
+        apt --fix-broken install -y &> /dev/null
         apt install $package -y &> /dev/null
       fi
 
