@@ -1427,7 +1427,7 @@ fn_menu_firewall_10(){
 
           #------------------------------------------------------ find all subdomains
           print "[bold][blue]Discovering all subdomains..."
-          readarray -t subdomains <<< $( /root/.wepn/subfinder -silent -d "$domain" )
+          readarray -t subdomains <<< $( /root/.wepn/subfinder -silent -d "$domain" | sort )
           clear_logs 1
           #------------------------------------------------------ loop over subdomains
           print "[bold][blue]Discovering all IP addresses associated with:"
