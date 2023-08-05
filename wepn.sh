@@ -1365,7 +1365,7 @@ fn_menu_firewall_8(){
 
 
   clear_menu
-  install_packages iptables ipset
+  install_packages iptables ipset dnsutils
 
   if ! ipset list wepn_speedtest_set &> /dev/null; then
 
