@@ -484,8 +484,8 @@ update_upgrade_package_lists(){
   # apt update (catch errors)
 #  print "[blue]Updating and upgrading packages..."
   apt_update_error=$(apt-get update -q 2>&1 >/dev/null)
-  apt_upgrade_error=$(apt-get upgrade -y -q 2>&1 >/dev/null)
   dpkg_configure_error=$(dpkg --configure -a 2>&1 >/dev/null)
+  apt_upgrade_error=$(apt-get upgrade -y -q 2>&1 >/dev/null)
 
   if [ -n "$apt_update_error" ] || [ -n "$apt_upgrade_error" ] || [ -n "$dpkg_configure_error" ]; then
 
