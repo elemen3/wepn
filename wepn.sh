@@ -367,12 +367,11 @@ fix_etc_hosts(){
 }
 #----------------------------------------------------------------------------------------------------------------------- disable ufw
 disable_ufw(){
-  # Check if uwf is installed
-  if command -v ufw &> /dev/null
-  then
+  # Check if uwf is installed and is active
+  if command -v ufw &> /dev/null && systemctl is-active --quiet ufw; then
       # ufw is installed, stop and disable it
       service ufw stop
-      ufw disable > /dev/null
+      systemctl is-enabled --quiet ufw && ufw disable > /dev/null
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- get latest version number
@@ -507,6 +506,7 @@ update_upgrade_package_lists(){
         kill -9 $pid
         echo
         print "[bold][green]Process [yellow]$pid[green] is killed."
+        print "[blue]Trying again..."
         sleep 1
         logo_shown=false
         show_headers
@@ -596,6 +596,7 @@ update_upgrade_package_lists(){
           kill -9 $pid
           echo
           print "[bold][green]Process [yellow]$pid[green] is killed."
+          print "[blue]Trying again..."
           sleep 1
           logo_shown=false
           show_headers
