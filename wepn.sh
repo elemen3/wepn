@@ -481,13 +481,40 @@ update_upgrade_package_lists(){
   echo "nameserver 1.1.1.1" > /etc/resolv.conf
   echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 
-  # apt update (catch errors)
-#  print "[blue]Updating and upgrading packages..."
+  # apt dpkg, update, upgrade (catch errors)
+  print center "[blue]Configuring dpkg..."
+  dpkg_configure_error=$(yes | dpkg --configure -a 2>&1 >/dev/null)
+  clear_logs 1
+  print center "[blue]Updating packages list..."
   apt_update_error=$(timeout 30 apt-get update -q 2>&1 >/dev/null)
-  dpkg_configure_error=$(dpkg --configure -a 2>&1 >/dev/null)
+  clear_logs 1
+  print center "[blue]Upgrading packages..."
   apt_upgrade_error=$(timeout 30 apt-get upgrade -y -q 2>&1 >/dev/null)
 
-  if [ -n "$apt_update_error" ]; then
+
+  if [ -n "$dpkg_configure_error" ] && [[ $dpkg_configure_error == *"dpkg frontend lock was locked by another process"* ]]; then
+    echo
+    print "[bold][yellow]The 'dpkg --configure a' encountered the following error(s):"
+    echo
+    print "[bold][red]$dpkg_configure_error"
+    echo
+      pid=$(echo "$dpkg_configure_error" | grep -oE 'pid [0-9]+' | awk '{print $2}')
+      print "[bold][blue]Would you like to kill the proccess [yellow]$pid[blue]?"
+      confirmation_dialog y
+      response="$?"
+      clear_logs 2
+      if [ $response -eq 1 ]; then
+        kill -9 $pid
+        echo
+        print "[bold][green]Process [yellow]$pid[green] is killed."
+        sleep 1
+        logo_shown=false
+        show_headers
+        update_upgrade_package_lists
+      else
+        fn_menu_2
+      fi
+  elif [ -n "$apt_update_error" ]; then
 
       echo
       print "[bold][yellow]The 'apt update' encountered the following error(s):"
@@ -559,13 +586,26 @@ update_upgrade_package_lists(){
     echo
     print "[bold][red]$apt_upgrade_error"
     echo
-    fn_menu_2
-  elif [ -n "$dpkg_configure_error" ]; then
-    echo
-    print "[bold][yellow]The 'dpkg --configure a' encountered the following error(s):"
-    echo
-    print "[bold][red]$dpkg_configure_error"
-    echo
+    if [[ $apt_upgrade_error == *"Could not get lock /var/lib/dpkg/lock-frontend. It is held by"* ]]; then
+        pid=$(echo "$apt_upgrade_error" | grep -oE 'process [0-9]+' | awk '{print $2}')
+        print "[bold][blue]Would you like to kill the proccess [yellow]$pid[blue]?"
+        confirmation_dialog y
+        response="$?"
+        clear_logs 2
+        if [ $response -eq 1 ]; then
+          kill -9 $pid
+          echo
+          print "[bold][green]Process [yellow]$pid[green] is killed."
+          sleep 1
+          logo_shown=false
+          show_headers
+          update_upgrade_package_lists
+        else
+          fn_menu_2
+        fi
+    else
+      fn_menu_2
+    fi
     fn_menu_2
   else
     sleep 0.5
