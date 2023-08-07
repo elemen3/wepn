@@ -483,14 +483,14 @@ update_upgrade_package_lists(){
 
   # apt update (catch errors)
 #  print "[blue]Updating and upgrading packages..."
-  apt_update_error=$(apt-get update -q 2>&1 >/dev/null)
+  apt_update_error=$(apt update -q 2>&1 >/dev/null)
   dpkg_configure_error=$(dpkg --configure -a 2>&1 >/dev/null)
-  apt_upgrade_error=$(apt-get upgrade -y -q 2>&1 >/dev/null)
+  apt_upgrade_error=$(apt upgrade -y -q 2>&1 >/dev/null)
 
-  if [ -n "$apt_update_error" ] || [ -n "$apt_upgrade_error" ] || [ -n "$dpkg_configure_error" ]; then
+  if [ -n "$apt_update_error" ]; then
 
       echo
-      print "[bold][yellow]The apt-get update encountered the following error(s):"
+      print "[bold][yellow]The 'apt update' encountered the following error(s):"
       echo
       print "[bold][red]$apt_update_error"
       echo
@@ -551,8 +551,22 @@ update_upgrade_package_lists(){
       else
         print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
         #exit
-        fn_menu_2
+
       fi
+  elif [ -n "$apt_upgrade_error" ]; then
+    echo
+    print "[bold][yellow]The 'apt upgrade' encountered the following error(s):"
+    echo
+    print "[bold][red]$apt_upgrade_error"
+    echo
+    fn_menu_2
+  elif [ -n "$dpkg_configure_error" ]; then
+    echo
+    print "[bold][yellow]The 'dpkg --configure a' encountered the following error(s):"
+    echo
+    print "[bold][red]$dpkg_configure_error"
+    echo
+    fn_menu_2
   else
     sleep 0.5
     clear_logs 1
