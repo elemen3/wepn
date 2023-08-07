@@ -408,10 +408,6 @@ install_or_update_wepn(){
   # not installed
   if ! test -f "/usr/local/bin/wepn"; then
 
-      # apt update once
-      update_package_lists
-
-
       print "[blue]Installing WePN..."
       sleep 0.5
       curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
@@ -478,90 +474,87 @@ create_wepn_service(){
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- update package lists
-update_package_lists(){
+update_upgrade_package_lists(){
 
   # fix nameserver possible issue
-  if [ $os != "macOS" ]; then
-    cp /etc/resolv.conf /etc/resolv.conf.bak
-    echo "nameserver 1.1.1.1" > /etc/resolv.conf
-  fi
+#  cp /etc/resolv.conf /etc/resolv.conf.bak
+  echo "nameserver 1.1.1.1" > /etc/resolv.conf
+  echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 
   # apt update (catch errors)
-  if [ $os != "macOS" ]; then
+#  print "[blue]Updating and upgrading packages..."
+  apt_update_error=$(apt-get update -q 2>&1 >/dev/null)
+  apt_upgrade_error=$(apt-get upgrade -y -q 2>&1 >/dev/null)
 
-    print "[blue]Updating package lists..."
-    apt_update_error=$(apt-get update -q 2>&1 >/dev/null)
+  if [ -n "$apt_update_error" ] && [ -n "$apt_upgrade_error" ]; then
 
-    if [ -n "$apt_update_error" ]; then
+      echo
+      print "[bold][yellow]The apt-get update encountered the following error(s):"
+      echo
+      print "[bold][red]$apt_update_error"
+      echo
 
-        echo
-        print "[bold][yellow]The apt-get update encountered the following error(s):"
-        echo
-        print "[bold][red]$apt_update_error"
-        echo
+      # debian 11 error
+      if echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
 
-        # debian 11 error
-        if echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
+          print "[bold][blue]Would you like to resolve it?"
+          confirmation_dialog y
+          response="$?"
+          clear_logs 1
+          if [ $response -eq 1 ]; then
 
-            print "[bold][blue]Would you like to resolve it?"
-            confirmation_dialog y
-            response="$?"
-            clear_logs 1
-            if [ $response -eq 1 ]; then
+            # Fix error for Debian 11
+            print "[blue]Resolving the problem..."
+            sleep 1
+            cp /etc/apt/sources.list /etc/apt/sources.list.bak
+            sed -i '/debian-security/d; /^deb-src/d' /etc/apt/sources.list
+            echo "deb http://security.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
 
-              # Fix error for Debian 11
-              print "[blue]Resolving the problem..."
-              sleep 1
-              cp /etc/apt/sources.list /etc/apt/sources.list.bak
-              sed -i '/debian-security/d; /^deb-src/d' /etc/apt/sources.list
-              echo "deb http://security.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
+            print "[bold][green]The issue has been resolved :)"
+            sleep 1
+            # try again
+            print "[blue]Trying again..."
+            sleep 1
+            show_headers
+            update_upgrade_package_lists
+          else
+            print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+            #exit
+            fn_menu_2
+          fi
+      # certbot error
+      elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
 
-              print "[bold][green]The issue has been resolved :)"
-              sleep 1
-              # try again
-              print "[blue]Trying again..."
-              sleep 1
-              show_headers
-              update_package_lists
-            else
-              print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-              #exit
-              fn_menu_2
-            fi
-        # certbot error
-        elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
+          print "[bold][blue]Would you like to resolve it?"
+          confirmation_dialog y
+          response="$?"
+          clear_logs 1
+          if [ $response -eq 1 ]; then
 
-            print "[bold][blue]Would you like to resolve it?"
-            confirmation_dialog y
-            response="$?"
-            clear_logs 1
-            if [ $response -eq 1 ]; then
-
-              # Fix certbot error
-              print "[blue]Resolving the problem..."
-              sleep 1
-              rm -f /etc/apt/sources.list.d/certbot-*.list
-              print "[bold][green]The issue has been resolved :)"
-              sleep 1
-              # try again
-              print "[blue]Trying again..."
-              sleep 1
-              show_headers
-              update_package_lists
-            else
-              print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-              #exit
-              fn_menu_2
-            fi
-        else
-          print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-          #exit
-          fn_menu_2
-        fi
-    else
-      sleep 0.5
-      clear_logs 1
-    fi
+            # Fix certbot error
+            print "[blue]Resolving the problem..."
+            sleep 1
+            rm -f /etc/apt/sources.list.d/certbot-*.list
+            print "[bold][green]The issue has been resolved :)"
+            sleep 1
+            # try again
+            print "[blue]Trying again..."
+            sleep 1
+            show_headers
+            update_upgrade_package_lists
+          else
+            print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+            #exit
+            fn_menu_2
+          fi
+      else
+        print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+        #exit
+        fn_menu_2
+      fi
+  else
+    sleep 0.5
+    clear_logs 1
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- install package(s)
@@ -817,7 +810,7 @@ separator(){
   if [ -n "$1" ]; then
     echo -e "\033[38;5;240m${_seperator// /$1}\033[0m"
   else
-    echo -e "\033[38;5;240m${_seperator// /─}\033[0m"
+    echo -e "\033[38;5;240m${_seperator// /━}\033[0m"
   fi
 
 }
@@ -866,7 +859,8 @@ show_headers(){
     sleep 0.05
     echo
     separator -
-    sleep 3
+    update_upgrade_package_lists
+#    sleep 3
     clear && printf '\e[3J'
   fi
 
