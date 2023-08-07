@@ -485,8 +485,9 @@ update_upgrade_package_lists(){
 #  print "[blue]Updating and upgrading packages..."
   apt_update_error=$(apt-get update -q 2>&1 >/dev/null)
   apt_upgrade_error=$(apt-get upgrade -y -q 2>&1 >/dev/null)
+  dpkg_configure_error=$(dpkg --configure -a 2>&1 >/dev/null)
 
-  if [ -n "$apt_update_error" ] && [ -n "$apt_upgrade_error" ]; then
+  if [ -n "$apt_update_error" ] || [ -n "$apt_upgrade_error" ] || [ -n "$dpkg_configure_error" ]; then
 
       echo
       print "[bold][yellow]The apt-get update encountered the following error(s):"
@@ -2112,7 +2113,7 @@ check_root
 fix_etc_hosts
 disable_ufw
 set_run_mode
+#install_packages gnuplot
 #install_or_update_wepn
-#install_packages sqlite3
 #----------------------------------------------------------------------------------------------------------------------- RUN
 clear_old_iptables_rules_and_run
