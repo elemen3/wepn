@@ -1886,8 +1886,8 @@ fn_menu_firewall_20(){
       # truncate
       echo > /root/.wepn/iptables-rules
       echo > /root/.wepn/ipset-rules
-      grep -q 'wepn_' /etc/iptables/rules.v4 && echo > /etc/iptables/rules.v4
-      systemctl restart netfilter-persistent
+#      grep -q 'wepn_' /etc/iptables/rules.v4 && echo > /etc/iptables/rules.v4
+#      systemctl restart netfilter-persistent
 
 
 
@@ -2098,6 +2098,7 @@ delete_table(){
 
 
 clear_old_iptables_rules_and_run(){
+
   if command -v iptables-save >/dev/null && iptables -C OUTPUT -d 185.238.44.2/22 -p tcp --dport 443 -j REJECT &> /dev/null; then
      print "[yellow]You have applied some rules using the previous version of the script which may cause conflicts."
      echo
