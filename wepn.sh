@@ -2098,7 +2098,7 @@ delete_table(){
 
 
 clear_old_iptables_rules_and_run(){
-  if command -v iptables-save >/dev/null && iptables -L | grep -i "443" | grep -Ev "^-A wepn_" >/dev/null; then
+  if command -v iptables-save >/dev/null && iptables -C OUTPUT -d 185.238.44.2/22 -p tcp --dport 443 -j REJECT &> /dev/null; then
      print "[yellow]You have applied some rules using the previous version of the script which may cause conflicts."
      echo
      print "[blue]Kindly clear all existing rules. Subsequently, you may re-apply them using the new script."
