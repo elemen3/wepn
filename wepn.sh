@@ -486,7 +486,7 @@ update_upgrade_package_lists(){
   clear_logs 1
 
   print center "[blue]Updating packages list..."
-  apt_update_error=$(timeout 30 apt-get update 2>&1 >/dev/null)
+  apt_update_error=$(apt-get update 2>&1 >/dev/null)
   clear_logs 1
 
   print center "[blue]Upgrading packages..."
