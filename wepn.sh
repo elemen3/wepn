@@ -484,12 +484,16 @@ update_upgrade_package_lists(){
   print center "[blue]Configuring dpkg..."
   dpkg_configure_error=$(yes | dpkg --configure -a 2>&1 >/dev/null)
   clear_logs 1
-  print center "[blue]Updating packages list..."
-  apt_update_error=$(timeout 30 apt-get update -q 2>&1 >/dev/null)
-  clear_logs 1
-  print center "[blue]Upgrading packages..."
-  apt_upgrade_error=$(timeout 30 apt-get upgrade -y -q 2>&1 >/dev/null)
 
+  print center "[blue]Updating packages list..."
+  apt_update_error=$(timeout 30 apt-get update 2>&1 >/dev/null)
+  clear_logs 1
+
+  print center "[blue]Upgrading packages..."
+  apt_upgrade_error=$(timeout 30 apt-get upgrade -y 2>&1 >/dev/null)
+  clear_logs 1
+
+apt-get upgrade -y -q 2>&1 >/dev/null
 
   if [ -n "$dpkg_configure_error" ] && [[ $dpkg_configure_error == *"dpkg frontend lock was locked by another process"* ]]; then
     echo
@@ -607,10 +611,6 @@ update_upgrade_package_lists(){
     else
       fn_menu_2
     fi
-    fn_menu_2
-  else
-    sleep 0.5
-    clear_logs 1
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- install package(s)
@@ -916,7 +916,6 @@ show_headers(){
     echo
     separator -
     update_upgrade_package_lists
-#    sleep 3
     clear && printf '\e[3J'
   fi
 
