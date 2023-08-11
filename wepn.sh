@@ -490,7 +490,7 @@ update_upgrade_package_lists(){
   clear_logs 1
 
   print center "[blue]Upgrading packages..."
-  apt_upgrade_error=$(timeout 30 apt-get upgrade -y 2>&1 >/dev/null)
+  apt_upgrade_error=$(apt-get upgrade -y 2>&1 >/dev/null)
   clear_logs 1
 
 apt-get upgrade -y -q 2>&1 >/dev/null
