@@ -1441,7 +1441,7 @@ fn_menu_firewall_8(){
 
       create_or_add_to_table wepn_speedtest BLOCK_WEBSITE "${speedtest_ips[@]}"
       clear_logs 1
-      print "[bold][green][red]Speedtest[green], [red]Speedcheck[green] and [red]fast.com[green] websites and apps are all blocked."
+      print "[bold][green][yellow]Speedtest[green], [yellow]Speedcheck[green] and [yellow]fast.com[green] websites and apps are all blocked."
 
       back_to_menu enter
     else
