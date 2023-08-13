@@ -480,9 +480,19 @@ update_upgrade_package_lists(){
   echo "nameserver 1.1.1.1" > /etc/resolv.conf
   echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 
+
+  # Get the list of PIDs
+  pids=($(top -b -n 1 | grep dpkg | awk '{ print $1 }'))
+  # Loop over the PIDs and kill them
+  for pid in "${pids[@]}"; do
+      kill -9 "$pid"
+  done
+
+
   # apt dpkg, update, upgrade (catch errors)
   print center "[blue]Configuring dpkg..."
-  dpkg_configure_error=$(yes | dpkg --configure -a 2>&1 >/dev/null)
+  dpkg_configure_error=$(DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>&1 >/dev/null)
+  unset DEBIAN_FRONTEND
   clear_logs 1
 
   print center "[blue]Updating packages list..."
