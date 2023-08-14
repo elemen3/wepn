@@ -528,22 +528,18 @@ update_upgrade_package_lists(){
         fn_menu_2
       fi
   elif [ -n "$apt_update_error" ]; then
-
       echo
       print "[bold][yellow]The 'apt update' encountered the following error(s):"
       echo
       print "[bold][red]$apt_update_error"
       echo
-
       # debian 11 error
       if echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
-
           print "[bold][blue]Would you like to resolve it?"
           confirmation_dialog y
           response="$?"
           clear_logs 1
           if [ $response -eq 1 ]; then
-
             # Fix error for Debian 11
             print "[blue]Resolving the problem..."
             sleep 1
@@ -565,13 +561,11 @@ update_upgrade_package_lists(){
           fi
       # certbot error
       elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
-
           print "[bold][blue]Would you like to resolve it?"
           confirmation_dialog y
           response="$?"
           clear_logs 1
           if [ $response -eq 1 ]; then
-
             # Fix certbot error
             print "[blue]Resolving the problem..."
             sleep 1
@@ -591,7 +585,7 @@ update_upgrade_package_lists(){
       else
         print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
         #exit
-
+        fn_menu_2
       fi
   elif [ -n "$apt_upgrade_error" ]; then
     echo
@@ -617,6 +611,27 @@ update_upgrade_package_lists(){
         else
           fn_menu_2
         fi
+    elif [[ $apt_upgrade_error == *"apt --fix-broken install"* ]]; then
+      print "[bold][blue]Would you like to resolve it?"
+      confirmation_dialog y
+      response="$?"
+      clear_logs 1
+      if [ $response -eq 1 ]; then
+        # Fix apt --fix-broken install  error
+        print "[blue]Resolving the problem..."
+        sleep 1
+        apt --fix-broken install -y 2>&1 >/dev/null
+        print "[bold][green]The issue has been resolved :)"
+        sleep 1
+        # try again
+        print "[blue]Trying again..."
+        sleep 1
+        show_headers
+        update_upgrade_package_lists
+      else
+        #exit
+        fn_menu_2
+      fi
     else
       fn_menu_2
     fi
@@ -1510,7 +1525,7 @@ fn_menu_firewall_10(){
             _ip_addresses=($(echo "$checkhost_json" | jq -r 'to_entries[] | select(.value != null) | .value[][] | select(.[2] != null) | .[2]' | sort -u))
 
             for ip in "${_ip_addresses[@]}"; do
-            #             echo "Adding $ip to the list"
+            # echo "Adding $ip to the list"
              [[ ! " ${ip_addresses[@]} " =~ " $ip " ]] && ip_addresses+=("$ip")
             done
             clear_logs 2
