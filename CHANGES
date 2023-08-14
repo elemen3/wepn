@@ -16,27 +16,4 @@ Bug Fix: Resolved an issue where certbot was generating errors during apt-update
 Bug Fix: Corrected an issue where the UFW firewall was interfering with iptables rules by disabling and stopping the UFW service.
 ------------------------------------------------------------------------------------------------------------------------ 2023.03.06
 Option to whitelist derak.cloud
------------------------------------------------------------------------------------------------------------------------- 2023.08.01
-hide logo
-faster iptable rules
-better menu navigation (backspace key)
-fix alibaba.ir
-block porn
-block speedtest
-block specific website
-block attacks from china
-block attacks from russia
-block individual attacks
-block bittorrent
-block ip scan
------------------------------------------------------------------------------------------------------------------------- 2023.08.02
-update iranian ip ranges
-add "allow tunneling" menu
-donate in tron
-fix: ipset: command not found
-fix: delay on boot caused by IP Scan rules
-fix: rules don't persist on reboot
------------------------------------------------------------------------------------------------------------------------- 2023.08.03
-block specific website -> find all subdomains and all ip addresses even if it's behind a loadbalancer
-fix: host: command not found
------------------------------------------------------------------------------------------------------------------------- 2023.08.04
+------------------------------------------------------------------------------------------------------------------------ 2023.xx.xxxxxx
