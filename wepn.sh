@@ -324,13 +324,13 @@ check_os(){
       if ! [[ "$os_version" == "18.04" || "$os_version" == "20.04" || "$os_version" == "22.04" || "$os_version" == "22.10" ]]; then
           echo
           print center "[bold][red]This script has not been tested on\n [bold][yellow]$os $os_version [bold][red]yet!"
-          fn_menu_2
+          fn_menu_20
       fi
   elif [[ "$os" == "Debian" ]]; then
       if ! [[ "$os_version" == "10" || "$os_version" == "11" ]]; then
           echo
           print center "[bold][red]This script has not been tested on [bold][yellow]$os $os_version [bold][red]yet."
-          fn_menu_2
+          fn_menu_20
       fi
   elif [[ "$os" == "macOS" ]]; then #todo macOS_ for production
     # FOR TESTING PURPOSES ONLY!
@@ -338,7 +338,7 @@ check_os(){
   else
       echo
       print center "[bold][red]This script is designed to work only on\n [bold][yellow]Ubuntu [bold][red]and [bold][yellow]Debian [bold][red]systems."
-      fn_menu_2
+      fn_menu_20
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- check root
@@ -346,7 +346,7 @@ check_root(){
   # Check if the user has root privileges
   if [[ $os != "macOS" && $EUID -ne 0 ]]; then
       print "[bold][red]This script must be run as [bold][yellow]root[bold][red]." #todo ask user to enable root
-      fn_menu_2
+      fn_menu_20
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- set run mode
@@ -525,7 +525,7 @@ update_upgrade_package_lists(){
         show_headers
         update_upgrade_package_lists
       else
-        fn_menu_2
+        fn_menu_20
       fi
   elif [ -n "$apt_update_error" ]; then
       echo
@@ -556,7 +556,7 @@ update_upgrade_package_lists(){
             update_upgrade_package_lists
           else
             print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-            fn_menu_2
+            fn_menu_20
           fi
       # certbot error
       elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
@@ -579,11 +579,11 @@ update_upgrade_package_lists(){
           else
             print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
             #exit
-            fn_menu_2
+            fn_menu_20
           fi
       else
         print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-        fn_menu_2
+        fn_menu_20
       fi
   elif [ -n "$apt_upgrade_error" ]; then
     echo
@@ -607,7 +607,7 @@ update_upgrade_package_lists(){
           show_headers
           update_upgrade_package_lists
         else
-          fn_menu_2
+          fn_menu_20
         fi
     elif [[ $apt_upgrade_error == *"apt --fix-broken install"* ]]; then
       print "[bold][blue]Would you like to resolve it?"
@@ -628,10 +628,10 @@ update_upgrade_package_lists(){
         show_headers
         update_upgrade_package_lists
       else
-        fn_menu_2
+        fn_menu_20
       fi
     else
-      fn_menu_2
+      fn_menu_20
     fi
   fi
 }
@@ -882,13 +882,15 @@ show_progress() {
 }
 #----------------------------------------------------------------------------------------------------------------------- separator
 separator(){
-  if [ -z "$_seperator" ]; then
-    printf -v _seperator "%-${width}b" ""
+  if [ -z "$_separator" ]; then
+    printf -v _separator "%-${width}b" ""
   fi
   if [ -n "$1" ]; then
-    echo -e "\033[38;5;240m${_seperator// /$1}\033[0m"
+    echo -e "\033[38;5;240m${_separator// /$1}\033[0m"
   else
-    echo -e "\033[38;5;240m${_seperator// /━}\033[0m"
+#    echo -e "\033[38;5;240m${_separator// /━}\033[0m"
+    echo -e "\033[38;5;240m${_separator// /─}\033[0m"
+#    echo -e "\033[38;5;240m${_separator// /-}\033[0m"
   fi
 
 }
@@ -909,7 +911,7 @@ prepare_screen(){
   hide_cursor
 
   # Set up the trap to call the exit function when the script is interrupted
-  trap fn_menu_2 INT
+  trap fn_menu_20 INT
 }
 #----------------------------------------------------------------------------------------------------------------------- show headers
 show_headers(){
@@ -1113,7 +1115,7 @@ run_menu(){
 				return "$selected_menu_index"
 				;;
 		  [qQ])  # Q key
-    			fn_menu_2
+    			fn_menu_20
     		;;
 		esac
 	done
@@ -1153,8 +1155,37 @@ function_name() {
   echo "$modified_string"
 }
 #----------------------------------------------------------------------------------------------------------------------- menu
+#menu=(
+#"Firewall"
+#"-"
+#"Exit"
+#)
+
 menu=(
-"Firewall"
+"Block Iranian Websites"
+#"Block Iranian Banking and Payment Websites Only"
+#"Block Iranian Government Websites Only"
+#"Block Iranian Social Media Websites Only"
+#"Block Iranian Media Websites Only"
+"Whitelist Tunneling Server"
+"Whitelist Arvancloud CDN and Servers"
+"Whitelist Derakcloud CDN and Servers"
+"-"
+"Block Porn Websites"
+"Block Speedtest"
+"-"
+"Block Specific Website"
+"-"
+"Block Attacks from China"
+"Block Attacks from Russia"
+"Block Individual Attacker"
+"-"
+"Block IP Scan"
+"Block BitTorrent"
+#"Block Ads"
+"-"
+"View Rules"
+"Clear Rules"
 "-"
 "Exit"
 )
@@ -1187,34 +1218,7 @@ menu_network=(
 "tunnel"
 )
 
-menu_firewall=(
-"Back"
-"-"
-"Block Iranian Websites"
-#"Block Iranian Banking and Payment Websites Only"
-#"Block Iranian Government Websites Only"
-#"Block Iranian Social Media Websites Only"
-#"Block Iranian Media Websites Only"
-"Whitelist Tunneling Server"
-"Whitelist Arvancloud CDN and Servers"
-"Whitelist Derakcloud CDN and Servers"
-"-"
-"Block Porn Websites"
-"Block Speedtest"
-"-"
-"Block Specific Website"
-"-"
-"Block Attacks from China"
-"Block Attacks from Russia"
-"Block Individual Attacker"
-"-"
-"Block IP Scan"
-"Block BitTorrent"
-#"Block Ads"
-"-"
-"View Rules"
-"Clear Rules"
-)
+
 
 
 
@@ -1234,24 +1238,8 @@ menu_ssh=(
 
 
 #----------------------------------------------------------------------------------------------------------------------- menu functions
-#------------------------------------------------------------------------------------------------------- System
-fn_menu_00(){
-  menu_handler "menu_system"
-}
-#------------------------------------------------------------ back
-fn_menu_system_0(){
-  menu_handler "menu"
-}
-#------------------------------------------------------------------------------------------------------- Firewall
-fn_menu_0(){
-  menu_handler "menu_firewall"
-}
-#------------------------------------------------------------ back
-fn_menu_firewall_0(){
-  menu_handler "menu"
-}
 #------------------------------------------------------------ block iranian websites
-fn_menu_firewall_2(){
+fn_menu_0(){
   clear_menu
   install_packages iptables ipset
 
@@ -1279,7 +1267,7 @@ fn_menu_firewall_2(){
   fi
 }
 #------------------------------------------------------------ allow tunneling server
-fn_menu_firewall_3(){
+fn_menu_1(){
   clear_menu
   install_packages iptables ipset
 
@@ -1324,7 +1312,7 @@ fn_menu_firewall_3(){
   fi
 }
 #------------------------------------------------------------ allow arvancloud
-fn_menu_firewall_4(){
+fn_menu_2(){
   clear_menu
   if ipset list wepn_iranian_websites_set &> /dev/null; then
     if ! ipset list wepn_arvancloud_set &> /dev/null; then
@@ -1356,7 +1344,7 @@ fn_menu_firewall_4(){
   fi
 }
 #------------------------------------------------------------ allow derakcloud
-fn_menu_firewall_5(){
+fn_menu_3(){
   clear_menu
   install_packages iptables ipset
 
@@ -1389,7 +1377,7 @@ fn_menu_firewall_5(){
   fi
 }
 #------------------------------------------------------------ block porn websites
-fn_menu_firewall_7(){
+fn_menu_5(){
   clear_menu
   install_packages iptables ipset
 
@@ -1417,7 +1405,7 @@ fn_menu_firewall_7(){
 
 }
 #------------------------------------------------------------ block speedtest
-fn_menu_firewall_8(){
+fn_menu_6(){
 
   domains=(
   speedtest.net
@@ -1468,7 +1456,7 @@ fn_menu_firewall_8(){
   fi
 }
 #------------------------------------------------------------ block specific website
-fn_menu_firewall_10(){
+fn_menu_8(){
   clear_menu
 
   while true; do
@@ -1563,7 +1551,7 @@ fn_menu_firewall_10(){
   back_to_menu enter
 }
 #------------------------------------------------------------ block External Attacks from China
-fn_menu_firewall_12(){
+fn_menu_10(){
   clear_menu
   install_packages iptables ipset
 
@@ -1589,7 +1577,7 @@ fn_menu_firewall_12(){
   fi
 }
 #------------------------------------------------------------ block Attacks from Russia
-fn_menu_firewall_13(){
+fn_menu_11(){
   clear_menu
   install_packages iptables ipset
 
@@ -1616,7 +1604,7 @@ fn_menu_firewall_13(){
   fi
 }
 #------------------------------------------------------------ block Individual Attacker
-fn_menu_firewall_14(){
+fn_menu_12(){
   clear_menu
   install_packages iptables ipset
 
@@ -1647,7 +1635,7 @@ fn_menu_firewall_14(){
   back_to_menu enter
 }
 #------------------------------------------------------------ block IP Scan
-fn_menu_firewall_16(){
+fn_menu_14(){
   clear_menu
   install_packages iptables ipset
 
@@ -1673,7 +1661,7 @@ fn_menu_firewall_16(){
   fi
 }
 #------------------------------------------------------------ block BitTorrent
-fn_menu_firewall_17(){
+fn_menu_15(){
   clear_menu
   install_packages iptables ipset
 
@@ -1701,12 +1689,11 @@ fn_menu_firewall_17(){
   fi
 }
 #------------------------------------------------------------ View Rules
-fn_menu_firewall_19(){
+fn_menu_17(){
   install_packages iptables ipset
   clear_menu
   view_rules
 }
-
 view_rules(){
 
     iran_ips=($(ipset -q list wepn_iranian_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
@@ -1875,7 +1862,7 @@ view_rules_in_detail(){
 
 }
 #------------------------------------------------------------ Clear Rules
-fn_menu_firewall_20(){
+fn_menu_18(){
   install_packages iptables ipset
   clear_menu
 
@@ -1927,7 +1914,7 @@ fn_menu_firewall_20(){
 
 }
 #------------------------------------------------------------------------------------------------------- Exit
-fn_menu_2(){
+fn_menu_20(){
 
   # restore resolv.conf
   cp -f /etc/resolv.conf.bak /etc/resolv.conf 2>/dev/null || :
@@ -2175,7 +2162,7 @@ clear_old_iptables_rules_and_run(){
        menu_handler "menu"
      else
        clear_logs 5
-       fn_menu_2
+       fn_menu_20
      fi
   else
      menu_handler "menu"
