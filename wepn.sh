@@ -534,7 +534,7 @@ update_upgrade_package_lists(){
       else
         fn_menu_20
       fi
-  elif [ -n "$apt_update_error" ]; then
+  elif [[ -n "$apt_update_error" && ! "$apt_update_error" =~ "WARNING" ]]; then
       echo
       print "[bold][yellow]The 'apt update' encountered the following error(s):"
       echo
@@ -592,7 +592,7 @@ update_upgrade_package_lists(){
         print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
         fn_menu_20
       fi
-  elif [ -n "$apt_upgrade_error" ]; then
+  elif [[ -n "$apt_upgrade_error" && ! "$apt_upgrade_error" =~ "WARNING" ]]; then
     echo
     print "[bold][yellow]The 'apt upgrade' encountered the following error(s):"
     echo
