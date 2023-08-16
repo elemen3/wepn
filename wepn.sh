@@ -489,18 +489,16 @@ update_upgrade_package_lists(){
   done
 
 
-  # apt dpkg, update, upgrade (catch errors)
-#  print center "[blue]Configuring dpkg..."
-  sleep 1
-  dpkg_configure_error=$(DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>&1 >/dev/null)
-  unset DEBIAN_FRONTEND
-#  clear_logs 1
-
-
   num_upgradable=$(apt list --upgradable 2>/dev/null | wc -l)
 
   # Check if the number of upgradable packages is greater than 1
   if [ "$num_upgradable" -gt 1 ]; then
+
+    print center "[blue]Configuring dpkg..."
+    dpkg_configure_error=$(DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>&1 >/dev/null)
+    unset DEBIAN_FRONTEND
+    clear_logs 1
+
     print center "[blue]Updating packages list..."
     apt_update_error=$(apt update 2>&1 >/dev/null)
     clear_logs 1
