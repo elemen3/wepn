@@ -1,4 +1,4 @@
-# WePN Master Script
+# WePN MASTER SCRIPT
 
 <div style="display: flex;">
   <img src="asset/shot1.jpg" alt="Description" style="width: 49%; margin-right: 1%;"/>
