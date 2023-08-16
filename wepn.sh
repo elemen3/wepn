@@ -490,6 +490,7 @@ update_upgrade_package_lists(){
 
 
   num_upgradable=$(apt list --upgradable 2>/dev/null | wc -l)
+  sleep 1
 
   # Check if the number of upgradable packages is greater than 1
   if [ "$num_upgradable" -gt 1 ]; then
