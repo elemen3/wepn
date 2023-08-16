@@ -1297,7 +1297,7 @@ fn_menu_firewall_3(){
             print "[bold][yellow]Left blank."
             break
           # ip is valid (1.1.1.1  1.1.1./24)
-          elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})?$ ]]; then
+         elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[12][0-9]|3[0-2]))?$ ]]; then
             if ipset list wepn_tunnel_set | grep -q "$response"; then
               print "[bold][green]This server is already whitelisted."
               break
@@ -1632,7 +1632,7 @@ fn_menu_firewall_14(){
         print "[bold][yellow]Left blank."
         break
       # is valid IP address?
-      elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})?$ ]]; then
+      elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[12][0-9]|3[0-2]))?$ ]]; then
           ip_addresses=("$response")
 
           create_or_add_to_table wepn_attackers BLOCK_ATTACK "${ip_addresses[@]}"
