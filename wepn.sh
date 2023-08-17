@@ -526,7 +526,6 @@ update_upgrade_package_lists(){
 
 
   num_upgradable=$(apt list --upgradable 2>/dev/null | wc -l)
-  sleep 1
 
   # Check if the number of upgradable packages is greater than 1
   if [ "$num_upgradable" -gt 1 ]; then
@@ -676,6 +675,8 @@ update_upgrade_package_lists(){
       fn_menu_20
     fi
   fi
+
+  sysinfo
 }
 #----------------------------------------------------------------------------------------------------------------------- install package(s)
 install_packages() {
@@ -2214,7 +2215,6 @@ clear_old_iptables_rules_and_run(){
 prepare_screen
 create_wepn_service
 show_headers
-sysinfo
 check_os
 check_root
 fix_etc_hosts
