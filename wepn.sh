@@ -408,6 +408,7 @@ disable_ufw(){
       # ufw is installed, stop and disable it
       service ufw stop
       systemctl is-enabled --quiet ufw && ufw disable > /dev/null
+      iptables -I INPUT -j ACCEPT
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- get latest version number
@@ -515,6 +516,7 @@ update_upgrade_package_lists(){
 #  cp /etc/resolv.conf /etc/resolv.conf.bak
   echo "nameserver 1.1.1.1" > /etc/resolv.conf
   echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+
 
 
   # Get the list of PIDs
