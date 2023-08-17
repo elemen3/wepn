@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # COPYRIGHT (c) 2023 macromicro
 #
