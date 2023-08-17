@@ -1,8 +1,8 @@
 # WePN MASTER SCRIPT
 
 <div style="display: flex;">
-  <img src="asset/shot1.jpg" alt="Description" style="width: 49%; height: 380px; margin-right: 1%;"/>
-  <img src="asset/shot2.jpg" alt="Description" style="width: 50%; height: 380px"/>
+  <img src="asset/shot1.jpg" alt="Description" style="width: 49%; height: 480px; margin-right: 1%;"/>
+  <img src="asset/shot2.jpg" alt="Description" style="width: 50%; height: 480px"/>
 </div>
 
 ## Installation
