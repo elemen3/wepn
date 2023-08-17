@@ -22,7 +22,7 @@
 #
 
 # DESCRIPTION: Master Script for VPN Admins
-# AUTHOR: macromicro
+# AUTHOR: @macromicro
 # TELEGRAM GROUP: @wepn_group
 
 
