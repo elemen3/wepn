@@ -1295,8 +1295,6 @@ fn_menu_0(){
     clear_logs 2
     if [ $response -eq 1 ]; then
       load_iran_ips
-      load_arvancloud_ips
-      load_derakcloud_ips
       print "[blue]Blocking all Iranian Websites..."
       create_or_add_to_table wepn_iranian_websites BLOCK_WEBSITE "${iran_ips[@]}"
       echo
