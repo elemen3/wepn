@@ -301,10 +301,11 @@ confirmation_dialog(){
  done
 
 }
-#----------------------------------------------------------------------------------------------------------------------- show headers
+#----------------------------------------------------------------------------------------------------------------------- sysinfo
 sysinfo(){
 
-install_packages jq
+apt install jq -y &> /dev/null
+
 
 ip=$(curl -s 4.ident.me)
 ipapi_url="https://ipapi.co/$ip/json/"
@@ -313,7 +314,7 @@ org=$(curl -s "$ipapi_url" | jq -r '.org')
 ipinfo="$ip | $country | $org"
 
 hostname=$(hostname 2>/dev/null)
-os_info=$(lsb_release -d | cut -f2 2>/dev/null)
+os_info=$(cat /etc/os-release | grep "PRETTY_NAME" | cut -d'"' -f2 2>/dev/null)
 kernel=$(uname -r 2>/dev/null)
 cpu_info=$(cat /proc/cpuinfo | awk -F': ' '/model name/ { print $2 }' | uniq 2>/dev/null)
 memory_info=$(free -h | awk '/^Mem:/ { print $3 "/" $2 }' 2>/dev/null)
@@ -435,7 +436,7 @@ get_latest_version_number(){
 
   echo "$FORMATTED_DATETIME"
 }
-#----------------------------------------------------------------------------------------------------------------------- install wepn
+#----------------------------------------------------------------------------------------------------------------------- install wepn-ubuntu-debian
 install_or_update_wepn(){
 
   mkdir -p "$HOME/.wepn"
@@ -446,9 +447,9 @@ install_or_update_wepn(){
 
       print "[blue]Installing WePN..."
       sleep 0.5
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
-#      cp /Users/ben/Projects/intellij/shell/wepn/wepn-test.sh /usr/local/bin/wepn # TODO replace in production
-      chmod +x /usr/local/bin/wepn
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn-ubuntu-debian
+#      cp /Users/ben/Projects/intellij/shell/wepn-ubuntu-debian/wepn-ubuntu-debian-test.sh /usr/local/bin/wepn-ubuntu-debian # TODO replace in production
+      chmod +x /usr/local/bin/wepn-ubuntu-debian
 
       latest_version="$(get_latest_version_number)"
       echo "version=$latest_version" > "$HOME/.wepn/settings"
@@ -460,7 +461,7 @@ install_or_update_wepn(){
 
      back_to_menu enter
 
-  # already installed and running via wepn cmd
+  # already installed and running via wepn-ubuntu-debian cmd
   elif $running_installed ; then
 
     print "[blue]Checking for updates..."
@@ -474,9 +475,9 @@ install_or_update_wepn(){
       print "[blue]Installing the new version ([bold][green]$latest_version)[blue]..."
       sleep 0.5
 
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
-#      cp /Users/ben/Projects/intellij/shell/wepn/wepn-test.sh /usr/local/bin/wepn # TODO replace in production
-      chmod +x /usr/local/bin/wepn
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn-ubuntu-debian
+#      cp /Users/ben/Projects/intellij/shell/wepn-ubuntu-debian/wepn-ubuntu-debian-test.sh /usr/local/bin/wepn-ubuntu-debian # TODO replace in production
+      chmod +x /usr/local/bin/wepn-ubuntu-debian
 
       latest_version="$(get_latest_version_number)"
       sed -i.bak "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings" && rm "$HOME/.wepn/settings.bak"
@@ -492,21 +493,21 @@ install_or_update_wepn(){
 
   fi
 }
-#----------------------------------------------------------------------------------------------------------------------- create wepn.service
+#----------------------------------------------------------------------------------------------------------------------- create wepn-ubuntu-debian.service
 create_wepn_service(){
   # create service.sh
   if [ ! -f "/root/.wepn/service.sh" ]; then
     curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/service.sh > "/root/.wepn/service.sh"
-    chmod +x /root/.wepn/service.sh
+    chmod +x /root/.wepn-ubuntu-debian/service.sh
   fi
 
-  # create wepn.service
+  # create wepn-ubuntu-debian.service
   if [ ! -f "/etc/systemd/system/wepn.service" ]; then
     curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/wepn.service > "/etc/systemd/system/wepn.service"
 
-    # activate wepn.service
+    # activate wepn-ubuntu-debian.service
     systemctl daemon-reload
-    systemctl enable wepn.service
+    systemctl enable wepn-ubuntu-debian.service
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- update package lists
@@ -941,6 +942,8 @@ separator(){
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare screen
 prepare_screen(){
+
+  export TERM=xterm
 
   # get terminal default bg color
   #default_bg_color=$(echo "rgb:0a0a/1212/1e1e" | sed 's/rgb:\(..\)\(..\)\(..\)\/\(..\)\(..\)\(..\)/\1\2\3/g' | xxd -r -p | xxd -p -u -l 3 | tr '[:upper:]' '[:lower:]')
@@ -1520,16 +1523,16 @@ fn_menu_8(){
         if ! [ -z "$(host $domain)" ] && ! echo "$(host $domain)" | grep -qi "not found"; then
           install_packages iptables ipset jq
           #------------------------------------------------------ download subfinder
-          # check if /root/.wepn/subfinder doesn't exists
+          # check if /root/.wepn-ubuntu-debian/subfinder doesn't exists
           if [ ! -x "/root/.wepn/subfinder" ]; then
             # print "[bold][blue]Installing subfinder..."
-            curl -sS -L "https://github.com/elemen3/wepn/raw/master/subfinder" -o /root/.wepn/subfinder
-            chmod +x /root/.wepn/subfinder
+            curl -sS -L "https://github.com/elemen3/wepn/raw/master/subfinder" -o /root/.wepn-ubuntu-debian/subfinder
+            chmod +x /root/.wepn-ubuntu-debian/subfinder
           fi
 
           #------------------------------------------------------ find all subdomains
           print "[bold][blue]Discovering all subdomains..."
-          readarray -t subdomains <<< $( /root/.wepn/subfinder -silent -d "$domain" | sort )
+          readarray -t subdomains <<< $( /root/.wepn-ubuntu-debian/subfinder -silent -d "$domain" | sort )
           clear_logs 1
           #------------------------------------------------------ loop over subdomains
           print "[bold][blue]Discovering all IP addresses associated with:"
@@ -1935,8 +1938,8 @@ fn_menu_18(){
 
 
       # truncate
-      echo > /root/.wepn/iptables-rules
-      echo > /root/.wepn/ipset-rules
+      echo > /root/.wepn-ubuntu-debian/iptables-rules
+      echo > /root/.wepn-ubuntu-debian/ipset-rules
 #      grep -q 'wepn_' /etc/iptables/rules.v4 && echo > /etc/iptables/rules.v4
 #      systemctl restart netfilter-persistent
 
@@ -2116,8 +2119,8 @@ create_or_add_to_table(){
   fi
 
   # save
-  iptables-save > /root/.wepn/iptables-rules
-  ipset save > /root/.wepn/ipset-rules
+  iptables-save > /root/.wepn-ubuntu-debian/iptables-rules
+  ipset save > /root/.wepn-ubuntu-debian/ipset-rules
 }
 
 delete_table(){
