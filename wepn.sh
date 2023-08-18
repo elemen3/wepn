@@ -498,7 +498,7 @@ create_wepn_service(){
   # create service.sh
   if [ ! -f "/root/.wepn/service.sh" ]; then
     curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/service.sh > "/root/.wepn/service.sh"
-    chmod +x /root/.wepn-ubuntu-debian/service.sh
+    chmod +x /root/.wepn/service.sh
   fi
 
   # create wepn-ubuntu-debian.service
@@ -1524,16 +1524,16 @@ fn_menu_8(){
         if ! [ -z "$(host $domain)" ] && ! echo "$(host $domain)" | grep -qi "not found"; then
           install_packages iptables ipset jq
           #------------------------------------------------------ download subfinder
-          # check if /root/.wepn-ubuntu-debian/subfinder doesn't exists
+          # check if /root/.wepn/subfinder doesn't exists
           if [ ! -x "/root/.wepn/subfinder" ]; then
             # print "[bold][blue]Installing subfinder..."
-            curl -sS -L "https://github.com/elemen3/wepn/raw/master/subfinder" -o /root/.wepn-ubuntu-debian/subfinder
-            chmod +x /root/.wepn-ubuntu-debian/subfinder
+            curl -sS -L "https://github.com/elemen3/wepn/raw/master/subfinder" -o /root/.wepn/subfinder
+            chmod +x /root/.wepn/subfinder
           fi
 
           #------------------------------------------------------ find all subdomains
           print "[bold][blue]Discovering all subdomains..."
-          readarray -t subdomains <<< $( /root/.wepn-ubuntu-debian/subfinder -silent -d "$domain" | sort )
+          readarray -t subdomains <<< $( /root/.wepn/subfinder -silent -d "$domain" | sort )
           clear_logs 1
           #------------------------------------------------------ loop over subdomains
           print "[bold][blue]Discovering all IP addresses associated with:"
@@ -1939,8 +1939,8 @@ fn_menu_18(){
 
 
       # truncate
-      echo > /root/.wepn-ubuntu-debian/iptables-rules
-      echo > /root/.wepn-ubuntu-debian/ipset-rules
+      echo > /root/.wepn/iptables-rules
+      echo > /root/.wepn/ipset-rules
 #      grep -q 'wepn_' /etc/iptables/rules.v4 && echo > /etc/iptables/rules.v4
 #      systemctl restart netfilter-persistent
 
@@ -2120,8 +2120,8 @@ create_or_add_to_table(){
   fi
 
   # save
-  iptables-save > /root/.wepn-ubuntu-debian/iptables-rules
-  ipset save > /root/.wepn-ubuntu-debian/ipset-rules
+  iptables-save > /root/.wepn/iptables-rules
+  ipset save > /root/.wepn/ipset-rules
 }
 
 delete_table(){
