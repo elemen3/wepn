@@ -536,6 +536,7 @@ update_upgrade_package_lists(){
     print center "[blue]Configuring dpkg..."
     dpkg_configure_error=$(DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>&1 >/dev/null)
     unset DEBIAN_FRONTEND
+    sleep 1
     clear_logs 1
 
     print center "[blue]Updating packages list..."
