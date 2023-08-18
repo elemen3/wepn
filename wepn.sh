@@ -436,7 +436,7 @@ get_latest_version_number(){
 
   echo "$FORMATTED_DATETIME"
 }
-#----------------------------------------------------------------------------------------------------------------------- install wepn-ubuntu-debian
+#----------------------------------------------------------------------------------------------------------------------- install wepn
 install_or_update_wepn(){
 
   mkdir -p "$HOME/.wepn"
@@ -447,9 +447,9 @@ install_or_update_wepn(){
 
       print "[blue]Installing WePN..."
       sleep 0.5
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn-ubuntu-debian
-#      cp /Users/ben/Projects/intellij/shell/wepn-ubuntu-debian/wepn-ubuntu-debian-test.sh /usr/local/bin/wepn-ubuntu-debian # TODO replace in production
-      chmod +x /usr/local/bin/wepn-ubuntu-debian
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
+#      cp /Users/ben/Projects/intellij/shell/wepn/wepn-test.sh /usr/local/bin/wepn # TODO replace in production
+      chmod +x /usr/local/bin/wepn
 
       latest_version="$(get_latest_version_number)"
       echo "version=$latest_version" > "$HOME/.wepn/settings"
@@ -461,7 +461,7 @@ install_or_update_wepn(){
 
      back_to_menu enter
 
-  # already installed and running via wepn-ubuntu-debian cmd
+  # already installed and running via wepn cmd
   elif $running_installed ; then
 
     print "[blue]Checking for updates..."
@@ -475,9 +475,9 @@ install_or_update_wepn(){
       print "[blue]Installing the new version ([bold][green]$latest_version)[blue]..."
       sleep 0.5
 
-      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn-ubuntu-debian
-#      cp /Users/ben/Projects/intellij/shell/wepn-ubuntu-debian/wepn-ubuntu-debian-test.sh /usr/local/bin/wepn-ubuntu-debian # TODO replace in production
-      chmod +x /usr/local/bin/wepn-ubuntu-debian
+      curl -s "https://raw.githubusercontent.com/elemen3/wepn/master/$main_script_file" -o /usr/local/bin/wepn
+#      cp /Users/ben/Projects/intellij/shell/wepn/wepn-test.sh /usr/local/bin/wepn # TODO replace in production
+      chmod +x /usr/local/bin/wepn
 
       latest_version="$(get_latest_version_number)"
       sed -i.bak "s/version=.*/version=$latest_version/" "$HOME/.wepn/settings" && rm "$HOME/.wepn/settings.bak"
@@ -493,7 +493,7 @@ install_or_update_wepn(){
 
   fi
 }
-#----------------------------------------------------------------------------------------------------------------------- create wepn-ubuntu-debian.service
+#----------------------------------------------------------------------------------------------------------------------- create wepn.service
 create_wepn_service(){
   # create service.sh
   if [ ! -f "/root/.wepn/service.sh" ]; then
@@ -501,13 +501,13 @@ create_wepn_service(){
     chmod +x /root/.wepn/service.sh
   fi
 
-  # create wepn-ubuntu-debian.service
+  # create wepn.service
   if [ ! -f "/etc/systemd/system/wepn.service" ]; then
     curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/wepn.service > "/etc/systemd/system/wepn.service"
 
-    # activate wepn-ubuntu-debian.service
+    # activate wepn.service
     systemctl daemon-reload
-    systemctl enable wepn-ubuntu-debian.service
+    systemctl enable wepn.service
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- update package lists
