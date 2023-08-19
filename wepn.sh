@@ -515,6 +515,9 @@ update_upgrade_package_lists(){
 
   # fix nameserver possible issue
 #  cp /etc/resolv.conf /etc/resolv.conf.bak
+
+#  mount -o remount,rw /
+#  chmod 644 /etc/resolvv.conf
   echo "nameserver 1.1.1.1" > /etc/resolv.conf
   echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 
