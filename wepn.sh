@@ -27,7 +27,7 @@
 
 #----------------------------------------------------------------------------------------------------------------------- vars
 main_script_file="wepn.sh"
-version="2023.08.03"
+version="2023.08.19"
 
 running_url=false
 running_installed=false
@@ -361,13 +361,13 @@ check_os(){
       if ! [[ "$os_version" == "18.04" || "$os_version" == "20.04" || "$os_version" == "22.04" || "$os_version" == "22.10" ]]; then
           echo
           print center "[bold][red]This script has not been tested on\n [bold][yellow]$os $os_version [bold][red]yet!"
-          fn_menu_20
+          fn_menu_21
       fi
   elif [[ "$os" == "Debian" ]]; then
       if ! [[ "$os_version" == "10" || "$os_version" == "11" ]]; then
           echo
           print center "[bold][red]This script has not been tested on [bold][yellow]$os $os_version [bold][red]yet."
-          fn_menu_20
+          fn_menu_21
       fi
   elif [[ "$os" == "macOS" ]]; then #todo macOS_ for production
     # FOR TESTING PURPOSES ONLY!
@@ -375,7 +375,7 @@ check_os(){
   else
       echo
       print center "[bold][red]This script is designed to work only on\n [bold][yellow]Ubuntu [bold][red]and [bold][yellow]Debian [bold][red]systems."
-      fn_menu_20
+      fn_menu_21
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- check root
@@ -383,7 +383,7 @@ check_root(){
   # Check if the user has root privileges
   if [[ $os != "macOS" && $EUID -ne 0 ]]; then
       print "[bold][red]This script must be run as [bold][yellow]root[bold][red]." #todo ask user to enable root
-      fn_menu_20
+      fn_menu_21
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- set run mode
@@ -573,7 +573,7 @@ update_upgrade_package_lists(){
         show_headers
         update_upgrade_package_lists
       else
-        fn_menu_20
+        fn_menu_21
       fi
   elif [[ -n "$apt_update_error" && ! "$apt_update_error" =~ "WARNING" ]]; then
       echo
@@ -604,7 +604,7 @@ update_upgrade_package_lists(){
             update_upgrade_package_lists
           else
             print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-            fn_menu_20
+            fn_menu_21
           fi
       # certbot error
       elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
@@ -627,11 +627,11 @@ update_upgrade_package_lists(){
           else
             print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
             #exit
-            fn_menu_20
+            fn_menu_21
           fi
       else
         print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-        fn_menu_20
+        fn_menu_21
       fi
   elif [[ -n "$apt_upgrade_error" && ! "$apt_upgrade_error" =~ "WARNING" ]]; then
     echo
@@ -655,7 +655,7 @@ update_upgrade_package_lists(){
           show_headers
           update_upgrade_package_lists
         else
-          fn_menu_20
+          fn_menu_21
         fi
     elif [[ $apt_upgrade_error == *"apt --fix-broken install"* ]]; then
       print "[bold][blue]Would you like to resolve it?"
@@ -676,10 +676,10 @@ update_upgrade_package_lists(){
         show_headers
         update_upgrade_package_lists
       else
-        fn_menu_20
+        fn_menu_21
       fi
     else
-      fn_menu_20
+      fn_menu_21
     fi
   fi
 
@@ -963,7 +963,7 @@ prepare_screen(){
   hide_cursor
 
   # Set up the trap to call the exit function when the script is interrupted
-  trap fn_menu_20 INT
+  trap fn_menu_21 INT
 }
 #----------------------------------------------------------------------------------------------------------------------- show headers
 show_headers(){
@@ -1167,7 +1167,7 @@ run_menu(){
 				return "$selected_menu_index"
 				;;
 		  [qQ])  # Q key
-    			fn_menu_20
+    			fn_menu_21
     		;;
 		esac
 	done
@@ -1219,14 +1219,15 @@ menu=(
 #"Block Iranian Government Websites Only"
 #"Block Iranian Social Media Websites Only"
 #"Block Iranian Media Websites Only"
-"Whitelist Tunneling Server"
-"Whitelist Arvancloud CDN and Servers"
-"Whitelist Derakcloud CDN and Servers"
+"Allow Tunneling Server"
+"Allow Arvancloud CDN and Servers"
+"Allow Derakcloud CDN and Servers"
 "-"
 "Block Porn Websites"
 "Block Speedtest"
 "-"
 "Block Specific Website"
+"Allow Specific Website"
 "-"
 "Block Attacks from China"
 "Block Attacks from Russia"
@@ -1357,16 +1358,17 @@ fn_menu_1(){
       back_to_menu enter
 
   else
-    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]Your Iranian Server [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
+    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]your Iranian Server [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
     back_to_menu enter
   fi
 }
 #------------------------------------------------------------ allow arvancloud
 fn_menu_2(){
   clear_menu
+  install_packages iptables ipset
+
   if ipset list wepn_iranian_websites_set &> /dev/null; then
     if ! ipset list wepn_arvancloud_set &> /dev/null; then
-      install_packages iptables ipset
       load_arvancloud_ips
 
       print "[blue]If you have block Iranian websites while tunneling through Arvancloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Arvancloud."
@@ -1508,6 +1510,7 @@ fn_menu_6(){
 #------------------------------------------------------------ block specific website
 fn_menu_8(){
   clear_menu
+  install_packages iptables ipset
 
   while true; do
 
@@ -1523,7 +1526,7 @@ fn_menu_8(){
       # is valid domain name?
     elif [[ $domain =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,10})+$ ]]; then
       # check if website is not in black list
-      if ! ipset list wepn_specific_websites_set &>/dev/null || { ipset list wepn_specific_websites_set &>/dev/null && ! ipset list wepn_specific_websites_set 2>/dev/null | grep -q "\"$domain\""; }; then
+      if ! ipset list wepn_block_websites_set &>/dev/null || { ipset list wepn_block_websites_set &>/dev/null && ! ipset list wepn_block_websites_set 2>/dev/null | grep -q "\"$domain\""; }; then
         if ! [ -z "$(host $domain)" ] && ! echo "$(host $domain)" | grep -qi "not found"; then
           install_packages iptables ipset jq
           #------------------------------------------------------ download subfinder
@@ -1568,13 +1571,14 @@ fn_menu_8(){
             print "[blue]$subdomain"
           done
 
+          block_websites=()
 
           for ip in "${ip_addresses[@]}"; do
-            specific_domains+=("$ip>$domain")
+            block_websites+=("$ip>$domain")
           done
 
 
-          create_or_add_to_table wepn_specific_websites BLOCK_WEBSITE "${specific_domains[@]}"
+          create_or_add_to_table wepn_block_websites BLOCK_WEBSITE "${block_websites[@]}"
           show_headers
 
           print "[bold][green]The website ([red]$domain[green]) and all its subdomains are blocked."
@@ -1600,8 +1604,117 @@ fn_menu_8(){
 
   back_to_menu enter
 }
+#------------------------------------------------------------ whitelist specific website
+fn_menu_9(){
+  clear_menu
+  install_packages iptables ipset
+
+
+  if ipset list wepn_iranian_websites_set &> /dev/null || ipset list wepn_porn_websites_set &> /dev/null || ipset list wepn_speedtest_set &> /dev/null || ipset list wepn_block_websites_set &> /dev/null ; then
+
+    while true; do
+
+      show_cursor
+      read -e -p "$(print "[bold][blue]Enter the Domain name: ")" domain
+      clear_logs 1
+      hide_cursor
+
+      if [ -z "$domain" ]; then
+        # left blank
+        print "[bold][yellow]Left blank."
+        break
+        # is valid domain name?
+      elif [[ $domain =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,10})+$ ]]; then
+        # check if website is not in white list
+        if ! ipset list wepn_allow_websites_set &>/dev/null || { ipset list wepn_allow_websites_set &>/dev/null && ! ipset list wepn_allow_websites_set 2>/dev/null | grep -q "\"$domain\""; }; then
+          # check if website is not in black list
+          if ! ipset list wepn_block_websites_set &>/dev/null || { ipset list wepn_block_websites_set &>/dev/null && ! ipset list wepn_block_websites_set 2>/dev/null | grep -q "\"$domain\""; }; then
+            if ! [ -z "$(host $domain)" ] && ! echo "$(host $domain)" | grep -qi "not found"; then
+              install_packages iptables ipset jq
+              #------------------------------------------------------ download subfinder
+              # check if /root/.wepn/subfinder doesn't exists
+              if [ ! -x "/root/.wepn/subfinder" ]; then
+                # print "[bold][blue]Installing subfinder..."
+                curl -sS -L "https://github.com/elemen3/wepn/raw/master/subfinder" -o /root/.wepn/subfinder
+                chmod +x /root/.wepn/subfinder
+              fi
+
+              #------------------------------------------------------ find all subdomains
+              print "[bold][blue]Discovering all subdomains..."
+              readarray -t subdomains <<< $( /root/.wepn/subfinder -silent -d "$domain" | sort )
+              clear_logs 1
+              #------------------------------------------------------ loop over subdomains
+              print "[bold][blue]Discovering all IP addresses associated with:"
+              echo
+
+              ip_addresses=()
+
+              for (( j=0; j<${#subdomains[@]}; j++ )); do
+                #       for subdomain in "${subdomains[@]}"; do
+                subdomain="${subdomains[$j]}"
+                print "[blue]$subdomain..."
+                echo
+                show_progress $((j + 1)) ${#subdomains[@]}
+                #------------------------------------------------------ get all ip addresses using check-host.net API
+                # get request_id
+                request_id=$(curl -sSH "Accept: application/json" "https://check-host.net/check-ping?host=$subdomain&max_nodes=0" | jq -r '.request_id')
+                #echo $request_id
+                sleep 1.1
+                checkhost_json=$(curl -sSH "Accept: application/json" "https://check-host.net/check-result/$request_id")
+                #echo $checkhost_json
+
+                _ip_addresses=($(echo "$checkhost_json" | jq -r 'to_entries[] | select(.value != null) | .value[][] | select(.[2] != null) | .[2]' | sort -u))
+
+                for ip in "${_ip_addresses[@]}"; do
+                # echo "Adding $ip to the list"
+                 [[ ! " ${ip_addresses[@]} " =~ " $ip " ]] && ip_addresses+=("$ip")
+                done
+                clear_logs 2
+                print "[blue]$subdomain"
+              done
+
+              allow_websites=()
+
+              for ip in "${ip_addresses[@]}"; do
+                allow_websites+=("$ip>$domain")
+              done
+
+
+              create_or_add_to_table wepn_allow_websites ALLOW_WEBSITE "${allow_websites[@]}"
+              show_headers
+
+              print "[bold][green]The website ([green]$domain[green]) and all its subdomains are whitelisted."
+              break
+
+            else
+              print "[bold][yellow]Domain has no IP address."
+              break
+            fi
+          else
+            print "[bold][red]Website is already in blacklist. You cannot simultaneously block and whitelist a domain!"
+            break
+          fi
+
+        else
+          print "[bold][green]Website is already whitelisted."
+          break
+        fi
+      else
+        print "[bold][red]Domain is not valid. Please try again."
+        sleep 2
+        clear_logs 1
+      fi
+
+    done
+    back_to_menu enter
+
+  else
+    print "[bold][blue]As of your current policy, since you have not blocked any websites yet, there is no need to whitelist anything."
+    back_to_menu enter
+  fi
+}
 #------------------------------------------------------------ block External Attacks from China
-fn_menu_10(){
+fn_menu_11(){
   clear_menu
   install_packages iptables ipset
 
@@ -1627,7 +1740,7 @@ fn_menu_10(){
   fi
 }
 #------------------------------------------------------------ block Attacks from Russia
-fn_menu_11(){
+fn_menu_12(){
   clear_menu
   install_packages iptables ipset
 
@@ -1654,7 +1767,7 @@ fn_menu_11(){
   fi
 }
 #------------------------------------------------------------ block Individual Attacker
-fn_menu_12(){
+fn_menu_13(){
   clear_menu
   install_packages iptables ipset
 
@@ -1685,7 +1798,7 @@ fn_menu_12(){
   back_to_menu enter
 }
 #------------------------------------------------------------ block IP Scan
-fn_menu_14(){
+fn_menu_15(){
   clear_menu
   install_packages iptables ipset
 
@@ -1711,7 +1824,7 @@ fn_menu_14(){
   fi
 }
 #------------------------------------------------------------ block BitTorrent
-fn_menu_15(){
+fn_menu_16(){
   clear_menu
   install_packages iptables ipset
 
@@ -1739,7 +1852,7 @@ fn_menu_15(){
   fi
 }
 #------------------------------------------------------------ View Rules
-fn_menu_17(){
+fn_menu_18(){
   install_packages iptables ipset
   clear_menu
   view_rules
@@ -1752,8 +1865,10 @@ view_rules(){
     derakcloud_ips=($(ipset -q list wepn_derakcloud_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
     porn_ips=($(ipset -q list wepn_porn_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
     speedtest_ips=($(ipset -q list wepn_speedtest_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
-    _specific_domains=($(ipset -q list wepn_specific_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $3}'))
-    specific_domains=($(printf "%s\n" "${_specific_domains[@]}" | sort -u))
+    _block_websites=($(ipset -q list wepn_block_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $3}'))
+    block_websites=($(printf "%s\n" "${_block_websites[@]}" | sort -u))
+    _allow_websites=($(ipset -q list wepn_allow_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $3}'))
+    allow_websites=($(printf "%s\n" "${_allow_websites[@]}" | sort -u))
     china_ips=($(ipset -q list wepn_china_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
     russia_ips=($(ipset -q list wepn_russia_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
     attacker_ips=($(ipset -q list wepn_attackers_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
@@ -1774,11 +1889,19 @@ view_rules(){
     [ ${#porn_ips[@]} -gt 0 ] &&  print n "[bold][white]Porn Websites                                            [red]BLOCKED" && separator "-" && any_rules=1
     [ ${#speedtest_ips[@]} -gt 0 ] &&  print n "[bold][white]Speedtest                                                [red]BLOCKED" && separator "-" && any_rules=1
 
-    if [ ${#specific_domains[@]} -gt 0 ]; then
-      for item in "${specific_domains[@]}"; do
+    if [ ${#block_websites[@]} -gt 0 ]; then
+      for item in "${block_websites[@]}"; do
         domain=$(echo "$item" | tr -d '"')
         printf -v _spaces_for_domain "%-$((50 - ${#domain}))b" ""
         print n "[bold][white]$domain[white]${_spaces_for_domain// /" "}       [red]BLOCKED" && separator "-" && any_rules=1
+      done
+    fi
+
+    if [ ${#allow_websites[@]} -gt 0 ]; then
+      for item in "${allow_websites[@]}"; do
+        domain=$(echo "$item" | tr -d '"')
+        printf -v _spaces_for_domain "%-$((50 - ${#domain}))b" ""
+        print n "[bold][white]$domain[white]${_spaces_for_domain// /" "}       [green]ALLOWED" && separator "-" && any_rules=1
       done
     fi
 
@@ -1816,7 +1939,7 @@ view_rules(){
 view_rules_in_detail(){
   # Find the longest value in the arrays
   max_length=0
-  for val in "${iran_ips[@]}" "${arvancloud_ips[@]}" "${derakcloud_ips[@]}" "${allowed_ips[@]}" "${porn_ips[@]}" "${speedtest_ips[@]}" "${specific_domains[@]}" "${china_ips[@]}" "${russia_ips[@]}"  "${attacker_ips[@]}"; do
+  for val in "${iran_ips[@]}" "${arvancloud_ips[@]}" "${derakcloud_ips[@]}" "${allowed_ips[@]}" "${porn_ips[@]}" "${speedtest_ips[@]}" "${block_websites[@]}" "${allow_websites[@]}" "${china_ips[@]}" "${russia_ips[@]}"  "${attacker_ips[@]}"; do
     len=${#val}
     if ((len > max_length)); then
       max_length=$len
@@ -1838,70 +1961,66 @@ view_rules_in_detail(){
 
 
   if [[ ${#iran_ips[@]} -gt 0 ]]; then
-      # Print the iran_ips in a grid
       for val in "${iran_ips[@]}"; do
         printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
       done
   fi
   if [[ ${#tunnel_ips[@]} -gt 0 ]]; then
-      # Print the tunnel_ips in a grid
       for val in "${tunnel_ips[@]}"; do
         printf "| %-${max_length}s | \033[1;32m%-7s\033[0m |\n" "${val}" "ALLOWED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
       done
   fi
   if [[ ${#arvancloud_ips[@]} -gt 0 ]]; then
-      # Print the arvancloud_ips in a grid
       for val in "${arvancloud_ips[@]}"; do
         printf "| %-${max_length}s | \033[1;32m%-7s\033[0m |\n" "${val}" "ALLOWED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
       done
   fi
   if [[ ${#derakcloud_ips[@]} -gt 0 ]]; then
-      # Print the derakcloud_ips in a grid
       for val in "${derakcloud_ips[@]}"; do
         printf "| %-${max_length}s | \033[1;32m%-7s\033[0m |\n" "${val}" "ALLOWED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
       done
   fi
   if [[ ${#porn_ips[@]} -gt 0 ]]; then
-      # Print the porn_ips in a grid
       for val in "${porn_ips[@]}"; do
         printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
       done
   fi
   if [[ ${#speedtest_ips[@]} -gt 0 ]]; then
-      # Print the porn_ips in a grid
       for val in "${speedtest_ips[@]}"; do
         printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
       done
   fi
-  if [[ ${#specific_domains[@]} -gt 0 ]]; then
-      # Print the porn_ips in a grid
-      for val in "${specific_domains[@]}"; do
+  if [[ ${#block_websites[@]} -gt 0 ]]; then
+      for val in "${block_websites[@]}"; do
+        printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "$(echo "$item" | tr -d '"')" "BLOCKED"
+        printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
+      done
+  fi
+  if [[ ${#allow_websites[@]} -gt 0 ]]; then
+      for val in "${allow_websites[@]}"; do
         printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "$(echo "$item" | tr -d '"')" "BLOCKED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
       done
   fi
   if [[ ${#china_ips[@]} -gt 0 ]]; then
-      # Print the china_ips in a grid
       for val in "${china_ips[@]}"; do
         printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
       done
   fi
   if [[ ${#russia_ips[@]} -gt 0 ]]; then
-      # Print the russia_ips in a grid
       for val in "${russia_ips[@]}"; do
         printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
       done
   fi
   if [[ ${#attacker_ips[@]} -gt 0 ]]; then
-      # Print the attacker_ips in a grid
       for val in "${attacker_ips[@]}"; do
         printf "| %-${max_length}s | \033[1;31m%-7s\033[0m |\n" "${val}" "BLOCKED"
         printf '+%s+\n' "$(printf -- '-%.0s' $(seq 1 $((${max_length}+12))))"
@@ -1912,7 +2031,7 @@ view_rules_in_detail(){
 
 }
 #------------------------------------------------------------ Clear Rules
-fn_menu_18(){
+fn_menu_19(){
   install_packages iptables ipset
   clear_menu
 
@@ -1932,7 +2051,8 @@ fn_menu_18(){
       ipset -q list wepn_derakcloud_set &>/dev/null && delete_table wepn_derakcloud
       ipset -q list wepn_porn_websites_set &>/dev/null && delete_table wepn_porn_websites
       ipset -q list wepn_speedtest_set &>/dev/null && delete_table wepn_speedtest
-      ipset -q list wepn_specific_websites_set &>/dev/null && delete_table wepn_specific_websites
+      ipset -q list wepn_block_websites_set &>/dev/null && delete_table wepn_block_websites
+      ipset -q list wepn_allow_websites_set &>/dev/null && delete_table wepn_allow_websites
       ipset -q list wepn_china_set &>/dev/null && delete_table wepn_china
       ipset -q list wepn_russia_set &>/dev/null && delete_table wepn_russia
       ipset -q list wepn_attackers_set &>/dev/null && delete_table wepn_attackers
@@ -1964,7 +2084,7 @@ fn_menu_18(){
 
 }
 #------------------------------------------------------------------------------------------------------- Exit
-fn_menu_20(){
+fn_menu_21(){
 
   # restore resolv.conf
   cp -f /etc/resolv.conf.bak /etc/resolv.conf 2>/dev/null || :
@@ -2075,6 +2195,12 @@ create_or_add_to_table(){
       iptables -I $chain -p tcp --dport 443 -m set --match-set $set dst -j REJECT
       iptables -I OUTPUT 1 -j $chain
       iptables -I FORWARD 1 -j $chain
+      if iptables -nL wepn_allow_websites_chain >/dev/null 2>&1; then
+        iptables -D OUTPUT -j wepn_allow_websites_chain
+        iptables -I OUTPUT 1 -j wepn_allow_websites_chain
+        iptables -D FORWARD -j wepn_allow_websites_chain
+        iptables -I FORWARD 1 -j wepn_allow_websites_chain
+      fi
     elif [ "$rule" == "ALLOW_WEBSITE" ]; then
       iptables -I $chain -p tcp --dport 80 -m set --match-set $set dst -j ACCEPT
       iptables -I $chain -p tcp --dport 443 -m set --match-set $set dst -j ACCEPT
@@ -2157,6 +2283,39 @@ delete_table(){
 
 clear_old_iptables_rules_and_run(){
 
+  # rename wepn_specific_websites_chain and set to wepn_block_websites_chain and set
+  if command -v iptables >/dev/null && command -v ipset >/dev/null && iptables -nL wepn_specific_websites_chain >/dev/null 2>&1; then
+
+    # create set with new name
+    ipset create wepn_block_websites_set hash:net comment maxelem 20000
+    ipset list wepn_specific_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | while read line; do
+      ip=$(echo $line | awk '{print $1}')
+      comment=$(echo $line | awk '{print $3}' | tr -d '"')
+      ipset add wepn_block_websites_set $ip comment $comment
+    done
+
+    # create chain with new name
+    iptables -N wepn_block_websites_chain
+    iptables -I wepn_block_websites_chain -p tcp --dport 80 -m set --match-set wepn_block_websites_set dst -j REJECT
+    iptables -I wepn_block_websites_chain -p tcp --dport 443 -m set --match-set wepn_block_websites_set dst -j REJECT
+    iptables -I OUTPUT 1 -j wepn_block_websites_chain
+    iptables -I FORWARD 1 -j wepn_block_websites_chain
+
+
+    # delete old chain
+    iptables -D OUTPUT -j wepn_specific_websites_chain 2>/dev/null
+    iptables -D FORWARD -j wepn_specific_websites_chain 2>/dev/null
+    iptables -F wepn_specific_websites_chain
+    iptables -X wepn_specific_websites_chain
+
+    # destroy old set
+    sleep 3
+    ipset destroy wepn_specific_websites_set
+
+  fi
+
+
+
   if command -v iptables-save >/dev/null && iptables -C OUTPUT -d 185.238.44.2/22 -p tcp --dport 443 -j REJECT &> /dev/null; then
      print "[yellow]You have applied some rules using the previous version of the script which may cause conflicts."
      echo
@@ -2212,7 +2371,7 @@ clear_old_iptables_rules_and_run(){
        menu_handler "menu"
      else
        clear_logs 5
-       fn_menu_20
+       fn_menu_21
      fi
   else
      menu_handler "menu"
