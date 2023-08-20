@@ -364,7 +364,7 @@ check_os(){
           fn_menu_21
       fi
   elif [[ "$os" == "Debian" ]]; then
-      if ! [[ "$os_version" == "10" || "$os_version" == "11" ]]; then
+      if ! [[ "$os_version" == "10" || "$os_version" == "11" || "$os_version" == "12" ]]; then
           echo
           print center "[bold][red]This script has not been tested on [bold][yellow]$os $os_version [bold][red]yet."
           fn_menu_21
