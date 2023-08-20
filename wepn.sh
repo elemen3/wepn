@@ -496,7 +496,7 @@ install_or_update_wepn(){
 #----------------------------------------------------------------------------------------------------------------------- create wepn.service
 create_wepn_service(){
 
-  mkdir -p "$HOME/.wepn"
+  mkdir -p "/root/.wepn"
 
   # create service.sh
   if [ ! -f "/root/.wepn/service.sh" ]; then
