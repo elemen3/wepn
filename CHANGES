@@ -1,19 +1,30 @@
 ------------------------------------------------------------------------------------------------------------------------ 2023.02.27
-Script Installation: Installs the script and will be accessible later via `wepn` command
-Expanded Compatibility: Now supporting Ubuntu 18.04, 20.04, 22.04, 22.10, Debian 10 and 11 - so you can use our product on your preferred OS.
-Improved Menu Navigation: Experience faster and smoother navigation with the newly optimized menu.
-Quick Exit: Press Q to quickly exit the menu.
-Easy Item Selection: Jump to the first and last items in the menu with the left and right arrow keys.
-Confirmation Dialog: Avoid mistakes with a confirmation dialog that appears before executing important commands.
-Apt Update Error Warnings: We'll help you fix apt update errors by providing timely warnings.
-Bug Fix: iptables-persistent not found issue
-Bug Fix: circle icon rendering issue
+feat: Script Installation: Installs the script and will be accessible later via `wepn` command
+feat: Expanded Compatibility: Now supporting Ubuntu 18.04, 20.04, 22.04, 22.10, Debian 10 and 11 - so you can use our product on your preferred OS.
+feat: Improved Menu Navigation: Experience faster and smoother navigation with the newly optimized menu.
+feat: Quick Exit: Press Q to quickly exit the menu.
+feat: easy Item Selection: Jump to the first and last items in the menu with the left and right arrow keys.
+fix: Confirmation Dialog: Avoid mistakes with a confirmation dialog that appears before executing important commands.
+feat: Apt Update Error Warnings: We'll help you fix apt update errors by providing timely warnings.
+fix: iptables-persistent not found issue
+fix: circle icon rendering issue
 ------------------------------------------------------------------------------------------------------------------------ 2023.03.04
-Updated the logo to use the blue variant.
-Expanded the list of IP ranges to provide more comprehensive coverage.
-Adjusted the datagrid to resize based on the width of the content.
-Bug Fix: Resolved an issue where certbot was generating errors during apt-update.
-Bug Fix: Corrected an issue where the UFW firewall was interfering with iptables rules by disabling and stopping the UFW service.
+chore: Updated the logo to use the blue variant.
+chore: expanded the list of IP ranges to provide more comprehensive coverage.
+fix: adjusted the datagrid to resize based on the width of the content.
+fix: Resolved an issue where certbot was generating errors during apt-update.
+fix: Corrected an issue where the UFW firewall was interfering with iptables rules by disabling and stopping the UFW service.
 ------------------------------------------------------------------------------------------------------------------------ 2023.03.06
-Option to whitelist derak.cloud
------------------------------------------------------------------------------------------------------------------------- 2023.xx.xxxxxx
+feat: Option to whitelist derak.cloud
+------------------------------------------------------------------------------------------------------------------------ 2023.08.02
+chore: update iranian ip ranges
+feat: add "allow tunneling" menu
+feat: donate in tron
+fix: ipset: command not found
+fix: delay on boot caused by IP Scan rules
+fix: rules don't persist on reboot
+------------------------------------------------------------------------------------------------------------------------ 2023.08.03
+feat: block specific website -> find all subdomains and all ip addresses even if it's behind a loadbalancer
+fix: host: command not found
+------------------------------------------------------------------------------------------------------------------------ 2023.08.19
+feat: allow specific website
