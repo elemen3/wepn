@@ -495,6 +495,9 @@ install_or_update_wepn(){
 }
 #----------------------------------------------------------------------------------------------------------------------- create wepn.service
 create_wepn_service(){
+
+  mkdir -p "$HOME/.wepn"
+
   # create service.sh
   if [ ! -f "/root/.wepn/service.sh" ]; then
     curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/service.sh > "/root/.wepn/service.sh"
