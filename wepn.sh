@@ -521,8 +521,9 @@ update_upgrade_package_lists(){
 
 #  mount -o remount,rw /
 #  chmod 644 /etc/resolvv.conf
-  echo "nameserver 1.1.1.1" > /etc/resolv.conf
-  echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+  echo "nameserver 1.1.1.1" | tee /etc/resolv.conf >/dev/null
+  echo "nameserver 8.8.8.8" | tee -a /etc/resolv.conf >/dev/null
+
 
 
   # Get the list of PIDs
