@@ -525,7 +525,6 @@ update_upgrade_package_lists(){
   echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 
 
-
   # Get the list of PIDs
   pids=($(top -b -n 1 | grep dpkg | awk '{ print $1 }'))
   # Loop over the PIDs and kill them
