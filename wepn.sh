@@ -533,17 +533,17 @@ update_upgrade_package_lists(){
       kill -9 "$pid"
   done
 
+#  print center "[blue]Configuring dpkg..."
+  dpkg_configure_error=$(DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>&1 >/dev/null)
+  unset DEBIAN_FRONTEND
+#  sleep 1
+  clear_logs 1
+
 
   num_upgradable=$(apt list --upgradable 2>/dev/null | wc -l)
 
   # Check if the number of upgradable packages is greater than 1
   if [ "$num_upgradable" -gt 1 ]; then
-
-    print center "[blue]Configuring dpkg..."
-    dpkg_configure_error=$(DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>&1 >/dev/null)
-    unset DEBIAN_FRONTEND
-    sleep 1
-    clear_logs 1
 
     print center "[blue]Updating packages list..."
     apt_update_error=$(apt update 2>&1 >/dev/null)
@@ -555,30 +555,7 @@ update_upgrade_package_lists(){
   fi
 
 
-  if [ -n "$dpkg_configure_error" ] && [[ $dpkg_configure_error == *"dpkg frontend lock was locked by another process"* ]]; then
-    echo
-    print "[bold][yellow]The 'dpkg --configure a' encountered the following error(s):"
-    echo
-    print "[bold][red]$dpkg_configure_error"
-    echo
-      pid=$(echo "$dpkg_configure_error" | grep -oE 'pid [0-9]+' | awk '{print $2}')
-      print "[bold][blue]Would you like to kill the proccess [yellow]$pid[blue]?"
-      confirmation_dialog y
-      response="$?"
-      clear_logs 2
-      if [ $response -eq 1 ]; then
-        kill -9 $pid
-        echo
-        print "[bold][green]Process [yellow]$pid[green] is killed."
-        print "[blue]Trying again..."
-        sleep 1
-        logo_shown=false
-        show_headers
-        update_upgrade_package_lists
-      else
-        fn_menu_21
-      fi
-  elif [[ -n "$apt_update_error" && ! "$apt_update_error" =~ "WARNING" ]]; then
+  if [[ -n "$apt_update_error" && ! "$apt_update_error" =~ "WARNING" ]]; then
       echo
       print "[bold][yellow]The 'apt update' encountered the following error(s):"
       echo
