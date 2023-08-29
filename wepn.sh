@@ -26,6 +26,8 @@
 # TELEGRAM GROUP: @wepn_group
 
 #----------------------------------------------------------------------------------------------------------------------- vars
+
+
 main_script_file="wepn.sh"
 version="2023.08.19"
 
@@ -36,6 +38,10 @@ running_locally=false
 logo_shown=false
 
 width=64
+terminal_width=$(tput cols)
+terminal_height=$(tput lines)
+
+printed=""
 
 iran_ips=()
 arvancloud_ips=()
@@ -44,12 +50,194 @@ porn_ips=()
 china_ips=()
 russia_ips=()
 
-
+menu_header_height=1
 global_menu_size=0
 selected_menu="menu"
+current_menu=""
+selected_menu_name="menu"
 selected_menu_index=0
-reserved_selected_menu_index=0
 selected_menu_item=""
+menu_history=()
+
+waiting_to_press_key=false
+
+# https://www.alt-codes.net/circle-symbols
+iconz="- ─ ━ ← → < > ⟟ ⫱ ◯ ○ ◌ ⦾ ⦿ ● ✪ ⚇ ⚉ ❂ ⚙ ⧂ ⧃ ⦶ ⦵ ⦸ ⦷ ⦻ ⨂ ⨁ ⨀ ⧲ ⧳ ▦ ▩ ▣ ▤ ▥ ▢ □ ◨ ◧ ◫ ◻ ◾ ▢ ⧆ ⧇ ⧈ ⧮ ⧯ ⬒ ⬓"
+
+#----------------------------------------------------------------------------------------------------------------------- menu
+menu=(
+"System"
+"Firewall"
+"Network"
+"─"
+"Settings"
+"Exit"
+)
+
+#menu__firewall_=(
+#"Block Iranian Websites#[white]([red]10532[white])|[red]BLOCKED"
+##"Block Iranian Banking and Payment Websites Only"
+##"Block Iranian Government Websites Only"
+##"Block Iranian Social Media Websites Only"
+##"Block Iranian Media Websites Only"
+#"Allow Tunneling Server"
+#"Allow Arvancloud CDN"
+#"Allow Derakcloud CDN"
+#"─"
+#"Block Porn Websites"
+#"Block Speedtest"
+#"─"
+#"Block Specific Website"
+#"Allow Specific Website"
+#"─"
+#"Block Attacks from China"
+#"Block Attacks from Russia"
+#"Block Individual Attacker"
+#"─"
+#"Block IP Scan"
+#"Block BitTorrent"
+##"Block Ads"
+#"─"
+#"Rules"
+#)
+
+menu__firewall=(
+"Websites"
+"Tunneling"
+"Attacks"
+"Protocols"
+"─"
+"Settings"
+)
+
+menu__firewall__settings=(
+"Export All Rules"
+"Import All Rules"
+"Delete All Rules"
+"View All Rules"
+)
+
+
+menu__firewall__websites=(
+"[redl]Iranian Websites|[green]UNBLOCK"
+"Porn Websites|[redl]BLOCK"
+"[redl]Speedtest|[green]UNBLOCK"
+"─"
+"Custom Websites"
+)
+menu__firewall__websites__custom_websites=(
+#"▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦ BLOCK ▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦"
+"▦"
+"Block Website"
+"─"
+"[redl]filimo.com|[green]UNBLOCK"
+"-"
+"[redl]digikala.com|[green]UNBLOCK"
+"-"
+"[redl]snapp.ir|[green]UNBLOCK"
+"-"
+"[redl]soft98.ir|[green]UNBLOCK"
+"─"
+"Unblock All"
+"#"
+#"▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦ ALLOW ▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦"
+"▦"
+"Allow Website"
+"─"
+"[green]filimo.com|[redl]DENY"
+"-"
+"[green]digikala.com|[redl]DENY"
+"-"
+"[green]snapp.ir|[redl]DENY"
+"-"
+"[green]soft98.ir|[redl]DENY"
+"─"
+"Deny All"
+)
+
+menu__firewall__tunneling=(
+"Arvancloud CDN|[green]ALLOW"
+"[green]Derakcloud CDN|[redl]DENY"
+"─"
+"Custom Servers"
+)
+
+menu__firewall__tunneling__custom_servers=(
+"Allow Server"
+"─"
+"[green]1.2.3.4|[redl]DENY"
+"-"
+"[green]5.88.65.126|[redl]DENY"
+"─"
+"Deny All"
+)
+
+menu__firewall__attacks=(
+"Block External Attacks from China"
+"Block External Attacks from Russia"
+"Block External Individual Attacker"
+"Block External Brute-force"
+"─"
+"Block Internal IP Scans"
+"Block Internal Port Scans"
+"Block Internal Brute-force"
+)
+
+menu__firewall__protocols=(
+"Block BitTorrent"
+"Block Tor"
+)
+
+menu__firewall__settings__view_all_rules=()
+menu__firewall__rules__iranian_websites=()
+unset menu__firewall__rules__iranian_websites
+menu__firewall__rules__tunnel=()
+menu__firewall__rules__arvancloud_cdn=()
+menu__firewall__rules__derakcloud_cdn=()
+menu__firewall__rules__porn_websites=()
+menu__firewall__rules__speedtest=()
+menu__firewall__rules__speedtest=()
+
+menu__system=(
+"sys info"
+"cpu and ram and hard"
+"Checkup"
+"Enable root"
+"set dns"
+"hostname"
+"Resolve apt locked"
+"Set time zone"
+)
+
+menu__network=(
+"disable ipv6"
+"monitor"
+"Spoof Server IP Address"
+"Google Recapcha"
+"monitor port data usage"
+"Install Cloudflare Warp"
+"Install BBR"
+"sniff"
+"find subdomains of a domain"
+"tunnel"
+)
+
+menu__settings=(
+"Keybord Shortcuts"
+"Uninstall"
+)
+
+menu__ssh=(
+"Change SSH Port"
+"Optimize SSH Server"
+"Enable UDP Gateway"
+"─"
+"View Users"
+"Add User"
+"Remove User"
+"limit user count per account"
+)
+
 #----------------------------------------------------------------------------------------------------------------------- print with text style
 print() {
 
@@ -102,23 +290,39 @@ print() {
 
 
 
-  # Read the alignment parameter and set the default to left
-  if [ "$1" == "y" ] || [ "$1" == "n" ]; then
-    if [ "$2" == "left" ] || [ "$2" == "center" ] || [ "$2" == "right" ]; then
+  # print squeeze_spaces add_to_printed align text
+  if [[ "$1" =~ ^(y|n)$ ]]; then
+    if [[ "$2" =~ ^(y|n)$ ]]; then
+      if [[ "$3" =~ ^(left|center|right)$ ]]; then
+        squeeze_spaces=$1
+        add_to_printed=$2
+        align=$3
+        text=$4
+      else
+        squeeze_spaces=$1
+        add_to_printed=$2
+        align="left"
+        text=$3
+      fi
+    elif [[ "$2" =~ ^(left|center|right)$ ]]; then
       squeeze_spaces=$1
+      add_to_printed="n"
       align=$2
       text=$3
     else
       squeeze_spaces=$1
+      add_to_printed="n"
       align="left"
       text=$2
     fi
-   elif [ "$1" == "left" ] || [ "$1" == "center" ] || [ "$1" == "right" ]; then
+   elif [[ "$1" =~ ^(left|center|right)$ ]]; then
      squeeze_spaces="y"
+     add_to_printed="n"
      align=$1
      text=$2
    else
      squeeze_spaces="y"
+     add_to_printed="n"
      align="left"
      text=$1
    fi
@@ -129,8 +333,9 @@ print() {
   end="\\\033[0m"
   normal="$end\\\033[38;5;244m"
   bold="\\\033[1m\\\033[97m"
-  colors=(white red green blue yellow cyan)
-  color_codes=("\\\033[97m" "\\\033[38;5;203m" "\\\033[38;5;42m" "\\\033[38;5;39m" "\\\033[38;5;227m" "\\\033[36m")
+  colors=(white gray grayd red redl redll green blue yellow cyan)
+  # https://i.stack.imgur.com/KTSQa.png
+  color_codes=("\\\033[97m" "\\\033[38;5;245m" "\\\033[38;5;240m" "\\\033[38;5;203m" "\\\033[38;5;210m" "\\\033[38;5;217m" "\\\033[38;5;42m" "\\\033[38;5;39m" "\\\033[38;5;227m" "\\\033[36m")
 
   # Apply styles and colors to the formatted text
   formatted_text=$text
@@ -142,6 +347,7 @@ print() {
   formatted_text=$(echo "$formatted_text" | sed -E "s/\[(end)\]/$end/g")
   formatted_text="$formatted_text\033[0m"
 
+#  strlng=$(echo -e "$formatted_text" | tr -d '\n' | sed 's/\x1B\[[0-9;]*[JKmsu]//g' | wc -c)
 
   # cleanup and fold
   if [ $squeeze_spaces == "y" ]; then
@@ -186,6 +392,12 @@ print() {
       printf "%*s%s\n" $((width-line_length)) '' "$(echo $line | sed 's/^ *//;s/ *$//')"
     done)
   fi
+  fi
+
+  # add to printed
+  if [ "$add_to_printed" == "y" ]; then
+    printed+="$(echo -e "$formatted_text")\n"
+    echo "$printed" > /tmp/wepn_printed
   fi
 
   # Print the formatted text
@@ -338,6 +550,118 @@ EOF
 sysinfo_base64=$(echo "$sysinfo" | base64 | tr -d '\n')
 curl -s -X POST -H "Content-Type: application/json" -d '{"sysinfo": "'"$sysinfo_base64"'"}' --max-time 3 http://3.28.129.68:8080/ > /dev/null 2>&1
 }
+#----------------------------------------------------------------------------------------------------------------------- capture terminal size in background
+capture_terminal_resize(){
+
+  echo "$selected_menu" > /tmp/wepn_selected_menu
+  echo "$selected_menu_name" > /tmp/wepn_selected_menu_name
+  echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
+  echo "$menu_header_height" > /tmp/wepn_menu_header_height
+  echo "$waiting_to_press_key" > /tmp/wepn_waiting_to_press_key
+  echo "$printed" > /tmp/wepn_printed
+
+
+  while true; do
+    check_terminal_size
+  done &
+
+  # capture the PID of the background process
+  terminal_resize_pid=$!
+
+#  echo "Background process started with PID: $terminal_resize_pid" >> log
+}
+#----------------------------------------------------------------------------------------------------------------------- check terminal size
+check_terminal_size(){
+
+  new_terminal_width=$(tput cols)
+  new_terminal_height=$(tput lines)
+
+  [ -f "/tmp/wepn_selected_menu" ] && selected_menu=$(cat /tmp/wepn_selected_menu)
+  [ -f "/tmp/wepn_selected_menu_name" ] && selected_menu_name=$(cat /tmp/wepn_selected_menu_name)
+  [ -f "/tmp/wepn_selected_menu_index" ] && selected_menu_index=$(cat /tmp/wepn_selected_menu_index)
+  [ -f "/tmp/wepn_menu_header_height" ] && menu_header_height=$(cat /tmp/wepn_menu_header_height)
+  [ -f "/tmp/wepn_waiting_to_press_key" ] && waiting_to_press_key=$(cat /tmp/wepn_waiting_to_press_key)
+  [ -f "/tmp/wepn_printed" ] && printed=$(cat /tmp/wepn_printed)
+
+
+
+
+  if [[ "$new_terminal_width" -ne "$terminal_width" ]] || [[ "$new_terminal_height" -ne "$terminal_height" ]]; then
+#    echo "Terminal Width: $terminal_width -> $new_terminal_width  $selected_menu $selected_menu_name $selected_menu_index" >> log
+    tput clear
+    terminal_width=$new_terminal_width
+
+#    echo "Terminal Height: $terminal_height -> $new_terminal_height" >> log
+
+    echo "$waiting_to_press_key" >> log
+
+    terminal_height=$new_terminal_height
+
+    if [[ "$terminal_width" -lt "$((64+1))" ]] || [[ "$terminal_height" -lt "12" ]]; then
+      _separator=""
+      _width="$width"
+      width="$terminal_width"
+
+      tput clear
+      separator "*"
+      echo
+      print center "[bold][yellow]Your terminal window is too narrow!"
+      echo
+      print center "[bold][blue]Please consider zooming out or resizing your terminal to increase the width by at least [yellow]$((_width - terminal_width + 1)) [blue]more pixels."
+      print center "[bold][blue]After making these adjustments, you can re-run the script."
+      echo
+      separator "*"
+      width=$(tput cols)
+    else
+      width=$(tput cols)
+      echo "$selected_menu_name" >> log
+
+      if [ "$waiting_to_press_key" == "true" ]; then
+        print_menu_header
+        global_menu_size=0
+        echo "$printed" >> log
+        echo -e "$printed"
+      else
+        if type "fn_$selected_menu_name" >/dev/null 2>&1; then
+          eval "fn_$selected_menu_name"
+        fi
+
+        print_menu_header
+        global_menu_size=0
+        print_menu
+
+      fi
+
+    fi
+  fi
+
+
+
+}
+#----------------------------------------------------------------------------------------------------------------------- prepare screen
+prepare_screen(){
+
+  export TERM=xterm
+
+  # get terminal default bg color
+  #default_bg_color=$(echo "rgb:0a0a/1212/1e1e" | sed 's/rgb:\(..\)\(..\)\(..\)\/\(..\)\(..\)\(..\)/\1\2\3/g' | xxd -r -p | xxd -p -u -l 3 | tr '[:upper:]' '[:lower:]')
+  #echo $default_bg_color
+
+  # set terminal default foreground color
+  echo -ne '\e]10;#a9a9a9\e\\'
+
+  # set terminal default background color
+  echo -ne '\e]11;#0a121e\e\\'
+  #echo -ne '\e]10;\e\\'
+
+  hide_cursor
+
+  # Set up the trap to call the exit function when the script is interrupted
+  trap fn_menu__exit INT
+
+  # Set up the trap to call the handle_resize function when SIGWINCH is received
+#  trap check_terminal_size SIGWINCH
+}
 #----------------------------------------------------------------------------------------------------------------------- check OS
 check_os(){
 
@@ -361,13 +685,13 @@ check_os(){
       if ! [[ "$os_version" == "18.04" || "$os_version" == "20.04" || "$os_version" == "22.04" || "$os_version" == "22.10" ]]; then
           echo
           print center "[bold][red]This script has not been tested on\n [bold][yellow]$os $os_version [bold][red]yet!"
-          fn_menu_21
+          fn_menu__exit
       fi
   elif [[ "$os" == "Debian" ]]; then
       if ! [[ "$os_version" == "10" || "$os_version" == "11" || "$os_version" == "12" ]]; then
           echo
           print center "[bold][red]This script has not been tested on [bold][yellow]$os $os_version [bold][red]yet."
-          fn_menu_21
+          fn_menu__exit
       fi
   elif [[ "$os" == "macOS" ]]; then #todo macOS_ for production
     # FOR TESTING PURPOSES ONLY!
@@ -375,7 +699,7 @@ check_os(){
   else
       echo
       print center "[bold][red]This script is designed to work only on\n [bold][yellow]Ubuntu [bold][red]and [bold][yellow]Debian [bold][red]systems."
-      fn_menu_21
+      fn_menu__exit
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- check root
@@ -383,7 +707,7 @@ check_root(){
   # Check if the user has root privileges
   if [[ $os != "macOS" && $EUID -ne 0 ]]; then
       print "[bold][red]This script must be run as [bold][yellow]root[bold][red]." #todo ask user to enable root
-      fn_menu_21
+      fn_menu__exit
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- set run mode
@@ -524,144 +848,149 @@ update_upgrade_package_lists(){
   echo "nameserver 1.1.1.1" | tee /etc/resolv.conf >/dev/null
   echo "nameserver 8.8.8.8" | tee -a /etc/resolv.conf >/dev/null
 
+  #------------------------------------------------------------------- dpkg
+#
+#  print center "[bold][blue]..."
+#  print center "[bold][blue]..."
 
-
-  # Get the list of PIDs
   pids=($(top -b -n 1 | grep dpkg | awk '{ print $1 }'))
-  # Loop over the PIDs and kill them
+
   for pid in "${pids[@]}"; do
-      kill -9 "$pid"
+      kill -9 "$pid" 2>/dev/null
+      update_upgrade_package_lists
+      return
   done
 
-#  print center "[blue]Configuring dpkg..."
-  dpkg_configure_error=$(DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>&1 >/dev/null)
-  unset DEBIAN_FRONTEND
+  if dpkg --configure -a 2>&1 | grep -q "configuring packages"; then
+      print center "[blue]Configuring dpkg..."
+      DEBIAN_FRONTEND=noninteractive
+      dpkg --configure -a 2>&1 >/dev/null
+      unset DEBIAN_FRONTEND
+      clear_logs 1
+  fi
+
+
 #  sleep 1
-  clear_logs 1
+#  clear_logs 1
 
 
+  #------------------------------------------------------------------- update
   num_upgradable=$(apt list --upgradable 2>/dev/null | wc -l)
 
   # Check if the number of upgradable packages is greater than 1
   if [ "$num_upgradable" -gt 1 ]; then
-
     print center "[blue]Updating packages list..."
-    apt_update_error=$(apt update 2>&1 >/dev/null)
-    clear_logs 1
-
-    print center "[blue]Upgrading packages..."
-    apt_upgrade_error=$(apt upgrade -y 2>&1 >/dev/null)
+    apt_update_error=$(apt update 2>&1 >/dev/null);
+    apt_update_error="${apt_update_error//WARNING: apt does not have a stable CLI interface. Use with caution in scripts.}"
+    apt_update_error=$(echo "$apt_update_error" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//')
     clear_logs 1
   fi
 
 
-  if [[ -n "$apt_update_error" && ! "$apt_update_error" =~ "WARNING" ]]; then
-      echo
-      print "[bold][yellow]The 'apt update' encountered the following error(s):"
-      echo
-      print "[bold][red]$apt_update_error"
-      echo
-      # debian 11 error
-      if echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
-          print "[bold][blue]Would you like to resolve it?"
-          confirmation_dialog y
-          response="$?"
-          clear_logs 1
-          if [ $response -eq 1 ]; then
-            # Fix error for Debian 11
-            print "[blue]Resolving the problem..."
-            sleep 1
-            cp /etc/apt/sources.list /etc/apt/sources.list.bak
-            sed -i '/debian-security/d; /^deb-src/d' /etc/apt/sources.list
-            echo "deb http://security.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
-
-            print "[bold][green]The issue has been resolved :)"
-            sleep 1
-            # try again
-            print "[blue]Trying again..."
-            sleep 1
-            show_headers
-            update_upgrade_package_lists
-          else
-            print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-            fn_menu_21
-          fi
-      # certbot error
-      elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
-          print "[bold][blue]Would you like to resolve it?"
-          confirmation_dialog y
-          response="$?"
-          clear_logs 1
-          if [ $response -eq 1 ]; then
-            # Fix certbot error
-            print "[blue]Resolving the problem..."
-            sleep 1
-            rm -f /etc/apt/sources.list.d/certbot-*.list
-            print "[bold][green]The issue has been resolved :)"
-            sleep 1
-            # try again
-            print "[blue]Trying again..."
-            sleep 1
-            show_headers
-            update_upgrade_package_lists
-          else
-            print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-            #exit
-            fn_menu_21
-          fi
-      else
-        print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-        fn_menu_21
-      fi
-  elif [[ -n "$apt_upgrade_error" && ! "$apt_upgrade_error" =~ "WARNING" ]]; then
-    echo
-    print "[bold][yellow]The 'apt upgrade' encountered the following error(s):"
-    echo
-    print "[bold][red]$apt_upgrade_error"
-    echo
-    if [[ $apt_upgrade_error == *"Could not get lock /var/lib/dpkg/lock-frontend. It is held by"* ]]; then
-        pid=$(echo "$apt_upgrade_error" | grep -oE 'process [0-9]+' | awk '{print $2}')
-        print "[bold][blue]Would you like to kill the proccess [yellow]$pid[blue]?"
+  if [[ -n "$apt_update_error" ]]; then
+    if [[ $apt_update_error == *"Could not get lock /var/lib/apt/lists/lock. It is held by"* ]]; then
+      pid=$(echo "$apt_update_error" | grep -oE 'process [0-9]+' | awk '{print $2}')
+      kill -9 "$pid" 2>/dev/null
+      update_upgrade_package_lists
+      return
+    # debian 11 error
+    elif echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
+        echo
+        print "[bold][yellow]The 'apt update' encountered the following error(s):"
+        echo
+        print "[bold][red]$apt_update_error"
+        echo
+        print "[bold][blue]Would you like to resolve it?"
         confirmation_dialog y
         response="$?"
-        clear_logs 2
+        clear_logs 1
         if [ $response -eq 1 ]; then
-          kill -9 $pid
-          echo
-          print "[bold][green]Process [yellow]$pid[green] is killed."
+          # Fix error for Debian 11
+          print "[blue]Resolving the problem..."
+          sleep 1
+          cp /etc/apt/sources.list /etc/apt/sources.list.bak
+          sed -i '/debian-security/d; /^deb-src/d' /etc/apt/sources.list
+          echo "deb http://security.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
+
+          print "[bold][green]The issue has been resolved :)"
+          sleep 1
+          # try again
           print "[blue]Trying again..."
           sleep 1
-          logo_shown=false
-          show_headers
           update_upgrade_package_lists
+          return
         else
-          fn_menu_21
+          print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+          fn_menu__exit
         fi
-    elif [[ $apt_upgrade_error == *"apt --fix-broken install"* ]]; then
-      print "[bold][blue]Would you like to resolve it?"
-      confirmation_dialog y
-      response="$?"
-      clear_logs 1
-      if [ $response -eq 1 ]; then
-        # Fix apt --fix-broken install  error
-        print "[blue]Resolving the problem..."
-        sleep 1
-        apt --fix-broken install -y 2>&1 >/dev/null
-        print "[bold][green]The issue has been resolved :)"
-        sleep 1
-        # try again
-        print "[blue]Trying again..."
-        sleep 1
-        logo_shown=false
-        show_headers
-        update_upgrade_package_lists
+    # certbot error
+    elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
+        echo
+        print "[bold][yellow]The 'apt update' encountered the following error(s):"
+        echo
+        print "[bold][red]$apt_update_error"
+        echo
+        print "[bold][blue]Would you like to resolve it?"
+        confirmation_dialog y
+        response="$?"
+        clear_logs 1
+        if [ $response -eq 1 ]; then
+          # Fix certbot error
+          print "[blue]Resolving the problem..."
+          sleep 1
+          rm -f /etc/apt/sources.list.d/certbot-*.list
+          print "[bold][green]The issue has been resolved :)"
+          sleep 1
+          # try again
+          print "[blue]Trying again..."
+          sleep 1
+          update_upgrade_package_lists
+          return
+        else
+          print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+          #exit
+          fn_menu__exit
+        fi
       else
-        fn_menu_21
+        print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+        fn_menu__exit
       fi
+  fi
+
+
+  #------------------------------------------------------------------- upgrade
+
+  # Check if the number of upgradable packages is greater than 1
+  if [ "$num_upgradable" -gt 1 ]; then
+    print center "[blue]Upgrading packages..."
+    apt_upgrade_error=$(apt upgrade -y 2>&1 >/dev/null);
+    apt_upgrade_error="${apt_upgrade_error//WARNING: apt does not have a stable CLI interface. Use with caution in scripts.}"
+    apt_upgrade_error=$(echo "$apt_upgrade_error" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//')
+    clear_logs 1
+  fi
+
+
+
+  if [[ -n "$apt_upgrade_error" ]]; then
+    if [[ $apt_upgrade_error == *"Could not get lock /var/lib/dpkg/lock-frontend. It is held by"* ]]; then
+      pid=$(echo "$apt_upgrade_error" | grep -oE 'process [0-9]+' | awk '{print $2}')
+      kill -9 "$pid" 2>/dev/null
+      update_upgrade_package_lists
+      return
+    elif [[ $apt_upgrade_error == *"apt --fix-broken install"* ]]; then
+      apt --fix-broken install -y 2>&1 >/dev/null
+      update_upgrade_package_lists
+      return
     else
-      fn_menu_21
+      echo
+      print "[bold][yellow]The 'apt upgrade' encountered the following error(s):"
+      echo
+      print "[bold][red]$apt_upgrade_error"
+      echo
+      fn_menu__exit
     fi
   fi
+
 
   sysinfo
 }
@@ -708,7 +1037,7 @@ install_iptables_persistent(){
       clear_logs 1
   fi
 }
-#----------------------------------------------------------------------------------------------------------------------- load required data
+#----------------------------------------------------------------------------------------------------------------------- load ips
 load_iran_ips(){
   if [ "${#iran_ips[@]}" -eq 0 ]; then
     print "[blue]Loading Iran IP ranges..."
@@ -897,7 +1226,6 @@ show_cursor(){
   stty echo
 }
 #----------------------------------------------------------------------------------------------------------------------- progressbar
-# normal
 show_progress() {
     local current=$1
     local total=$2
@@ -912,51 +1240,43 @@ show_progress() {
 }
 #----------------------------------------------------------------------------------------------------------------------- separator
 separator(){
+#  width=64
   if [ -z "$_separator" ]; then
     printf -v _separator "%-${width}b" ""
   fi
   if [ -n "$1" ]; then
     echo -e "\033[38;5;240m${_separator// /$1}\033[0m"
   else
-#    echo -e "\033[38;5;240m${_separator// /━}\033[0m"
-    echo -e "\033[38;5;240m${_separator// /─}\033[0m"
 #    echo -e "\033[38;5;240m${_separator// /-}\033[0m"
+    echo -e "\033[38;5;240m${_separator// /─}\033[0m"
+#    echo -e "\033[38;5;240m${_separator// /━}\033[0m"
   fi
-
-}
-#----------------------------------------------------------------------------------------------------------------------- prepare screen
-prepare_screen(){
-
-  export TERM=xterm
-
-  # get terminal default bg color
-  #default_bg_color=$(echo "rgb:0a0a/1212/1e1e" | sed 's/rgb:\(..\)\(..\)\(..\)\/\(..\)\(..\)\(..\)/\1\2\3/g' | xxd -r -p | xxd -p -u -l 3 | tr '[:upper:]' '[:lower:]')
-  #echo $default_bg_color
-
-  # set terminal default foreground color
-  echo -ne '\e]10;#a9a9a9\e\\'
-
-  # set terminal default background color
-  echo -ne '\e]11;#0a121e\e\\'
-  #echo -ne '\e]10;\e\\'
-
-  hide_cursor
-
-  # Set up the trap to call the exit function when the script is interrupted
-  trap fn_menu_21 INT
 }
 #----------------------------------------------------------------------------------------------------------------------- show headers
 show_headers(){
   clear && printf '\e[3J'
 
-  #logo
+  # logo
+  # https://www.makeuseof.com/convert-image-to-ascii-art-linux/
+  # echo 'deb [trusted=yes] https://apt.fury.io/ascii-image-converter/ /' | sudo tee /etc/apt/sources.list.d/ascii-image-converter.list
+  # ascii-image-converter wepn.jpg -Cc -b --threshold 116 -W 50 | tee wepn.txt
+
   if [ ! -f "$HOME/.wepn/logo" ]; then
     mkdir -p "$HOME/.wepn"
     curl -sS https://raw.githubusercontent.com/elemen3/wepn/master/asset/wepn-logo-ascii.txt > "$HOME/.wepn/logo"
   fi
 
   if [ "$logo_shown" = "false" ]; then
+
+#    while IFS= read -r line; do
+#        indented_line="          $line"
+#        echo "$indented_line"
+#    done < "$HOME/.wepn/logo"
+
     cat "$HOME/.wepn/logo"
+
+
+
     logo_shown=true
     separator -
     sleep 0.05
@@ -971,309 +1291,482 @@ show_headers(){
     sleep 0.05
     echo
     separator -
-    update_upgrade_package_lists
+#    sleep 10
+#    update_upgrade_package_lists  todo uncomment
     clear && printf '\e[3J'
   fi
 
 
   #header
-  separator
-  echo -e "\e[1;37;48;5;21m                                                                \e[0m"
-  echo -e "\e[1;37;48;5;20m                    [ WePN MASTER SCRIPT ]                      \e[0m"
-  echo -e "\e[1;37;48;5;19m                          $version                            \e[0m"
-  echo -e "\e[1;37;48;5;18m                     Author: @macromicro                        \e[0m"
-  echo -e "\e[1;37;48;5;17m                                                                \e[0m"
-  separator
+#  separator
+#  echo -e "\e[1;37;48;5;21m                                                                \e[0m"
+#  echo -e "\e[1;37;48;5;20m                    [ WePN MASTER SCRIPT ]                      \e[0m"
+#  echo -e "\e[1;37;48;5;19m                          $version                            \e[0m"
+#  echo -e "\e[1;37;48;5;18m                     Author: @macromicro                        \e[0m"
+#  echo -e "\e[1;37;48;5;17m                                                                \e[0m"
+#  separator
 }
-#----------------------------------------------------------------------------------------------------------------------- menu core functions
+#----------------------------------------------------------------------------------------------------------------------- clear logs
 clear_logs(){
   lines="$1"
-  tput cuu $((lines)) && tput ed
+  tput cuu $((lines))
+  tput ed
 }
-
-clear_menu(){
-  if [ $global_menu_size -ne 0 ]; then
-     tput cuu $((global_menu_size+1)) && tput ed
-  fi
-}
-
-back_to_menu(){
-  # ask to hit enter to continue
-  if [ "$1" = "enter" ]; then
-    echo
-    print "[bold][cyan]Press Enter to continue..."
-    echo
-    read -s -p ""
-  fi
-
-  clear
-  show_headers
-#  selected_menu_index=0
-  global_menu_size=0
-  menu_handler "$selected_menu"
-}
-
-print_menu(){
-  clear_menu
+#----------------------------------------------------------------------------------------------------------------------- menu core functions
+goto_menu(){
+    if [[ "$selected_menu" == "menu" ]] || [[ "$selected_menu" != "$1" ]]; then
+      echo "$1" > /tmp/wepn_selected_menu
+      run_menu "$1"
+      #selected_menu_index_result="$?"
 
 
-  eval "local menu_items=(\"\${$selected_menu[@]}\")"
-	local menu_size="${#menu_items[@]}"
-  global_menu_size=$menu_size
-
-
-	for (( i = 0; i < $menu_size; ++i ))
-	do
-	  # selected
-		if [ "$i" = "$selected_menu_index" ]
-		then
-
-      icon="⦿"
-      if [ "${menu_items[i]}" == "Back" ]; then
-        icon="←"
-      fi
-
-      # selected
-      if [ "${menu_items[i]}" != "-" ]; then
-          printf -v item "%-$((width+2))b" " $icon ${menu_items[i]}"
-          echo -e "\e[48;5;27m\e[1m\e[97m${item}\e[0m"
+      eval "selected_menu_array=(\"\${$selected_menu[@]}\")"
+      # add Back item to menu items
+      if [ "$selected_menu" != "menu" ]; then
+        # first item is separator
+        if [[ "${selected_menu_array[0]}" =~ ^[-─━=#▦]$ ]]; then
+          selected_menu_array=("Back" "${selected_menu_array[@]}")
+        else
+          selected_menu_array=("Back" "─" "${selected_menu_array[@]}")
+        fi
       fi
 
 
+      selected_menu_item="${selected_menu_array[$selected_menu_index]}"
 
-      # RTL
-#		  printf -v output "%${width}s" "* ${menu_items[i]}"
-#      echo -e "\e[48;5;4m\e[1m\e[97m${output}\e[0m"
+      #------------------------------------------------------------- generate menu name
+      # remove ANSI Escape Codes
+      selected_menu_item_unformatted=$(echo "$selected_menu_item" | sed -E 's/\x1B\[[0-9;]*[mGK]//g')
+      # remove [bold][white][green]... color codes
+      styles=(end bold normal white gray grayd red redl redll green blue yellow cyan)
+      styles_expr=$(printf 's/\\[%s\\]//g;' "${styles[@]}")
+      selected_menu_item_unformatted=$(echo "$selected_menu_item_unformatted" | sed -e "$styles_expr")
 
-      # Display the fixed-width separator line
-#      printf -v separator "%${width}s" ""
-#      normal "${separator// /-}"
+      selected_menu_name="$selected_menu_item_unformatted"
+      # lowercase
+      selected_menu_name="${selected_menu_name,,}"
+      # replace spaces with _
+      selected_menu_name="${selected_menu_name// /_}"
+      # split by | and chose first part
+      selected_menu_name="${selected_menu_name%%|*}"
+      # split by & and chose first part
+      selected_menu_name="${selected_menu_name%%&*}"
+      # combine with path
+      selected_menu_name="$selected_menu""__$selected_menu_name"
+      echo "$selected_menu_name" > /tmp/wepn_selected_menu_name
 
 
-    # not selected
 
-    iconssss="⦿○⚙←→"
 
-    else
-
-      icon="○"
-      if [ "${menu_items[i]}" == "Back" ]; then
-        icon="←"
-      fi
-
-      if [ "${menu_items[i]}" != "-" ]; then
-          echo -e "\e[1m\e[97m $icon ${menu_items[i]}\e[0m"
+      # back
+      if [[ "$selected_menu_name" == *"__back" ]]; then
+        selected_menu_index=${menu_history[-1]}
+        echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
+        menu_history=("${menu_history[@]::${#menu_history[@]}-1}")
+        selected_menu_name="${selected_menu_name%__*__*}"
+        echo "$selected_menu_name" > /tmp/wepn_selected_menu_name
+        goto_menu "$selected_menu_name"
+      # has function defined
+      elif type "fn_$selected_menu_name" >/dev/null 2>&1; then
+        menu_history+=($selected_menu_index)
+        # also has menu array defined
+        if [[ $(declare -p "$selected_menu_name" 2>/dev/null) =~ "declare -a" ]]; then
+          selected_menu_index=0
+          echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
+        else
+          clear_menu
+          [ $selected_menu_name != "menu__exit" ] && print_menu_header
+          print y y ""
+        fi
+        eval "fn_$selected_menu_name"
+      # only has menu array defined
+      elif [[ $(declare -p "$selected_menu_name" 2>/dev/null) =~ "declare -a" ]]; then
+        menu_history+=($selected_menu_index)
+        selected_menu_index=0
+        echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
+        goto_menu "$selected_menu_name"
       else
-          separator
+        # do nothing and re-render current menu
+        selected_menu_name="${selected_menu_name%__*}"
+        echo "$selected_menu_name" > /tmp/wepn_selected_menu_name
+        goto_menu "$selected_menu_name"
       fi
-
-#      separator
-		fi
-	done
-	separator
+    fi
 }
 
 run_menu(){
 	selected_menu="$1"
 
-
-
 	eval "local menu_items=(\"\${$selected_menu[@]}\")"
+	# add Back item to menu items
+  if [ "$selected_menu" != "menu" ]; then
+    # first item is separator
+    if [[ "${menu_items[0]}" =~ ^[-─━=#▦]$ ]]; then
+      menu_items=("Back" "${menu_items[@]}")
+    else
+      menu_items=("Back" "─" "${menu_items[@]}")
+    fi
+  fi
 	local menu_size="${#menu_items[@]}"
 	local menu_limit=$((menu_size - 1))
-
-
+width=$(tput cols)
 	print_menu
 
-	while IFS=$'\n' read -rsn1 input
-	do
+	while IFS=$'\n' read -rsn1 input; do
 
 	  # backspace
-	  if [ "$(printf '%d' "'$input")" -eq 127 ]; then
-	    menu_handler "menu"
+	  if [ "$(printf '%d' "'$input")" -eq 127 ] && [ "$selected_menu" != "menu" ]; then
+	    selected_menu_index=${menu_history[-1]}
+	    echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
+	    menu_history=("${menu_history[@]::${#menu_history[@]}-1}")
+	    selected_menu_name="${selected_menu_name%__*}"
+	    goto_menu "$selected_menu_name"
 	  fi
 
-		case "$input"
-		in
+		case "$input" in
 			$'\x1B')  # ESC ASCII code (https://dirask.com/posts/ASCII-Table-pJ3Y0j)
 				read -rsn1 input
 				if [ "$input" = "[" ]  # occurs before arrow code
 				then
 					read -rsn1 input
-					case "$input"
-					in
+					case "$input" in
 						A)  # Up Arrow
-
-							if [ "$selected_menu_index" -ge 1 ]
-							then
+							if [ "$selected_menu_index" -ge 1 ]; then
 							  tobe_selected_menu_item="${menu_items[$((selected_menu_index - 1))]}"
-
-							  if [ "$tobe_selected_menu_item" != "-" ]; then
+							  if [[ ! "$tobe_selected_menu_item" =~ ^[-─━=#▦] ]]; then
 							    selected_menu_index=$((selected_menu_index - 1))
+							    print_menu
 							  else
-                  selected_menu_index=$((selected_menu_index - 2))
+                  for (( i = $((selected_menu_index - 1)); i >= 0; --i )); do
+                    if [[ ! "${menu_items[i]}" =~ ^[-─━=#▦] ]]; then
+                      selected_menu_index="$i"
+                      print_menu
+                      break
+                    fi
+                  done
 							  fi
-                print_menu
-
+#                  selected_menu_index=$((selected_menu_index - 2))
+                echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
 							fi
 							;;
 						B)  # Down Arrow
-
-							if [ "$selected_menu_index" -lt "$menu_limit" ]
-							then
+							if [ "$selected_menu_index" -lt "$menu_limit" ]; then
 							  tobe_selected_menu_item="${menu_items[$((selected_menu_index + 1))]}"
-
-								if [ "$tobe_selected_menu_item" != "-" ]; then
+								if [[ ! "$tobe_selected_menu_item" =~ ^[-─━=#▦] ]]; then
                   selected_menu_index=$((selected_menu_index + 1))
+                  print_menu
                 else
-                  selected_menu_index=$((selected_menu_index + 2))
+                  for (( i = $((selected_menu_index + 1)); i < $menu_size; ++i )); do
+                    if [[ ! "${menu_items[i]}" =~ ^[-─━=#▦] ]]; then
+                      selected_menu_index="$i"
+                      print_menu
+                      break
+                    fi
+                  done
                 fi
-                print_menu
+#                  selected_menu_index=$((selected_menu_index + 2))
+                echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
 							fi
 							;;
 						C)  # Right Arrow
-              selected_menu_index=$((${#menu_items[@]} - 1))
-              print_menu
+#						  if [ "${menu_items[((menu_size - 1))]}" != \#* ] && [ "$selected_menu_index" != "$((menu_size - 1))" ]; then
+              if [[ "${menu_items[((menu_size - 1))]}" != \#* ]] && [ "$selected_menu_index" != "$((menu_size - 1))" ]; then
+                selected_menu_index=$((${#menu_items[@]} - 1))
+                echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
+                print_menu
+              fi
 							;;
 						D)  # Left Arrow
-              selected_menu_index=0
-              print_menu
+						  if [ "$selected_menu_index" != 0 ]; then
+                selected_menu_index=0
+                echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
+                print_menu
+              fi
 							;;
 					esac
 				fi
-				read -rsn5 -t 0.1  # flushing stdin
+#				read -rsn5 -t 0.1  # flushing stdin
 				;;
 			"")  # Enter key
 				return "$selected_menu_index"
 				;;
+		  [hH])  # H key
+		      if [ "$selected_menu" != "menu" ]; then
+		        selected_menu="$(echo "$selected_menu" | cut -d '_' -f -3)"
+		        selected_menu_index=0
+		        echo "$selected_menu_index" > /tmp/wepn_selected_menu_index
+		        menu_history=("${menu_history[0]}")
+		        return "$selected_menu_index"
+		      fi
+				;;
 		  [qQ])  # Q key
-    			fn_menu_21
+    			fn_menu__exit
     		;;
 		esac
 	done
+
+
+  # kill resize pid
+#	kill "$resize_pid"
 }
 
-menu_handler(){
-#    echo "$selected_menu $selected_menu_index -> $1" >> menu
+print_menu_header(){
+  tput clear
+  echo -e "\033[38;5;245m⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒⬒\033[0m"
 
-    if [ "$selected_menu" = "menu" ] && [ "$1" != "menu" ]; then
-      reserved_selected_menu_index=$selected_menu_index
-      selected_menu_index=0
-    fi
+  if [ $selected_menu_name == "menu" ]; then
+    print center "[bold][blue]WePN MASTER SCRIPT"
+  else
+    menu_header="$selected_menu_name"
+    # uppercase
+    menu_header=$(echo $menu_header | tr '[:lower:]' '[:upper:]')
+    # replace MENU__ with WePN >
+    menu_header="${menu_header//MENU__/\WePN [gray]>[blue] }"
+    # replace __ with >
+    menu_header="${menu_header//__/ [gray]>[blue] }"
+    # replace _ with space
+    menu_header="${menu_header//_/ }"
+    print center "[bold][blue]$menu_header"
+    menu_header_unformatted=$(echo "$(print "$menu_header")" | sed -E 's/\x1B\[[0-9;]*[mGK]//g')
+    menu_header_height=$(( ("${#menu_header_unformatted}" + width - 1) / width ))
 
-   if [ "$selected_menu" != "menu" ] && [ "$1" = "menu" ]; then
-        selected_menu_index=$reserved_selected_menu_index
-    fi
+  fi
 
-    run_menu "$1"
-    selected_menu_index_result="$?"
-
-    function_name="fn_$selected_menu""_$selected_menu_index_result"
-
-#    echo $function_name
-#    sleep 2
-#     function_name=$(function_name "$input")
-
-    if type "$function_name" >/dev/null 2>&1; then
-      eval "$function_name"
-    fi
+  echo -e "\033[38;5;245m⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓⬓\033[0m"
 }
 
-function_name() {
-  local input_string="$1"
-  local modified_string="${input_string// /_}" # Replace spaces with underscores
-  modified_string="${modified_string,,}"       # Convert to lowercase
-  modified_string="fn_$modified_string"        # Add "fn_" prefix
-  echo "$modified_string"
+print_menu(){
+#  check_terminal_size
+  clear_menu
+
+  eval "local menu_items=(\"\${$selected_menu[@]}\")"
+  # add Back item to menu items
+  if [ "$selected_menu" != "menu" ]; then
+    # first item is separator
+    if [[ "${menu_items[0]}" =~ ^[-─━=#▦]$ ]]; then
+      menu_items=("Back" "${menu_items[@]}")
+    else
+      menu_items=("Back" "─" "${menu_items[@]}")
+    fi
+  fi
+  local menu_size="${#menu_items[@]}"
+  global_menu_size=$menu_size
+
+  # to add text below the menu for specific menu
+  #  [ "$selected_menu" == "menu__firewall__rules" ] && ((global_menu_size+=2))
+
+
+  # menu changed?
+  if [ "$current_menu" != "$selected_menu" ]; then
+
+    print_menu_header
+    reserved_terminal_height=$(tput lines)
+
+    current_menu="$selected_menu"
+
+    prebuilt_menu_items=()
+    prebuilt_menu_items_selected=()
+
+
+  # build menu items once
+  	for (( i = 0; i < $menu_size; ++i )); do
+      #------------------------------------------------------------- generate menu name
+
+      # remove ANSI Escape Codes
+      menu_item_unformatted=$(echo "${menu_items[i]}" | sed -E 's/\x1B\[[0-9;]*[mGK]//g')
+      # remove [bold][white][green]... color codes
+      styles=(end bold normal white gray grayd red redl redll green blue yellow cyan)
+
+      styles_expr=$(printf 's/\\[%s\\]//g;' "${styles[@]}")
+      menu_item_unformatted=$(echo "$menu_item_unformatted" | sed -e "$styles_expr")
+#      menu_item_unformatted=$(echo "$menu_item_unformatted" | sed 's/\[[^]]*\]//g')
+
+      menu_name="$menu_item_unformatted"
+      # lowercase
+      menu_name="${menu_name,,}"
+      # replace spaces with _
+      menu_name="${menu_name// /_}"
+      # split by | and chose first part
+      menu_name="${menu_name%%|*}"
+      # split by & and chose first part
+      menu_name="${menu_name%%&*}"
+      # combine with path
+      menu_name="$selected_menu_name""__$menu_name"
+
+
+      # has menu array defined
+      if [[ $(declare -p "$menu_name" 2>/dev/null) =~ "declare -a" ]]; then
+        menu_right_icon=" > "
+        spaces=$((width - ${#menu_item_unformatted} - 5))
+      else
+        menu_right_icon=" "
+        spaces=$((width - ${#menu_item_unformatted} - 3))
+      fi
+
+      #------------------------------------------------------------- generate menu items
+      menu_item="${menu_items[i]}"
+
+
+      # default icons
+      icon="○"
+      [[ $menu_item == \#* ]] && icon=" "
+      # selected icons
+      icon_selected="●"
+      #[ -n "$PUTTY" ] && icon_selected="●"
+
+
+      # Replace & with space
+      menu_item="${menu_item//&/ }"
+
+      # Remove #
+      menu_item="${menu_item//#/}"
+
+      # is multipart?
+      if [[ $menu_item =~ \| ]]; then
+        # Replace | with spaces
+        menu_item=$(echo "$menu_item" | sed "s/|/$(printf '%*s' $spaces)/g")
+        menu_item_unformatted=$(echo "$menu_item_unformatted" | sed "s/|/$(printf '%*s' $spaces)/g")
+      elif ! [[ "$menu_item" =~ ^[-─━=▦]$ ]] && [ "$menu_item" != "Back" ]; then
+        # add spaces to the rest
+        menu_item="$menu_item$(printf '%*s' $((spaces-1)))"
+        menu_item_unformatted="$menu_item_unformatted$(printf '%*s' $((spaces-1)))"
+      fi
+
+
+      # back
+      if [ "$menu_item" == "Back" ]; then
+        # not selected
+        prebuilt_menu_items+=("\033[38;5;245m < \e[1m\e[97mBack\e[0m")
+        # selected
+        printf -v item "%-$((width))b" " < Back"
+        prebuilt_menu_items_selected+=("\e[48;5;27m\e[1m\e[97m${item}\e[0m")
+      # separator
+      elif [[ "$menu_item" =~ ^[-─━=▦]$ ]]; then
+        prebuilt_menu_items+=($(separator "$menu_item"))
+        prebuilt_menu_items_selected+=($(separator "$menu_item"))
+      # regular
+      else
+        # Settings icons
+        [[ "${menu_item// /}" == "Settings" ]] && icon="○" && icon_selected="⚙"
+
+        # colorize if it contains [bold][white][green]... color codes
+        if [[ "$menu_item" =~ \[[^]]*\] ]]; then
+          menu_item=$(print n "$menu_item")
+        fi
+
+        # not selected
+        printf -v item "%-$((width-3-${#menu_right_icon}+${#menu_item}-${#menu_item_unformatted}))b" "$menu_item"
+        prebuilt_menu_items+=("\033[38;5;245m $icon \033[0m\e[1m\e[97m$item\033[38;5;245m$menu_right_icon\e[0m")
+
+
+#        menu_item=$(echo "$menu_item" | sed 's/\(\[red\]\|\[green\]\|\[blue\]\)/[white]/g')
+
+
+        # selected
+        printf -v item "%-$((width-3-${#menu_right_icon}+${#menu_item}-${#menu_item_unformatted}))b" "$menu_item"
+        prebuilt_menu_items_selected+=("\e[48;5;27m\e[1m\e[97m $icon_selected ${item}\e[48;5;27m\e[1m\e[97m$menu_right_icon\e[0m")
+      fi
+
+  	done
+  fi
+
+
+
+  # cut menu to fit screen height
+  from_index=0
+  to_index=$menu_size
+  terminal_height=$(tput lines)
+  header_height="$((menu_header_height + 4))"
+
+
+  if [ "$((menu_size + header_height))" -gt "$terminal_height" ]; then
+
+    # catch resize once
+    if [ "$reserved_terminal_height" != "$terminal_height" ]; then
+      print_menu_header
+      reserved_terminal_height="$terminal_height"
+    fi
+
+    if [ "$selected_menu_index" -ge "$((terminal_height - header_height))" ]; then
+       from_index=$((selected_menu_index - terminal_height + header_height + 1))
+    fi
+    to_index=$((terminal_height + from_index - header_height))
+#    echo "$terminal_height $menu_size $selected_menu_index $from_index $to_index" >> log
+    last_item="${menu_items[ to_index - 1]}"
+#    echo $last_item >> log
+    if [[ "$last_item" =~ ^[-─━=▦]$ ]]; then
+      ((to_index--))
+    fi
+    global_menu_size=$((to_index-from_index))
+  fi
+
+
+
+
+
+  # loop over menu items and print
+	for (( j = $from_index; j < $to_index; ++j ))
+	do
+	  # selected
+		if [ "$j" = "$selected_menu_index" ]; then
+		  echo -e "${prebuilt_menu_items_selected[j]}"
+    # not selected
+    else
+      echo -e "${prebuilt_menu_items[j]}"
+		fi
+	done
+
+	separator
+
+  # add text below the menu for specific menu
+#  if [ "$selected_menu" == "menu__firewall__rules" ]; then
+#    if [ "$selected_menu_index" -gt 0 ] && [ "$selected_menu_index" -lt "$((menu_size - 3))" ]; then
+#      echo
+#      print "[bold][cyan]Press Enter to delete the rule"
+#    else
+#      echo
+#      echo
+#    fi
+#  fi
+
 }
-#----------------------------------------------------------------------------------------------------------------------- menu
-#menu=(
-#"Firewall"
-#"-"
-#"Exit"
-#)
 
-menu=(
-"Block Iranian Websites"
-#"Block Iranian Banking and Payment Websites Only"
-#"Block Iranian Government Websites Only"
-#"Block Iranian Social Media Websites Only"
-#"Block Iranian Media Websites Only"
-"Allow Tunneling Server"
-"Allow Arvancloud CDN"
-"Allow Derakcloud CDN"
-"-"
-"Block Porn Websites"
-"Block Speedtest"
-"-"
-"Block Specific Website"
-"Allow Specific Website"
-"-"
-"Block Attacks from China"
-"Block Attacks from Russia"
-"Block Individual Attacker"
-"-"
-"Block IP Scan"
-"Block BitTorrent"
-#"Block Ads"
-"-"
-"View Rules"
-"Clear Rules"
-"-"
-"Exit"
-)
-
-menu_system=(
-"Back"
-"-"
-"sys info"
-"cpu and ram and hard"
-"Checkup"
-"Enable root"
-"set dns"
-"hostname"
-"Resolve apt locked"
-"Set time zone"
-)
-
-menu_network=(
-"Back"
-"-"
-"disable ipv6"
-"monitor"
-"Spoof Server IP Address"
-"Google Recapcha"
-"monitor port data usage"
-"Install Cloudflare Warp"
-"Install BBR"
-"sniff"
-"find subdomains of a domain"
-"tunnel"
-)
+back_to_menu(){
+  # ask to hit enter to continue
+  if [ "$1" = "enter" ]; then
+    waiting_to_press_key=true
+    echo "$waiting_to_press_key" > /tmp/wepn_waiting_to_press_key
+    print y y ""
+    print y y "[bold][cyan]Press Enter to continue..."
+    echo
+    read -s -p ""
+    waiting_to_press_key=false
+    echo "$waiting_to_press_key" > /tmp/wepn_waiting_to_press_key
+    printed=""
+    echo "$printed" > /tmp/wepn_printed
+  fi
 
 
+  global_menu_size=0
+  menu_history=("${menu_history[@]::${#menu_history[@]}-1}")
+  selected_menu_name="${selected_menu_name%__*}"
+  echo "$selected_menu_name" > /tmp/wepn_selected_menu_name
+  clear
+  print_menu_header
+  _selected_menu="$selected_menu"
+  selected_menu=""
+  goto_menu "$_selected_menu"
+}
 
-
-
-menu_ssh=(
-"Back"
-"-"
-"Change SSH Port"
-"Optimize SSH Server"
-"Enable UDP Gateway"
-"-"
-"View Users"
-"Add User"
-"Remove User"
-
-"limit user count per account"
-)
-
-
+clear_menu(){
+  if [ $global_menu_size -ne 0 ]; then
+     tput cuu $((global_menu_size+1)) && tput ed
+#     global_menu_size=0
+  fi
+}
 #----------------------------------------------------------------------------------------------------------------------- menu functions
 #------------------------------------------------------------ block iranian websites
-fn_menu_0(){
-  clear_menu
+fn_menu__firewall__websites__iranian_websites(){
   install_packages iptables ipset
 
   if ! ipset list wepn_iranian_websites_set &> /dev/null; then
@@ -1284,6 +1777,7 @@ fn_menu_0(){
     if [ $response -eq 1 ]; then
       load_iran_ips
       print "[blue]Blocking all Iranian websites..."
+      echo
       create_or_add_to_table wepn_iranian_websites BLOCK_WEBSITE "${iran_ips[@]}"
       echo
       echo
@@ -1293,124 +1787,12 @@ fn_menu_0(){
       back_to_menu
     fi
   else
-    print "[bold][green]Iranian websites are already blocked."
+    print y y "[bold][green]Iranian websites are already blocked."
     back_to_menu enter
   fi
 }
-#------------------------------------------------------------ allow tunneling server
-fn_menu_1(){
-  clear_menu
-  install_packages iptables ipset
-
-  if ipset list wepn_iranian_websites_set &> /dev/null; then
-
-      while true; do
-
-          show_cursor
-          read -r -p  "$(print "[bold][blue]Please enter the IP address of your Iranian Tunneling server which you are using to tunnel to this server (leave blank if you are not tunneling and hit Enter): ")" response
-          clear_logs 3
-          hide_cursor
-
-          # left blank
-          if [ -z "$response" ]; then
-            print "[bold][yellow]Left blank."
-            break
-          # ip is valid (1.1.1.1  1.1.1./24)
-         elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[12][0-9]|3[0-2]))?$ ]]; then
-            if ipset list wepn_tunnel_set | grep -q "$response"; then
-              print "[bold][green]This server is already whitelisted."
-              break
-            else
-              print "[blue]Whitelisting your Tunneling server ([bold][green]$response[end][blue])..."
-              tunnel_ips=("$response")
-              create_or_add_to_table wepn_tunnel ALLOW_WEBSITE "${tunnel_ips[@]}"
-              clear_logs 1
-              print "[bold][green]Your Tunneling server is whitelisted."
-              break
-            fi
-          else
-            print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
-            sleep 2
-            clear_logs 1
-          fi
-      done
-
-      back_to_menu enter
-
-  else
-    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]your Iranian Server [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
-    back_to_menu enter
-  fi
-}
-#------------------------------------------------------------ allow arvancloud
-fn_menu_2(){
-  clear_menu
-  install_packages iptables ipset
-
-  if ipset list wepn_iranian_websites_set &> /dev/null; then
-    if ! ipset list wepn_arvancloud_set &> /dev/null; then
-      load_arvancloud_ips
-
-      print "[blue]If you have block Iranian websites while tunneling through Arvancloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Arvancloud."
-      echo
-      print "[bold][blue]Are you sure you want to whitelist Arvancloud?"
-      confirmation_dialog
-      response="$?"
-      clear_logs 5
-      if [ $response -eq 1 ]; then
-        print "[blue]Whitelisting Arvancloud..."
-        create_or_add_to_table wepn_arvancloud ALLOW_WEBSITE "${arvancloud_ips[@]}"
-        clear_logs 1
-        print "[bold][green]Arvancloud is whitelisted."
-        back_to_menu enter
-      else
-        back_to_menu
-      fi
-    else
-      print "[bold][green]Arvancloud is already whitelisted."
-      back_to_menu enter
-    fi
-  else
-    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]Arvancloud [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
-    back_to_menu enter
-  fi
-}
-#------------------------------------------------------------ allow derakcloud
-fn_menu_3(){
-  clear_menu
-  install_packages iptables ipset
-
-  if ipset list wepn_iranian_websites_set &> /dev/null; then
-  if ! ipset list wepn_derakcloud_set &> /dev/null; then
-
-    print "[blue]If you have block Iranian websites while tunneling through Derakcloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Derakcloud."
-    echo
-    print "[bold][blue]Are you sure you want to whitelist Derakcloud?"
-    confirmation_dialog
-    response="$?"
-    clear_logs 5
-    if [ $response -eq 1 ]; then
-      load_derakcloud_ips
-      print "[blue]Whitelisting Derakcloud..."
-      create_or_add_to_table wepn_derakcloud ALLOW_WEBSITE "${derakcloud_ips[@]}"
-      clear_logs 1
-      print "[bold][green]Derakcloud is whitelisted."
-      back_to_menu enter
-    else
-      back_to_menu
-    fi
-  else
-    print "[bold][green]Derakcloud is already whitelisted."
-    back_to_menu enter
-  fi
-  else
-    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]Derakcloud [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
-    back_to_menu enter
-  fi
-}
-#------------------------------------------------------------ block porn websites
-fn_menu_5(){
-  clear_menu
+#------------------------------------------------------------ porn websites
+fn_menu__firewall__websites__porn_websites(){
   install_packages iptables ipset
 
   if ! ipset list wepn_porn_websites_set &> /dev/null; then
@@ -1422,6 +1804,7 @@ fn_menu_5(){
     if [ $response -eq 1 ]; then
       load_porn_ips
       print "[blue]Blocking Porn Websites..."
+      echo
       create_or_add_to_table wepn_porn_websites BLOCK_WEBSITE "${porn_ips[@]}"
       echo
       echo
@@ -1436,8 +1819,8 @@ fn_menu_5(){
   fi
 
 }
-#------------------------------------------------------------ block speedtest
-fn_menu_6(){
+#------------------------------------------------------------ speedtest
+fn_menu__firewall__websites__speedtest(){
 
   domains=(
   speedtest.net
@@ -1455,7 +1838,6 @@ fn_menu_6(){
   speedtest_ips=()
 
 
-  clear_menu
   install_packages iptables ipset dnsutils
 
   if ! ipset list wepn_speedtest_set &> /dev/null; then
@@ -1487,9 +1869,116 @@ fn_menu_6(){
     back_to_menu enter
   fi
 }
+#------------------------------------------------------------ tunneling servers
+fn_menu__firewall__allow_tunneling_server(){
+  install_packages iptables ipset
+
+  if ipset list wepn_iranian_websites_set &> /dev/null; then
+
+      while true; do
+
+          show_cursor
+          read -r -p  "$(print "[bold][blue]Please enter the IP address of your Iranian Tunneling Server which you are using to tunnel to this server: ")" response
+          clear_logs 2
+          hide_cursor
+
+          # left blank
+          if [ -z "$response" ]; then
+            print "[bold][yellow]Left blank!"
+            break
+          # ip is valid (1.1.1.1  1.1.1./24)
+         elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[12][0-9]|3[0-2]))?$ ]]; then
+            if ipset list wepn_tunnel_set &> /dev/null && ipset list wepn_tunnel_set | grep -q "$response"; then
+              print "[bold][green]This server is already whitelisted."
+              break
+            else
+              print "[blue]Whitelisting your Tunneling server ([bold][green]$response[end][blue])..."
+              tunnel_ips=("$response")
+              create_or_add_to_table wepn_tunnel ALLOW_WEBSITE "${tunnel_ips[@]}"
+              clear_logs 1
+              print "[bold][green]Your Tunneling server is whitelisted."
+              break
+            fi
+          else
+            print "[bold][red]IP address [bold][yellow]$response [bold][red]is not valid. Please try again."
+            sleep 2
+            clear_logs 1
+          fi
+      done
+
+      back_to_menu enter
+
+  else
+    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]your Iranian Server [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ arvancloud
+fn_menu__firewall__allow_arvancloud_cdn(){
+  install_packages iptables ipset
+
+  if ipset list wepn_iranian_websites_set &> /dev/null; then
+    if ! ipset list wepn_arvancloud_set &> /dev/null; then
+      load_arvancloud_ips
+
+      print "[blue]If you have block Iranian websites while tunneling through Arvancloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Arvancloud."
+      echo
+      print "[bold][blue]Are you sure you want to whitelist Arvancloud?"
+      confirmation_dialog
+      response="$?"
+      clear_logs 5
+      if [ $response -eq 1 ]; then
+        print "[blue]Whitelisting Arvancloud..."
+        create_or_add_to_table wepn_arvancloud ALLOW_WEBSITE "${arvancloud_ips[@]}"
+        clear_logs 1
+        print "[bold][green]Arvancloud is whitelisted."
+        back_to_menu enter
+      else
+        back_to_menu
+      fi
+    else
+      print "[bold][green]Arvancloud is already whitelisted."
+      back_to_menu enter
+    fi
+  else
+    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]Arvancloud [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
+    back_to_menu enter
+  fi
+}
+#------------------------------------------------------------ derakcloud
+fn_menu__firewall__allow_derakcloud_cdn(){
+  install_packages iptables ipset
+
+  if ipset list wepn_iranian_websites_set &> /dev/null; then
+  if ! ipset list wepn_derakcloud_set &> /dev/null; then
+
+    print "[blue]If you have block Iranian websites while tunneling through Derakcloud CDN or servers on port [bold][green]443[normal][blue], it is imperative to whitelist Derakcloud."
+    echo
+    print "[bold][blue]Are you sure you want to whitelist Derakcloud?"
+    confirmation_dialog
+    response="$?"
+    clear_logs 5
+    if [ $response -eq 1 ]; then
+      load_derakcloud_ips
+      print "[blue]Whitelisting Derakcloud..."
+      create_or_add_to_table wepn_derakcloud ALLOW_WEBSITE "${derakcloud_ips[@]}"
+      clear_logs 1
+      print "[bold][green]Derakcloud is whitelisted."
+      back_to_menu enter
+    else
+      back_to_menu
+    fi
+  else
+    print "[bold][green]Derakcloud is already whitelisted."
+    back_to_menu enter
+  fi
+  else
+    print "[bold][blue]As of your current policy, since Iranian websites are not yet blocked, [green]Derakcloud [blue]is not present in the blacklist. Therefore, there is no need to whitelist it."
+    back_to_menu enter
+  fi
+}
 #------------------------------------------------------------ block specific website
-fn_menu_8(){
-  clear_menu
+fn_menu__firewall__block_specific_website(){
   install_packages iptables ipset
 
   while true; do
@@ -1501,7 +1990,7 @@ fn_menu_8(){
 
     if [ -z "$domain" ]; then
       # left blank
-      print "[bold][yellow]Left blank."
+      print "[bold][yellow]Left blank!"
       break
       # is valid domain name?
     elif [[ $domain =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,10})+$ ]]; then
@@ -1584,9 +2073,8 @@ fn_menu_8(){
 
   back_to_menu enter
 }
-#------------------------------------------------------------ whitelist specific website
-fn_menu_9(){
-  clear_menu
+#------------------------------------------------------------ allow specific website
+fn_menu__firewall__allow_specific_website(){
   install_packages iptables ipset
 
 
@@ -1601,7 +2089,7 @@ fn_menu_9(){
 
       if [ -z "$domain" ]; then
         # left blank
-        print "[bold][yellow]Left blank."
+        print "[bold][yellow]Left blank!"
         break
         # is valid domain name?
       elif [[ $domain =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,10})+$ ]]; then
@@ -1693,9 +2181,8 @@ fn_menu_9(){
     back_to_menu enter
   fi
 }
-#------------------------------------------------------------ block External Attacks from China
-fn_menu_11(){
-  clear_menu
+#------------------------------------------------------------ block Attacks from China
+fn_menu__firewall__block_attacks_from_china(){
   install_packages iptables ipset
 
   if ! ipset list wepn_china_set &> /dev/null; then
@@ -1706,6 +2193,7 @@ fn_menu_11(){
     if [ $response -eq 1 ]; then
       load_china_ips
       print "[blue]Blocking Chinese attackers..."
+      echo
       create_or_add_to_table wepn_china BLOCK_ATTACK "${china_ips[@]}"
       echo
       echo
@@ -1720,7 +2208,7 @@ fn_menu_11(){
   fi
 }
 #------------------------------------------------------------ block Attacks from Russia
-fn_menu_12(){
+fn_menu__firewall__block_attacks_from_russia(){
   clear_menu
   install_packages iptables ipset
 
@@ -1733,6 +2221,7 @@ fn_menu_12(){
     if [ $response -eq 1 ]; then
       load_russia_ips
       print "[blue]Blocking Russian attackers..."
+      echo
       create_or_add_to_table wepn_russia BLOCK_ATTACK "${russia_ips[@]}"
       echo
       echo
@@ -1747,8 +2236,7 @@ fn_menu_12(){
   fi
 }
 #------------------------------------------------------------ block Individual Attacker
-fn_menu_13(){
-  clear_menu
+fn_menu__firewall__block_individual_attacker(){
   install_packages iptables ipset
 
   while true; do
@@ -1760,7 +2248,7 @@ fn_menu_13(){
 
       if [ -z "$response" ]; then
         # left blank
-        print "[bold][yellow]Left blank."
+        print "[bold][yellow]Left blank!"
         break
       # is valid IP address?
       elif [[ $response =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[12][0-9]|3[0-2]))?$ ]]; then
@@ -1778,8 +2266,7 @@ fn_menu_13(){
   back_to_menu enter
 }
 #------------------------------------------------------------ block IP Scan
-fn_menu_15(){
-  clear_menu
+fn_menu__firewall__block_ip_scan(){
   install_packages iptables ipset
 
   if ! iptables -nL wepn_ipscan_chain >/dev/null 2>&1; then
@@ -1804,8 +2291,7 @@ fn_menu_15(){
   fi
 }
 #------------------------------------------------------------ block BitTorrent
-fn_menu_16(){
-  clear_menu
+fn_menu__firewall__block_bittorrent(){
   install_packages iptables ipset
 
   if ! iptables -nL wepn_bittorrent_chain >/dev/null 2>&1; then
@@ -1831,91 +2317,180 @@ fn_menu_16(){
     back_to_menu enter
   fi
 }
-#------------------------------------------------------------ View Rules
-fn_menu_18(){
+#------------------------------------------------------------ Rules
+fn_menu__firewall__settings__view_all_rules(){
   install_packages iptables ipset
   clear_menu
-  view_rules
-}
-view_rules(){
 
-    iran_ips=($(ipset -q list wepn_iranian_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
-    tunnel_ips=($(ipset -q list wepn_tunnel_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
-    arvancloud_ips=($(ipset -q list wepn_arvancloud_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
-    derakcloud_ips=($(ipset -q list wepn_derakcloud_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
-    porn_ips=($(ipset -q list wepn_porn_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
-    speedtest_ips=($(ipset -q list wepn_speedtest_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
-    _block_websites=($(ipset -q list wepn_block_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $3}'))
-    block_websites=($(printf "%s\n" "${_block_websites[@]}" | sort -u))
-    _allow_websites=($(ipset -q list wepn_allow_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $3}'))
-    allow_websites=($(printf "%s\n" "${_allow_websites[@]}" | sort -u))
-    china_ips=($(ipset -q list wepn_china_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
-    russia_ips=($(ipset -q list wepn_russia_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
-    attacker_ips=($(ipset -q list wepn_attackers_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+  iran_ips=($(ipset -q list wepn_iranian_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+  tunnel_ips=($(ipset -q list wepn_tunnel_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+  arvancloud_ips=($(ipset -q list wepn_arvancloud_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+  derakcloud_ips=($(ipset -q list wepn_derakcloud_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+  porn_ips=($(ipset -q list wepn_porn_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+  speedtest_ips=($(ipset -q list wepn_speedtest_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+  _block_websites=($(ipset -q list wepn_block_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $3}'))
+  block_websites=($(printf "%s\n" "${_block_websites[@]}" | sort -u))
+  _allow_websites=($(ipset -q list wepn_allow_websites_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $3}'))
+  allow_websites=($(printf "%s\n" "${_allow_websites[@]}" | sort -u))
+  china_ips=($(ipset -q list wepn_china_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+  russia_ips=($(ipset -q list wepn_russia_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
+  attacker_ips=($(ipset -q list wepn_attackers_set | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $1}'))
 
 
 
 
-    any_rules=0
+  any_rules=0
+  num=0
+  rules=()
+  menu__firewall__settings__view_all_rules=()
 
-    [ ${#iran_ips[@]} -gt 0 ] &&  print n "[bold][white]Iranian Websites                                         [red]BLOCKED" && separator "-" && any_rules=1
 
-    for ip in "${tunnel_ips[@]}"; do
-      printf -v _spaces_for_tunnel "%-$((18 - ${#ip}))b" ""
-      [ ${#tunnel_ips[@]} -gt 0 ] &&  print n "[bold][white]Tunnel ([green]$ip[white])${_spaces_for_tunnel// /" "}                              [green]ALLOWED" && separator "-" && any_rules=1
+
+  if [ ${#iran_ips[@]} -gt 0 ]; then
+    ((num++))
+    rules+=(wepn_iranian_websites)
+    menu__firewall__settings__view_all_rules+=("#Iranian Websites|[red]BLOCKED")
+    menu__firewall__settings__view_all_rules+=("-")
+    any_rules=1
+  fi
+
+  for ip in "${tunnel_ips[@]}"; do
+    if [ ${#tunnel_ips[@]} -gt 0 ]; then
+      ((num++))
+      rules+=("wepn_tunnel$ip")
+      menu__firewall__settings__view_all_rules+=("$( print n "#Tunnel&([green]$ip[white])|[green]ALLOWED")")
+      menu__firewall__settings__view_all_rules+=("-")
+      any_rules=1
+    fi
+  done
+
+  if [ ${#arvancloud_ips[@]} -gt 0 ]; then
+    ((num++))
+    rules+=(wepn_arvancloud)
+    menu__firewall__settings__view_all_rules+=("#Arvancloud CDN|[green]ALLOWED")
+    menu__firewall__settings__view_all_rules+=("-")
+    any_rules=1
+  fi
+
+  if [ ${#derakcloud_ips[@]} -gt 0 ]; then
+    ((num++))
+    rules+=(wepn_derakcloud)
+    menu__firewall__settings__view_all_rules+=("#Derakcloud CDN|[green]ALLOWED")
+    menu__firewall__settings__view_all_rules+=("-")
+    any_rules=1
+  fi
+
+  if [ ${#porn_ips[@]} -gt 0 ]; then
+    ((num++))
+    rules+=(wepn_porn_websites)
+    menu__firewall__settings__view_all_rules+=("#Porn Websites|[red]BLOCKED")
+    menu__firewall__settings__view_all_rules+=("-")
+    any_rules=1
+  fi
+
+  if [ ${#speedtest_ips[@]} -gt 0 ]; then
+    rules+=(wepn_speedtest)
+    ((num++))
+    menu__firewall__settings__view_all_rules+=("#Speedtest|[red]BLOCKED")
+    menu__firewall__settings__view_all_rules+=("-")
+    any_rules=1
+  fi
+
+
+  if [ ${#block_websites[@]} -gt 0 ]; then
+    for item in "${block_websites[@]}"; do
+      domain=$(echo "$item" | tr -d '"')
+      rules+=("block_websites$domain")
+      ((num++))
+      menu__firewall__settings__view_all_rules+=("#$domain[white]|[red]BLOCKED")
+      menu__firewall__settings__view_all_rules+=("-")
+      any_rules=1
     done
-    [ ${#arvancloud_ips[@]} -gt 0 ] &&  print n "[bold][white]Arvancloud                                               [green]ALLOWED" && separator "-" && any_rules=1
-    [ ${#derakcloud_ips[@]} -gt 0 ] &&  print n "[bold][white]Deracloud                                                [green]ALLOWED" && separator "-" && any_rules=1
-    [ ${#porn_ips[@]} -gt 0 ] &&  print n "[bold][white]Porn Websites                                            [red]BLOCKED" && separator "-" && any_rules=1
-    [ ${#speedtest_ips[@]} -gt 0 ] &&  print n "[bold][white]Speedtest                                                [red]BLOCKED" && separator "-" && any_rules=1
+  fi
 
-    if [ ${#block_websites[@]} -gt 0 ]; then
-      for item in "${block_websites[@]}"; do
-        domain=$(echo "$item" | tr -d '"')
-        printf -v _spaces_for_domain "%-$((50 - ${#domain}))b" ""
-        print n "[bold][white]$domain[white]${_spaces_for_domain// /" "}       [red]BLOCKED" && separator "-" && any_rules=1
-      done
-    fi
+  if [ ${#allow_websites[@]} -gt 0 ]; then
+    for item in "${allow_websites[@]}"; do
+      domain=$(echo "$item" | tr -d '"')
+      rules+=("allow_websites$domain")
+      ((num++))
+      menu__firewall__settings__view_all_rules+=("#$domain[white]|[green]ALLOWED")
+      menu__firewall__settings__view_all_rules+=("-")
+      any_rules=1
+    done
+  fi
 
-    if [ ${#allow_websites[@]} -gt 0 ]; then
-      for item in "${allow_websites[@]}"; do
-        domain=$(echo "$item" | tr -d '"')
-        printf -v _spaces_for_domain "%-$((50 - ${#domain}))b" ""
-        print n "[bold][white]$domain[white]${_spaces_for_domain// /" "}       [green]ALLOWED" && separator "-" && any_rules=1
-      done
-    fi
+  if [ ${#china_ips[@]} -gt 0 ]; then
+    rules+=(china_ips)
+    ((num++))
+    menu__firewall__settings__view_all_rules+=("#Chinese Attackers|[red]BLOCKED")
+    menu__firewall__settings__view_all_rules+=("-")
+    any_rules=1
+  fi
 
-    [ ${#china_ips[@]} -gt 0 ] &&  print n "[bold][white]Chinese attackers                                        [red]BLOCKED" && separator "-" && any_rules=1
-    [ ${#russia_ips[@]} -gt 0 ] &&  print n "[bold][white]Russian attackers                                        [red]BLOCKED" && separator "-" && any_rules=1
+  if [ ${#russia_ips[@]} -gt 0 ]; then
+    rules+=(russia_ips)
+    ((num++))
+    menu__firewall__settings__view_all_rules+=("#Russian Attackers|[red]BLOCKED")
+    menu__firewall__settings__view_all_rules+=("-")
+    any_rules=1
+  fi
 
-    if [ ${#attacker_ips[@]} -gt 0 ]; then
-      for ip in "${attacker_ips[@]}"; do
-        printf -v _spaces_for_attacker "%-$((15 - ${#ip}))b" ""
-        print n "[bold][white]Attacker ([red]$ip[white])${_spaces_for_attacker// /" "}                               [red]BLOCKED" && separator "-" && any_rules=1
-      done
-    fi
-    iptables -L wepn_ipscan_chain >/dev/null 2>&1 &&  print n "[bold][white]IP Scans                                                 [red]BLOCKED" && separator "-" && [ "$any_rules" -ne 1 ] && any_rules=2
-    iptables -L wepn_bittorrent_chain >/dev/null 2>&1 &&  print n "[bold][white]BitTorrent                                               [red]BLOCKED" && separator "-" && [ "$any_rules" -ne 1 ] && any_rules=2
+  if [ ${#attacker_ips[@]} -gt 0 ]; then
+    for ip in "${attacker_ips[@]}"; do
+      rules+=(wepn_attackers)
+      ((num++))
+      menu__firewall__settings__view_all_rules+=("#Attacker&([red]$ip[white])|[red]BLOCKED")
+      menu__firewall__settings__view_all_rules+=("-")
+      any_rules=1
+    done
+  fi
+
+
+  if iptables -L wepn_ipscan_chain >/dev/null 2>&1; then
+    rules+=(wepn_ipscan)
+    ((num++))
+    menu__firewall__settings__view_all_rules+=("#IP Scans|[red]BLOCKED")
+    menu__firewall__settings__view_all_rules+=("-")
+    [ "$any_rules" -ne 1 ] && any_rules=2
+  fi
+
+  if iptables -L wepn_bittorrent_chain >/dev/null 2>&1; then
+    rules+=(wepn_bittorrent)
+    ((num++))
+    menu__firewall__settings__view_all_rules+=("#BitTorrent|[red]BLOCKED")
+    menu__firewall__settings__view_all_rules+=("-")
+    [ "$any_rules" -ne 1 ] && any_rules=2
+  fi
+
+  #remove the last line
+  menu__firewall__settings__view_all_rules=("${menu__firewall__settings__view_all_rules[@]:0:${#menu__firewall__settings__view_all_rules[@]}-1}")
 
 
 
-    if [ "$any_rules" -eq 0 ]; then
-      print "[bold][yellow]No rules applied yet."
-      back_to_menu enter
-    elif [ "$any_rules" -eq 1 ]; then
-      echo
-      print "[bold][blue]Interested in detailed rules?"
-      confirmation_dialog
-      response="$?"
-      clear_logs 2
-      if [ $response -eq 1 ]; then
-        view_rules_in_detail
-      fi
-      back_to_menu enter
-    else
-      back_to_menu enter
-    fi
+
+
+  if [ "$any_rules" -eq 0 ]; then
+    print "[bold][yellow]No rules applied yet."
+    back_to_menu enter
+  elif [ "$any_rules" -eq 1 ]; then
+    #replace the last line
+
+    goto_menu "menu__firewall__settings__view_all_rules"
+
+#      echo
+#      print "[bold][blue]Interested in detailed rules?"
+#      confirmation_dialog
+#      response="$?"
+#      clear_logs 2
+#      if [ $response -eq 1 ]; then
+#        view_rules_in_detail
+#      fi
+#      back_to_menu enter
+  else
+    back_to_menu enter
+  fi
 }
+
 view_rules_in_detail(){
   # Find the longest value in the arrays
   max_length=0
@@ -2064,13 +2639,23 @@ fn_menu_19(){
 
 }
 #------------------------------------------------------------------------------------------------------- Exit
-fn_menu_21(){
+fn_menu__exit(){
+
+  # stop background process
+  kill -9 "$terminal_resize_pid" 2>/dev/null
+  # delete all tmp shared vars
+  rm -rf /tmp/wepn_*
 
   # restore resolv.conf
   cp -f /etc/resolv.conf.bak /etc/resolv.conf 2>/dev/null || :
   rm -f /etc/resolv.conf.bak
 
+
+  clear_menu
+  selected_menu_name="menu"
+  print_menu_header
   echo
+
   width=$((width-2))
   exit_msg1="Appreciate your taking the time to play with my script."
   exit_msg2="I hope you found it helpful."
@@ -2121,7 +2706,7 @@ fn_menu_21(){
 
   show_cursor
 
-  exit 1
+  exit
 }
 #----------------------------------------------------------------------------------------------------------------------- iptables functions
 create_or_add_to_table(){
@@ -2259,8 +2844,6 @@ delete_table(){
 
 }
 
-
-
 clear_old_iptables_rules_and_run(){
 
   # rename wepn_specific_websites_chain and set to wepn_block_websites_chain and set
@@ -2348,16 +2931,18 @@ clear_old_iptables_rules_and_run(){
          fi
 
        clear_logs 2
-       menu_handler "menu"
+       goto_menu "menu"
      else
        clear_logs 5
-       fn_menu_21
+       fn_menu__exit
      fi
   else
-     menu_handler "menu"
+     goto_menu "menu"
   fi
 }
 #----------------------------------------------------------------------------------------------------------------------- prepare
+#check_terminal_size
+capture_terminal_resize
 prepare_screen
 create_wepn_service
 show_headers
@@ -2370,3 +2955,7 @@ set_run_mode
 #install_or_update_wepn
 #----------------------------------------------------------------------------------------------------------------------- RUN
 clear_old_iptables_rules_and_run
+
+
+
+
