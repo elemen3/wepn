@@ -524,144 +524,149 @@ update_upgrade_package_lists(){
   echo "nameserver 1.1.1.1" | tee /etc/resolv.conf >/dev/null
   echo "nameserver 8.8.8.8" | tee -a /etc/resolv.conf >/dev/null
 
+  #------------------------------------------------------------------- dpkg
+#
+#  print center "[bold][blue]..."
+#  print center "[bold][blue]..."
 
-
-  # Get the list of PIDs
   pids=($(top -b -n 1 | grep dpkg | awk '{ print $1 }'))
-  # Loop over the PIDs and kill them
+
   for pid in "${pids[@]}"; do
-      kill -9 "$pid"
+      kill -9 "$pid" 2>/dev/null
+      update_upgrade_package_lists
+      return
   done
 
-#  print center "[blue]Configuring dpkg..."
-  dpkg_configure_error=$(DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>&1 >/dev/null)
-  unset DEBIAN_FRONTEND
+  if dpkg --configure -a 2>&1 | grep -q "configuring packages"; then
+      print center "[blue]Configuring dpkg..."
+      DEBIAN_FRONTEND=noninteractive
+      dpkg --configure -a 2>&1 >/dev/null
+      unset DEBIAN_FRONTEND
+      clear_logs 1
+  fi
+
+
 #  sleep 1
 #  clear_logs 1
 
 
+  #------------------------------------------------------------------- update
   num_upgradable=$(apt list --upgradable 2>/dev/null | wc -l)
 
   # Check if the number of upgradable packages is greater than 1
   if [ "$num_upgradable" -gt 1 ]; then
-
     print center "[blue]Updating packages list..."
-    apt_update_error=$(apt update 2>&1 >/dev/null)
-    clear_logs 1
-
-    print center "[blue]Upgrading packages..."
-    apt_upgrade_error=$(apt upgrade -y 2>&1 >/dev/null)
+    apt_update_error=$(apt update 2>&1 >/dev/null);
+    apt_update_error="${apt_update_error//WARNING: apt does not have a stable CLI interface. Use with caution in scripts.}"
+    apt_update_error=$(echo "$apt_update_error" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//')
     clear_logs 1
   fi
 
 
-  if [[ -n "$apt_update_error" && ! "$apt_update_error" =~ "WARNING" ]]; then
-      echo
-      print "[bold][yellow]The 'apt update' encountered the following error(s):"
-      echo
-      print "[bold][red]$apt_update_error"
-      echo
-      # debian 11 error
-      if echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
-          print "[bold][blue]Would you like to resolve it?"
-          confirmation_dialog y
-          response="$?"
-          clear_logs 1
-          if [ $response -eq 1 ]; then
-            # Fix error for Debian 11
-            print "[blue]Resolving the problem..."
-            sleep 1
-            cp /etc/apt/sources.list /etc/apt/sources.list.bak
-            sed -i '/debian-security/d; /^deb-src/d' /etc/apt/sources.list
-            echo "deb http://security.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
-
-            print "[bold][green]The issue has been resolved :)"
-            sleep 1
-            # try again
-            print "[blue]Trying again..."
-            sleep 1
-            show_headers
-            update_upgrade_package_lists
-          else
-            print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-            fn_menu_21
-          fi
-      # certbot error
-      elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
-          print "[bold][blue]Would you like to resolve it?"
-          confirmation_dialog y
-          response="$?"
-          clear_logs 1
-          if [ $response -eq 1 ]; then
-            # Fix certbot error
-            print "[blue]Resolving the problem..."
-            sleep 1
-            rm -f /etc/apt/sources.list.d/certbot-*.list
-            print "[bold][green]The issue has been resolved :)"
-            sleep 1
-            # try again
-            print "[blue]Trying again..."
-            sleep 1
-            show_headers
-            update_upgrade_package_lists
-          else
-            print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-            #exit
-            fn_menu_21
-          fi
-      else
-        print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
-        fn_menu_21
-      fi
-  elif [[ -n "$apt_upgrade_error" && ! "$apt_upgrade_error" =~ "WARNING" ]]; then
-    echo
-    print "[bold][yellow]The 'apt upgrade' encountered the following error(s):"
-    echo
-    print "[bold][red]$apt_upgrade_error"
-    echo
-    if [[ $apt_upgrade_error == *"Could not get lock /var/lib/dpkg/lock-frontend. It is held by"* ]]; then
-        pid=$(echo "$apt_upgrade_error" | grep -oE 'process [0-9]+' | awk '{print $2}')
-        print "[bold][blue]Would you like to kill the proccess [yellow]$pid[blue]?"
+  if [[ -n "$apt_update_error" ]]; then
+    if [[ $apt_update_error == *"Could not get lock /var/lib/apt/lists/lock. It is held by"* ]]; then
+      pid=$(echo "$apt_update_error" | grep -oE 'process [0-9]+' | awk '{print $2}')
+      kill -9 "$pid" 2>/dev/null
+      update_upgrade_package_lists
+      return
+    # debian 11 error
+    elif echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
+        echo
+        print "[bold][yellow]The 'apt update' encountered the following error(s):"
+        echo
+        print "[bold][red]$apt_update_error"
+        echo
+        print "[bold][blue]Would you like to resolve it?"
         confirmation_dialog y
         response="$?"
-        clear_logs 2
+        clear_logs 1
         if [ $response -eq 1 ]; then
-          kill -9 $pid
-          echo
-          print "[bold][green]Process [yellow]$pid[green] is killed."
+          # Fix error for Debian 11
+          print "[blue]Resolving the problem..."
+          sleep 1
+          cp /etc/apt/sources.list /etc/apt/sources.list.bak
+          sed -i '/debian-security/d; /^deb-src/d' /etc/apt/sources.list
+          echo "deb http://security.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
+
+          print "[bold][green]The issue has been resolved :)"
+          sleep 1
+          # try again
           print "[blue]Trying again..."
           sleep 1
-          logo_shown=false
-          show_headers
           update_upgrade_package_lists
+          return
         else
-          fn_menu_21
+          print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+          fn_menu__exit
         fi
-    elif [[ $apt_upgrade_error == *"apt --fix-broken install"* ]]; then
-      print "[bold][blue]Would you like to resolve it?"
-      confirmation_dialog y
-      response="$?"
-      clear_logs 1
-      if [ $response -eq 1 ]; then
-        # Fix apt --fix-broken install  error
-        print "[blue]Resolving the problem..."
-        sleep 1
-        apt --fix-broken install -y 2>&1 >/dev/null
-        print "[bold][green]The issue has been resolved :)"
-        sleep 1
-        # try again
-        print "[blue]Trying again..."
-        sleep 1
-        logo_shown=false
-        show_headers
-        update_upgrade_package_lists
+    # certbot error
+    elif echo "$apt_update_error" | grep -q "certbot/certbot/ubuntu" ; then
+        echo
+        print "[bold][yellow]The 'apt update' encountered the following error(s):"
+        echo
+        print "[bold][red]$apt_update_error"
+        echo
+        print "[bold][blue]Would you like to resolve it?"
+        confirmation_dialog y
+        response="$?"
+        clear_logs 1
+        if [ $response -eq 1 ]; then
+          # Fix certbot error
+          print "[blue]Resolving the problem..."
+          sleep 1
+          rm -f /etc/apt/sources.list.d/certbot-*.list
+          print "[bold][green]The issue has been resolved :)"
+          sleep 1
+          # try again
+          print "[blue]Trying again..."
+          sleep 1
+          update_upgrade_package_lists
+          return
+        else
+          print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+          #exit
+          fn_menu__exit
+        fi
       else
-        fn_menu_21
+        print center "[bold][white]To address the issues, please share error messages and distribution details via [bold][green]@wepn_group. [bold][white]This will streamline fixing and aid in automating solutions for future versions."
+        fn_menu__exit
       fi
+  fi
+
+
+  #------------------------------------------------------------------- upgrade
+
+  # Check if the number of upgradable packages is greater than 1
+  if [ "$num_upgradable" -gt 1 ]; then
+    print center "[blue]Upgrading packages..."
+    apt_upgrade_error=$(apt upgrade -y 2>&1 >/dev/null);
+    apt_upgrade_error="${apt_upgrade_error//WARNING: apt does not have a stable CLI interface. Use with caution in scripts.}"
+    apt_upgrade_error=$(echo "$apt_upgrade_error" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//')
+    clear_logs 1
+  fi
+
+
+
+  if [[ -n "$apt_upgrade_error" ]]; then
+    if [[ $apt_upgrade_error == *"Could not get lock /var/lib/dpkg/lock-frontend. It is held by"* ]]; then
+      pid=$(echo "$apt_upgrade_error" | grep -oE 'process [0-9]+' | awk '{print $2}')
+      kill -9 "$pid" 2>/dev/null
+      update_upgrade_package_lists
+      return
+    elif [[ $apt_upgrade_error == *"apt --fix-broken install"* ]]; then
+      apt --fix-broken install -y 2>&1 >/dev/null
+      update_upgrade_package_lists
+      return
     else
-      fn_menu_21
+      echo
+      print "[bold][yellow]The 'apt upgrade' encountered the following error(s):"
+      echo
+      print "[bold][red]$apt_upgrade_error"
+      echo
+      fn_menu__exit
     fi
   fi
+
 
   sysinfo
 }
