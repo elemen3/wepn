@@ -529,21 +529,21 @@ update_upgrade_package_lists(){
 #  print center "[bold][blue]..."
 #  print center "[bold][blue]..."
 
-  pids=($(top -b -n 1 | grep dpkg | awk '{ print $1 }'))
+#  pids=($(top -b -n 1 | grep dpkg | awk '{ print $1 }'))
+#
+#  for pid in "${pids[@]}"; do
+#      kill -9 "$pid" 2>/dev/null
+#      update_upgrade_package_lists
+#      return
+#  done
 
-  for pid in "${pids[@]}"; do
-      kill -9 "$pid" 2>/dev/null
-      update_upgrade_package_lists
-      return
-  done
+  pkill -f dpkg
+  pkill -f apt
 
-  if dpkg --configure -a 2>&1 | grep -q "configuring packages"; then
-      print center "[blue]Configuring dpkg..."
-      DEBIAN_FRONTEND=noninteractive
-      dpkg --configure -a 2>&1 >/dev/null
-      unset DEBIAN_FRONTEND
-      clear_logs 1
-  fi
+  export DEBIAN_FRONTEND=noninteractive
+  print center "[blue]Checking the system..."
+  dpkg --configure -a 2>&1 >/dev/null
+  unset DEBIAN_FRONTEND
 
 
 #  sleep 1
@@ -555,6 +555,7 @@ update_upgrade_package_lists(){
 
   # Check if the number of upgradable packages is greater than 1
   if [ "$num_upgradable" -gt 1 ]; then
+    clear_logs 1
     print center "[blue]Updating packages list..."
     apt_update_error=$(apt update 2>&1 >/dev/null);
     apt_update_error="${apt_update_error//WARNING: apt does not have a stable CLI interface. Use with caution in scripts.}"
@@ -564,13 +565,7 @@ update_upgrade_package_lists(){
 
 
   if [[ -n "$apt_update_error" ]]; then
-    if [[ $apt_update_error == *"Could not get lock /var/lib/apt/lists/lock. It is held by"* ]]; then
-      pid=$(echo "$apt_update_error" | grep -oE 'process [0-9]+' | awk '{print $2}')
-      kill -9 "$pid" 2>/dev/null
-      update_upgrade_package_lists
-      return
-    # debian 11 error
-    elif echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
+    if echo "$apt_update_error" | grep -q "The repository 'http://security.debian.org/debian-security bullseye/updates Release' does not have a Release file" ; then
         echo
         print "[bold][yellow]The 'apt update' encountered the following error(s):"
         echo
@@ -648,12 +643,7 @@ update_upgrade_package_lists(){
 
 
   if [[ -n "$apt_upgrade_error" ]]; then
-    if [[ $apt_upgrade_error == *"Could not get lock /var/lib/dpkg/lock-frontend. It is held by"* ]]; then
-      pid=$(echo "$apt_upgrade_error" | grep -oE 'process [0-9]+' | awk '{print $2}')
-      kill -9 "$pid" 2>/dev/null
-      update_upgrade_package_lists
-      return
-    elif [[ $apt_upgrade_error == *"apt --fix-broken install"* ]]; then
+    if [[ $apt_upgrade_error == *"apt --fix-broken install"* ]]; then
       apt --fix-broken install -y 2>&1 >/dev/null
       update_upgrade_package_lists
       return
@@ -667,8 +657,8 @@ update_upgrade_package_lists(){
     fi
   fi
 
-
   sysinfo
+  clear_logs 1
 }
 #----------------------------------------------------------------------------------------------------------------------- install package(s)
 install_packages() {
